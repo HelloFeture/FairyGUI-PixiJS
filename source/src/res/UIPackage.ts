@@ -86,9 +86,9 @@ namespace fgui {
             return UIPackage.$packageInstByName[name];
         }
 
-        public static addPackage(resKey: string): UIPackage {
+        public static addPackage(resKey: string, decompressor ?: Decompressor): UIPackage {
             let pkg: UIPackage = new UIPackage();
-            pkg.create(resKey);
+            pkg.create(resKey, decompressor);
             UIPackage.$packageInstById[pkg.id] = pkg;
             UIPackage.$packageInstByName[pkg.name] = pkg;
             pkg.customId = resKey;
@@ -209,20 +209,22 @@ namespace fgui {
             return UIPackage.getItemURL(pkgName, srcName);
         }
 
-        private create(resKey: string): void {
+        private create(resKey: string, decompressor ?: Decompressor): void {
             this.$resKey = resKey;
 
             let buf: PIXI.LoaderResource = utils.AssetLoader.resourcesPool[this.$resKey];
             if (!buf)
                 buf = utils.AssetLoader.resourcesPool[`${this.$resKey}_fui`];
-            if (!buf)
+            if (!buf) {
                 throw new Error(`Resource '${this.$resKey}' not found, please make sure that you use "new fgui.utils.AssetLoader" to load resources instead of " PIXI.loaders.Loader".`);
+            }
 
-            if (!buf.data || !(buf.data instanceof ArrayBuffer))
+            if (!buf.data || !(buf.data instanceof ArrayBuffer)){
                 throw new Error(`Resource '${this.$resKey}' is not a proper binary resource, please load it as binary format by calling yourLoader.add(name, url, { loadType:PIXI.loaders.Resource.LOAD_TYPE.XHR, xhrType: PIXI.loaders.Resource.XHR_RESPONSE_TYPE.BUFFER })`);
+            }
 
-            this.decompressPackage(buf.data);
-
+            this.decompressPackage(buf.data, decompressor);
+            
             let str = this.getResDescriptor("sprites.bytes");
             str && str.split(UIPackage.sep1).forEach((str, index) => {
                 if(index >= 1 && str && str.length) {
@@ -318,20 +320,19 @@ namespace fgui {
             }, this);
         }
 
-        private decompressPackage(buf: ArrayBuffer): void {
+        private decompressPackage(buf: ArrayBuffer, decompressor ?: Decompressor): void {
             this.$resData = {};
 
             // let inflater: Zlib.RawInflate = new Zlib.RawInflate(buf);
             // let data: Uint8Array = inflater.decompress();
             // @FIXME
-            let inflater: any;
             let data: Uint8Array;
-            if (window["Zlib"]) {
-                inflater = new window["Zlib"]["RawInflate"](buf);
-                data = inflater.decompress();
+            if (typeof(decompressor) === "function"){
+                data = decompressor(buf);
             } else {
                 data = new Uint8Array(buf);
-            }
+            } 
+           
             let source: string = utils.RawByte.decodeUTF8(data);
             let curr: number = 0;
             let fn: string;

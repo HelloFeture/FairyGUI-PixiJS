@@ -22,7 +22,7 @@ gulp.task("buildDts", ["buildJs"], () => {
         .pipe(gulp.dest('./bin'));
 });
 
-// gulp.task("build", ["buildDts"], () => {
-//     return gulp.src('bin/**/*')
-//         .pipe(gulp.dest('../demo/libs/fairygui/'))
-// });
+gulp.task("build", ["buildDts"], () => {
+    return gulp.src('bin/**/*')
+        .pipe(gulp.dest('../demo/libs/fairygui/'))
+});
