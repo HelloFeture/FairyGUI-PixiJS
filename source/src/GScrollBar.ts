@@ -1,172 +1,150 @@
 namespace fgui {
 
     export class GScrollBar extends GComponent {
-        private $grip: GObject;
-        private $arrowButton1: GObject;
-        private $arrowButton2: GObject;
-        private $bar: GObject;
-        private $target: ScrollPane;
+        private _grip: GObject;
+        private _arrowButton1: GObject;
+        private _arrowButton2: GObject;
+        private _bar: GObject;
+        private _target: ScrollPane;
 
-        private $vertical: boolean;
-        private $scrollPerc: number;
-        private $fixedGripSize: boolean;
+        private _vertical: boolean;
+        private _scrollPerc: number;
+        private _fixedGripSize: boolean;
 
-        private $dragOffset: PIXI.Point;
+        private _dragOffset: PIXI.Point;
 
         public constructor() {
             super();
-            this.$dragOffset = new PIXI.Point();
-            this.$scrollPerc = 0;
+            this._dragOffset = new PIXI.Point();
+            this._scrollPerc = 0;
         }
 
         public setScrollPane(target: ScrollPane, vertical: boolean): void {
-            this.$target = target;
-            this.$vertical = vertical;
+            this._target = target;
+            this._vertical = vertical;
         }
 
         public set displayPerc(val: number) {
-            if (this.$vertical) {
-                if (!this.$fixedGripSize)
-                    this.$grip.height = val * this.$bar.height;
-                this.$grip.y = this.$bar.y + (this.$bar.height - this.$grip.height) * this.$scrollPerc;
+            if (!this._grip) {
+                return ;
+            }
+            if (this._vertical) {
+                if (!this._fixedGripSize)
+                    this._grip.height = val * this._bar.height;
+                this._grip.y = this._bar.y + (this._bar.height - this._grip.height) * this._scrollPerc;
             }
             else {
-                if (!this.$fixedGripSize)
-                    this.$grip.width = val * this.$bar.width;
-                this.$grip.x = this.$bar.x + (this.$bar.width - this.$grip.width) * this.$scrollPerc;
+                if (!this._fixedGripSize)
+                    this._grip.width = val * this._bar.width;
+                this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
             }
         }
 
         public get scrollPerc():number {
-            return this.$scrollPerc;
+            return this._scrollPerc;
         }
 
         public set scrollPerc(val: number) {
-            this.$scrollPerc = val;
-            if (this.$vertical)
-                this.$grip.y = this.$bar.y + (this.$bar.height - this.$grip.height) * this.$scrollPerc;
+            if (!this._grip) {
+                return ;
+            }
+            this._scrollPerc = val;
+            if (this._vertical)
+                this._grip.y = this._bar.y + (this._bar.height - this._grip.height) * this._scrollPerc;
             else
-                this.$grip.x = this.$bar.x + (this.$bar.width - this.$grip.width) * this.$scrollPerc;
+                this._grip.x = this._bar.x + (this._bar.width - this._grip.width) * this._scrollPerc;
         }
 
         public get minSize(): number {
-            if (this.$vertical)
-                return (this.$arrowButton1 != null ? this.$arrowButton1.height : 0) + (this.$arrowButton2 != null ? this.$arrowButton2.height : 0);
+            if (this._vertical)
+                return (this._arrowButton1 != null ? this._arrowButton1.height : 0) + (this._arrowButton2 != null ? this._arrowButton2.height : 0);
             else
-                return (this.$arrowButton1 != null ? this.$arrowButton1.width : 0) + (this.$arrowButton2 != null ? this.$arrowButton2.width : 0);
+                return (this._arrowButton1 != null ? this._arrowButton1.width : 0) + (this._arrowButton2 != null ? this._arrowButton2.width : 0);
         }
 
-        protected constructFromXML(xml: utils.XmlNode): void {
-            super.constructFromXML(xml);
+       
 
-            xml = utils.XmlParser.getChildNodes(xml, "ScrollBar")[0];
-            if (xml != null)
-                this.$fixedGripSize = xml.attributes.fixedGripSize == "true";
-
-            this.$grip = this.getChild("grip");
-            if (!this.$grip) {
-                console.error("please create and define 'grip' in the Editor for the scrollbar");
-                return;
-            }
-
-            this.$bar = this.getChild("bar");
-            if (!this.$bar) {
-                console.error("please create and define 'bar' in the Editor for the scrollbar");
-                return;
-            }
-
-            this.$arrowButton1 = this.getChild("arrow1");
-            this.$arrowButton2 = this.getChild("arrow2");
-
-            this.$grip.on(InteractiveEvents.Down, this.$gripMouseDown, this);
-
-            if (this.$arrowButton1)
-                this.$arrowButton1.on(InteractiveEvents.Down, this.$arrowButton1Click, this);
-            if (this.$arrowButton2)
-                this.$arrowButton2.on(InteractiveEvents.Down, this.$arrowButton2Click, this);
-
-            this.on(InteractiveEvents.Down, this.$barMouseDown, this);
-        }
-
-        private $gripMouseDown(evt: PIXI.interaction.InteractionEvent): void {
-            if (!this.$bar)
+        private _gripMouseDown(evt: PIXI.interaction.InteractionEvent): void {
+            if (!this._bar)
                 return;
             
             evt.stopPropagation();
             
-            this.$dragOffset = evt.data.getLocalPosition(this.displayObject, this.$dragOffset);
-            this.$dragOffset.x -= this.$grip.x;
-            this.$dragOffset.y -= this.$grip.y;
+            this._dragOffset = evt.data.getLocalPosition(this.displayObject, this._dragOffset);
+            this._dragOffset.x -= this._grip.x;
+            this._dragOffset.y -= this._grip.y;
 
             let g = GRoot.inst.nativeStage;
-            g.on(InteractiveEvents.Move, this.$gripDragging, this);
-            g.on(InteractiveEvents.Up, this.$gripDraggingEnd, this);
+            g.on(InteractiveEvents.Move, this._gripDragging, this);
+            g.on(InteractiveEvents.Up, this._gripDraggingEnd, this);
         }
 
         private static sScrollbarHelperPoint: PIXI.Point = new PIXI.Point();
-        private $gripDragging(evt: PIXI.interaction.InteractionEvent): void {
+        private _gripDragging(evt: PIXI.interaction.InteractionEvent): void {
             let pt: PIXI.Point = evt.data.getLocalPosition(this.displayObject, GScrollBar.sScrollbarHelperPoint);
-            if (this.$vertical) {
-                let curY: number = pt.y - this.$dragOffset.y;
-                this.$target.setPercY((curY - this.$bar.y) / (this.$bar.height - this.$grip.height), false);
+            if (this._vertical) {
+                let curY: number = pt.y - this._dragOffset.y;
+                this._target.setPercY((curY - this._bar.y) / (this._bar.height - this._grip.height), false);
             }
             else {
-                let curX: number = pt.x - this.$dragOffset.x;
-                this.$target.setPercX((curX - this.$bar.x) / (this.$bar.width - this.$grip.width), false);
+                let curX: number = pt.x - this._dragOffset.x;
+                this._target.setPercX((curX - this._bar.x) / (this._bar.width - this._grip.width), false);
             }
         }
 
-        private $gripDraggingEnd(evt: PIXI.interaction.InteractionEvent): void {
+        private _gripDraggingEnd(evt: PIXI.interaction.InteractionEvent): void {
             let g = GRoot.inst.nativeStage;
-            g.off(InteractiveEvents.Move, this.$gripDragging, this);
-            g.off(InteractiveEvents.Up, this.$gripDraggingEnd, this);
+            g.off(InteractiveEvents.Move, this._gripDragging, this);
+            g.off(InteractiveEvents.Up, this._gripDraggingEnd, this);
         }
 
-        private $arrowButton1Click(evt: PIXI.interaction.InteractionEvent): void {
+        private _arrowButton1Click(evt: PIXI.interaction.InteractionEvent): void {
             evt.stopPropagation();
 
-            if (this.$vertical)
-                this.$target.scrollUp();
+            if (this._vertical)
+                this._target.scrollUp();
             else
-                this.$target.scrollLeft();
+                this._target.scrollLeft();
         }
 
-        private $arrowButton2Click(evt: PIXI.interaction.InteractionEvent): void {
+        private _arrowButton2Click(evt: PIXI.interaction.InteractionEvent): void {
             evt.stopPropagation();
             
-            if (this.$vertical)
-                this.$target.scrollDown();
+            if (this._vertical)
+                this._target.scrollDown();
             else
-                this.$target.scrollRight();
+                this._target.scrollRight();
         }
 
-        private $barMouseDown(evt: PIXI.interaction.InteractionEvent): void {
-            let pt: PIXI.Point = evt.data.getLocalPosition(this.$grip.displayObject, GScrollBar.sScrollbarHelperPoint);
-            if (this.$vertical) {
+        private _barMouseDown(evt: PIXI.interaction.InteractionEvent): void {
+            let pt: PIXI.Point = evt.data.getLocalPosition(this._grip.displayObject, GScrollBar.sScrollbarHelperPoint);
+            if (this._vertical) {
                 if (pt.y < 0)
-                    this.$target.scrollUp(4);
+                    this._target.scrollUp(4);
                 else
-                    this.$target.scrollDown(4);
+                    this._target.scrollDown(4);
             }
             else {
                 if (pt.x < 0)
-                    this.$target.scrollLeft(4);
+                    this._target.scrollLeft(4);
                 else
-                    this.$target.scrollRight(4);
+                    this._target.scrollRight(4);
             }
         }
 
+        
+
         public dispose():void {
 
-            this.off(InteractiveEvents.Down, this.$barMouseDown, this);
+            this.off(InteractiveEvents.Down, this._barMouseDown, this);
 
-            if (this.$arrowButton1)
-                this.$arrowButton1.off(InteractiveEvents.Down, this.$arrowButton1Click, this);
-            if (this.$arrowButton2)
-                this.$arrowButton2.off(InteractiveEvents.Down, this.$arrowButton2Click, this);
+            if (this._arrowButton1)
+                this._arrowButton1.off(InteractiveEvents.Down, this._arrowButton1Click, this);
+            if (this._arrowButton2)
+                this._arrowButton2.off(InteractiveEvents.Down, this._arrowButton2Click, this);
 
-            this.$grip.off(InteractiveEvents.Down, this.$gripMouseDown, this);
-            this.$gripDraggingEnd(null);
+            this._grip.off(InteractiveEvents.Down, this._gripMouseDown, this);
+            this._gripDraggingEnd(null);
             
             super.dispose();
         }

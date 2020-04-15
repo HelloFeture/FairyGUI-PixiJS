@@ -2,68 +2,69 @@ namespace fgui.utils {
 
     export class InputDelegate {
 
-        protected $inited:boolean = false;
-        protected $textField:GTextInput;
-        protected $input:InputElement;
-        protected $restrictString:string = null;
-        protected $restrictRegex:RegExp = null;
-        protected $type:InputType;
+        protected _inited:boolean = false;
+        protected _textField:GTextInput;
+        protected _input:InputElement;
+        protected _restrictString:string = null;
+        protected _restrictRegex:RegExp = null;
+        protected _type:InputType;
 
-        private $focused:boolean = false;
+        private _focused:boolean = false;
 
         public constructor(tf:GTextInput) {
-            this.$textField = tf;
-            this.$input = new InputElement(tf);
+            this._textField = tf;
+            this._input = new InputElement(tf);
         }
 
         public initialize():void {
-            if(this.$inited) return;
+            if(this._inited) return;
             
-            this.$input.$addToStage();
+            this._input._addToStage();
 
-            this.$input.on("updateText", this.updateText, this);
-            this.$input.on(FocusEvent.CHANGED, this.focusHandler, this);
+            this._input.on("updateText", this.updateText, this);
+            this._input.on(FocusEvent.CHANGED, this.focusHandler, this);
 
-            this.$textField.on(InteractiveEvents.Down, this.textFieldDownHandler, this);
+            this._textField.on(InteractiveEvents.Down, this.textFieldDownHandler, this);
             
-            this.$inited = true;
+            this._inited = true;
         }
 
         private textFieldDownHandler():void {
-            this.$onFocus();
+            this._onFocus();
         }
 
         public destroy():void {
-            if(!this.$inited) return;
+            if(!this._inited) return;
             
-            this.$input.$removeFromStage();
+            this._input._removeFromStage();
 
-            this.$textField.off(InteractiveEvents.Down, this.textFieldDownHandler, this);
+            this._textField.off(InteractiveEvents.Down, this.textFieldDownHandler, this);
             GRoot.inst.off(InteractiveEvents.Down, this.onStageDown, this);
             
-            this.$input.off("updateText", this.updateText, this);
-            this.$input.off(FocusEvent.CHANGED, this.focusHandler, this);
+            this._input.off("updateText", this.updateText, this);
+            this._input.off(FocusEvent.CHANGED, this.focusHandler, this);
 
-            this.$inited = false;
+            this._inited = false;
         }
 
         public get text():string {
-            return this.$input.text;
+            return this._input.text;
         }
 
         public set text(v:string) {
-            this.$input.text = v;
+            this._input.text = v;
         }
 
         public setColor(v:number) {
-            return this.$input.setColor(v);
+            return this._input.setColor(v);
         }
 
         private updateText():void {
-            let textValue = this.$input.text;
+            Debug.log("updateText");
+            let textValue = this._input.text;
             let isChanged:boolean = false;
-            if(this.$restrictRegex != null) {
-                let result: string[] = textValue.match(this.$restrictRegex);
+            if(this._restrictRegex != null) {
+                let result: string[] = textValue.match(this._restrictRegex);
                 if (result)
                     textValue = result.join("");
                 else
@@ -71,109 +72,115 @@ namespace fgui.utils {
                 isChanged = true;
             }
             
-            if (isChanged && this.$input.text != textValue)
-                this.$input.text = textValue;
+            if (isChanged && this._input.text != textValue)
+                this._input.text = textValue;
 
-            this.$textField.text = this.$input.text;
+            this._textField.text = this._input.text;
 
-            this.$textField.emit(TextEvent.Change, this.$textField);
+            this._textField.emit(TextEvent.Change, this._textField);
         }
 
         private onStageDown(e:PIXI.interaction.InteractionEvent):void {
-            let target = GObject.castFromNativeObject(e.currentTarget);
-            if(target != this.$textField)
-                this.$input.$hide();
+            let target = GObject.cast(e.currentTarget);
+            if(target != this._textField){
+                this._input._hide();
+                Debug.log("onStageDown -> hide");
+            }
+            this._input._show();
         }
 
         private focusHandler(type: string): void {
+            Debug.log("fouces change ", type);
             if (type == "focus") {
-                if (!this.$focused) {
-                    this.$focused = true;
-                    this.$textField.$isTyping = true;
-                    this.$textField.alpha = 0;
-                    this.$textField.emit(FocusEvent.CHANGED, "focus", this.$textField);
-                    this.$textField.emit(TextEvent.FocusIn, this.$textField);
+                if (!this._focused) {
+                    this._focused = true;
+                    this._textField._isTyping = true;
+                    this._textField.alpha = 1;
+                    this._textField.emit(FocusEvent.CHANGED, "focus", this._textField);
+                    this._textField.emit(TextEvent.FocusIn, this._textField);
                 }
             }
             else if (type == "blur") {
-                if (this.$focused) {
-                    this.$focused = false;
+                if (this._focused) {
+                    this._focused = false;
                     GRoot.inst.off(InteractiveEvents.Down, this.onStageDown, this);
-                    this.$textField.$isTyping = false;
-                    this.$textField.alpha = 1;
-                    this.$input.$onBlur();
-                    this.$textField.emit(FocusEvent.CHANGED, "blur", this.$textField);
-                    this.$textField.emit(TextEvent.FocusOut, this.$textField);
+                    this._textField._isTyping = false;
+                    this._textField.alpha = 1;
+                    this._input._onBlur();
+                    this._textField.emit(FocusEvent.CHANGED, "blur", this._textField);
+                    this._textField.emit(TextEvent.FocusOut, this._textField);
                 }
             }
         }
 
         public get isFocused():boolean {
-            return this.$focused;
+            return this._focused;
         }
 
         /**@internal */
-        $getProperty(name:string):string {
-            return this.$inited && this.$input.getAttribute(name) || null;
+        _getProperty(name:string):string {
+            return this._inited && this._input.getAttribute(name) || null;
         }
 
         /**@internal */
-        $setProperty(name:string, value:string):void {
-            if(!this.$inited) return;
-            this.$input.setAttribute(name, value);
+        _setProperty(name:string, value:string):void {
+            if(!this._inited) return;
+            this._input.setAttribute(name, value);
         }
 
-        get $restrict():string {
-            return this.$restrictString;
+        get _restrict():string {
+            return this._restrictString;
         }
 
-        set $restrict(v:string) {
-            this.$restrictString = v;
-            if(this.$restrictString != null && this.$restrictString.length > 0)
-                this.$restrictRegex = new RegExp(this.$restrictString);
+        set _restrict(v:string) {
+            this._restrictString = v;
+            if(this._restrictString != null && this._restrictString.length > 0)
+                this._restrictRegex = new RegExp(this._restrictString);
             else
-                this.$restrictRegex = null;
+                this._restrictRegex = null;
         }
 
         public get type():InputType {
-            return this.$type;
+            return this._type;
         }
 
         public set type(v:InputType) {
-            if(v != this.$type)
-                this.$type = v;
+            if(v != this._type)
+                this._type = v;
         }
 
         private tryHideInput():void {
-            if (!this.$textField.visible && this.$input)
-                this.$input.$removeFromStage();
+            if (!this._textField.visible && this._input)
+                this._input._removeFromStage();
         }
 
         /**@internal */
-        $updateProperties():void {
+        _updateProperties():void {
             if (this.isFocused) {
-                this.$input.resetInput();
+                this._input.resetInput();
                 this.tryHideInput();
                 return;
             }
 
-            this.$input.text = this.$textField.text;
-            this.$input.resetInput();
+            this._input.text = this._textField.text;
+            this._input.resetInput();
             this.tryHideInput();
         }
         
 
         /**@internal */
-        $onFocus():void {
-            if (!this.$textField.visible || this.$focused)
+        _onFocus():void {
+            if (!this._textField.visible || this._focused){
+                Debug.log("_onFocus invisible or ");
                 return;
+            }
             
             GRoot.inst.off(InteractiveEvents.Down, this.onStageDown, this);
             GTimer.inst.callLater(() => {
                 GRoot.inst.on(InteractiveEvents.Down, this.onStageDown, this);
             }, this);
 
-            this.$input.$show();
+            this._input._show();
         }
     }
 }

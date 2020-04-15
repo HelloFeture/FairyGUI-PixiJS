@@ -1,4 +1,5 @@
 /// <reference path="UBBParser.ts" />
+/// <reference path="ColorMatrix.ts" />
 
 module fgui {
 
@@ -6,6 +7,12 @@ module fgui {
         public constructor() {
         }
 
+        /**
+         * 获取内部使用的文件名，不包含文件后缀
+         * @hide 
+         * @param source 源文件名
+         * @return 内部使用的文件名
+         */
         public static getFileName(source: string): string {
             var i: number = source.lastIndexOf("/");
             if (i != -1)
@@ -112,8 +119,9 @@ module fgui {
 
         public static displayObjectToGObject(obj: PIXI.DisplayObject): GObject {
             while (obj != null && !(obj instanceof UIStage)) {
-                if (obj["$owner"])
-                    //return GObject.cast(obj);
+                if (obj["$owner"]) {
+                    return GObject.cast(obj);
+                }
 
                 obj = obj.parent;
             }
@@ -175,8 +183,8 @@ module fgui {
             0, 0, 0, 1, 0
         ];
         public static setColorFilter(obj: PIXI.DisplayObject, color?: number | number[] | boolean): void {
-            //var filter: egret.ColorMatrixFilter = (<any>obj).$_colorFilter_; //cached instance
-            var filter : PIXI.Filter = (<any>obj).$_colorFilter_;
+            var filter: PIXI.filters.ColorMatrixFilter = (<any>obj).$_colorFilter_; //cached instance
+            var filter : PIXI.filters.ColorMatrixFilter = (<any>obj).$_colorFilter_;
             var filters: PIXI.Filter[] = obj.filters;
 
             var toApplyColor: any;
@@ -207,7 +215,7 @@ module fgui {
             }
 
             if (!filter) {
-                //filter = new PIXI.ColorMatrixFilter();
+                filter = new PIXI.filters.ColorMatrixFilter();
                 (<any>obj).$_colorFilter_ = filter;
             }
             if (!filters)
@@ -222,26 +230,26 @@ module fgui {
             (<any>filter).$_color_ = toApplyColor;
             (<any>filter).$_grayed_ = toApplyGray;
 
-            // let mat = filter.matrix;
+            let mat = filter.matrix;
 
-            // if (toApplyGray) {
-            //     for (let i = 0; i < 20; i++)
-            //         mat[i] = ToolSet.grayScaleMatrix[i];
-            // }
-            // else if (toApplyColor instanceof Array) {
-            //     ColorMatrix.getMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3], mat);
-            // }
-            // else {
-            //     for (let i = 0; i < 20; i++) {
-            //         mat[i] = (i == 0 || i == 6 || i == 12 || i == 18) ? 1 : 0;
-            //     }
+            if (toApplyGray) {
+                for (let i = 0; i < 20; i++)
+                    mat[i] = ToolSet.grayScaleMatrix[i];
+            }
+            else if (toApplyColor instanceof Array) {
+                utils.ColorMatrix.getMatrix(toApplyColor[0], toApplyColor[1], toApplyColor[2], toApplyColor[3], mat);
+            }
+            else {
+                for (let i = 0; i < 20; i++) {
+                    mat[i] = (i == 0 || i == 6 || i == 12 || i == 18) ? 1 : 0;
+                }
 
-            //     mat[0] = ((<number>color >> 16) & 0xFF) / 255;
-            //     mat[6] = ((<number>color >> 8) & 0xFF) / 255;
-            //     mat[12] = (<number>color & 0xFF) / 255;
-            // }
+                mat[0] = ((<number>color >> 16) & 0xFF) / 255;
+                mat[6] = ((<number>color >> 8) & 0xFF) / 255;
+                mat[12] = (<number>color & 0xFF) / 255;
+            }
 
-            // filter.matrix = mat;
+            filter.matrix = mat;
         }
     }
 }

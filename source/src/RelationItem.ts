@@ -1,36 +1,36 @@
-namespace fgui {
+
+module fgui {
 
     export class RelationItem {
-        protected $owner: GObject;
-        protected $target: GObject;
-        protected $targetX: number;
-        protected $targetY: number;
-        protected $targetWidth: number;
-        protected $targetHeight: number;
-
-        protected $defs: RelationDef[];
+        private _owner: GObject;
+        private _target: GObject;
+        private _defs: Array<RelationDef>;
+        private _targetX: number;
+        private _targetY: number;
+        private _targetWidth: number;
+        private _targetHeight: number;
 
         public constructor(owner: GObject) {
-            this.$owner = owner;
-            this.$defs = [];
+            this._owner = owner;
+            this._defs = new Array<RelationDef>();
         }
 
         public get owner(): GObject {
-            return this.$owner;
+            return this._owner;
         }
 
         public set target(value: GObject) {
-            if (this.$target != value) {
-                if (this.$target)
-                    this.releaseRefTarget(this.$target);
-                this.$target = value;
-                if (this.$target)
-                    this.addRefTarget(this.$target);
+            if (this._target != value) {
+                if (this._target)
+                    this.releaseRefTarget(this._target);
+                this._target = value;
+                if (this._target)
+                    this.addRefTarget(this._target);
             }
         }
 
         public get target(): GObject {
-            return this.$target;
+            return this._target;
         }
 
         public add(relationType: number, usePercent: boolean): void {
@@ -40,9 +40,9 @@ namespace fgui {
                 return;
             }
 
-            let length: number = this.$defs.length;
-            for (let i: number = 0; i < length; i++) {
-                let def: RelationDef = this.$defs[i];
+            var length: number = this._defs.length;
+            for (var i: number = 0; i < length; i++) {
+                var def: RelationDef = this._defs[i];
                 if (def.type == relationType)
                     return;
             }
@@ -50,22 +50,24 @@ namespace fgui {
             this.internalAdd(relationType, usePercent);
         }
 
-        private internalAdd(relationType: number, usePercent: boolean): void {
+        public internalAdd(relationType: number, usePercent: boolean): void {
             if (relationType == RelationType.Size) {
                 this.internalAdd(RelationType.Width, usePercent);
                 this.internalAdd(RelationType.Height, usePercent);
                 return;
             }
 
-            let info: RelationDef = new RelationDef();
+            var info: RelationDef = new RelationDef();
             info.percent = usePercent;
             info.type = relationType;
-            this.$defs.push(info);
+            info.axis = (relationType <= RelationType.Right_Right || relationType == RelationType.Width || relationType >= RelationType.LeftExt_Left && relationType <= RelationType.RightExt_Right) ? 0 : 1;
+            this._defs.push(info);
 
-            //CENTER relation will cause float pixel, so enable the auto-pixel-snapping here
+            //当使用中线关联时，因为需要除以2，很容易因为奇数宽度/高度造成小数点坐标；当使用百分比时，也会造成小数坐标；
+            //所以设置了这类关联的对象，自动启用pixelSnapping
             if (usePercent || relationType == RelationType.Left_Center || relationType == RelationType.Center_Center || relationType == RelationType.Right_Center
                 || relationType == RelationType.Top_Middle || relationType == RelationType.Middle_Middle || relationType == RelationType.Bottom_Middle)
-                this.$owner.pixelSnapping = true;
+                this._owner.pixelSnapping = true;
         }
 
         public remove(relationType: number = 0): void {
@@ -75,10 +77,10 @@ namespace fgui {
                 return;
             }
 
-            let dc: number = this.$defs.length;
-            for (let k: number = dc - 1; k >= 0; k--) {
-                if (this.$defs[k].type == relationType) {
-                    this.$defs.splice(k, 1);
+            var dc: number = this._defs.length;
+            for (var k: number = 0; k < dc; k++) {
+                if (this._defs[k].type == relationType) {
+                    this._defs.splice(k, 1);
                     break;
                 }
             }
@@ -86,66 +88,76 @@ namespace fgui {
 
         public copyFrom(source: RelationItem): void {
             this.target = source.target;
-            this.$defs.length = 0;
-            source.$defs.forEach(info => {
-                let info2: RelationDef = new RelationDef();
+
+            this._defs.length = 0;
+            var length: number = source._defs.length;
+            for (var i: number = 0; i < length; i++) {
+                var info: RelationDef = source._defs[i];
+                var info2: RelationDef = new RelationDef();
                 info2.copyFrom(info);
-                this.$defs.push(info2);
-            }, this);
+                this._defs.push(info2);
+            }
         }
 
         public dispose(): void {
-            if (this.$target != null) {
-                this.releaseRefTarget(this.$target);
-                this.$target = null;
+            if (this._target != null) {
+                this.releaseRefTarget(this._target);
+                this._target = null;
             }
         }
 
         public get isEmpty(): boolean {
-            return this.$defs.length == 0;
+            return this._defs.length == 0;
         }
 
-        public applyOnSelfResized(dWidth: number, dHeight: number): void {
-            let ox: number = this.$owner.x;
-            let oy: number = this.$owner.y;
+        public applyOnSelfResized(dWidth: number, dHeight: number, applyPivot: boolean): void {
+            var ox: number = this._owner.x;
+            var oy: number = this._owner.y;
 
-            this.$defs.forEach(info => {
+            var length: number = this._defs.length;
+            for (var i: number = 0; i < length; i++) {
+                var info: RelationDef = this._defs[i];
                 switch (info.type) {
                     case RelationType.Center_Center:
-                    case RelationType.Right_Center:
-                        this.$owner.x -= dWidth / 2;
+                        this._owner.x -= (0.5 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
                         break;
+                    case RelationType.Right_Center:
                     case RelationType.Right_Left:
                     case RelationType.Right_Right:
-                        this.$owner.x -= dWidth;
+                        this._owner.x -= (1 - (applyPivot ? this._owner.pivotX : 0)) * dWidth;
                         break;
+
                     case RelationType.Middle_Middle:
-                    case RelationType.Bottom_Middle:
-                        this.$owner.y -= dHeight / 2;
+                        this._owner.y -= (0.5 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
                         break;
+                    case RelationType.Bottom_Middle:
                     case RelationType.Bottom_Top:
                     case RelationType.Bottom_Bottom:
-                        this.$owner.y -= dHeight;
+                        this._owner.y -= (1 - (applyPivot ? this._owner.pivotY : 0)) * dHeight;
                         break;
                 }
-            }, this);
+            }
 
-            if (ox != this.$owner.x || oy != this.$owner.y) {
-                ox = this.$owner.x - ox;
-                oy = this.$owner.y - oy;
+            if (ox != this._owner.x || oy != this._owner.y) {
+                ox = this._owner.x - ox;
+                oy = this._owner.y - oy;
 
-                this.$owner.updateGearFromRelations(GearType.XY, ox, oy);
+                this._owner.updateGearFromRelations(1, ox, oy);
 
-                if (this.$owner.parent != null && this.$owner.parent.$transitions.length > 0) {
-                    this.$owner.parent.$transitions.forEach(t => {
-                        t.updateFromRelations(this.$owner.id, ox, oy);
-                    }, this);
+                if (this._owner.parent != null) {
+                    var len: number = this._owner.parent._transitions.length;
+                    if (len > 0) {
+                        for (var i: number = 0; i < len; ++i) {
+                            this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
+                        }
+                    }
                 }
             }
         }
 
         private applyOnXYChanged(info: RelationDef, dx: number, dy: number): void {
-            let tmp: number;
+            var tmp: number;
+
             switch (info.type) {
                 case RelationType.Left_Left:
                 case RelationType.Left_Center:
@@ -154,8 +166,9 @@ namespace fgui {
                 case RelationType.Right_Left:
                 case RelationType.Right_Center:
                 case RelationType.Right_Right:
-                    this.$owner.x += dx;
+                    this._owner.x += dx;
                     break;
+
                 case RelationType.Top_Top:
                 case RelationType.Top_Middle:
                 case RelationType.Top_Bottom:
@@ -163,310 +176,453 @@ namespace fgui {
                 case RelationType.Bottom_Top:
                 case RelationType.Bottom_Middle:
                 case RelationType.Bottom_Bottom:
-                    this.$owner.y += dy;
+                    this._owner.y += dy;
                     break;
+
                 case RelationType.Width:
                 case RelationType.Height:
                     break;
+
                 case RelationType.LeftExt_Left:
                 case RelationType.LeftExt_Right:
-                    tmp = this.$owner.x;
-                    this.$owner.x += dx;
-                    this.$owner.width = this.$owner.$rawWidth - (this.$owner.x - tmp);
+                    if (this._owner != this._target.parent) {
+                        tmp = this._owner.xMin;
+                        this._owner.width = this._owner._rawWidth - dx;
+                        this._owner.xMin = tmp + dx;
+                    }
+                    else
+                        this._owner.width = this._owner._rawWidth - dx;
                     break;
+
                 case RelationType.RightExt_Left:
                 case RelationType.RightExt_Right:
-                    this.$owner.width = this.$owner.$rawWidth + dx;
+                    if (this._owner != this._target.parent) {
+                        tmp = this._owner.xMin;
+                        this._owner.width = this._owner._rawWidth + dx;
+                        this._owner.xMin = tmp;
+                    }
+                    else
+                        this._owner.width = this._owner._rawWidth + dx;
                     break;
+
                 case RelationType.TopExt_Top:
                 case RelationType.TopExt_Bottom:
-                    tmp = this.$owner.y;
-                    this.$owner.y += dy;
-                    this.$owner.height = this.$owner.$rawHeight - (this.$owner.y - tmp);
+                    if (this._owner != this._target.parent) {
+                        tmp = this._owner.yMin;
+                        this._owner.height = this._owner._rawHeight - dy;
+                        this._owner.yMin = tmp + dy;
+                    }
+                    else
+                        this._owner.height = this._owner._rawHeight - dy;
                     break;
+
                 case RelationType.BottomExt_Top:
                 case RelationType.BottomExt_Bottom:
-                    this.$owner.height = this.$owner.$rawHeight + dy;
+                    if (this._owner != this._target.parent) {
+                        tmp = this._owner.yMin;
+                        this._owner.height = this._owner._rawHeight + dy;
+                        this._owner.yMin = tmp;
+                    }
+                    else
+                        this._owner.height = this._owner._rawHeight + dy;
                     break;
             }
         }
 
         private applyOnSizeChanged(info: RelationDef): void {
-            let targetX: number, targetY: number;
-            if (this.$target != this.$owner.parent) {
-                targetX = this.$target.x;
-                targetY = this.$target.y;
+            var pos: number = 0, pivot: number = 0, delta: number = 0;
+            var v: number, tmp: number;
+
+            if (info.axis == 0) {
+                if (this._target != this._owner.parent) {
+                    pos = this._target.x;
+                    if (this._target.pivotAsAnchor)
+                        pivot = this._target.pivotX;
+                }
+
+                if (info.percent) {
+                    if (this._targetWidth != 0)
+                        delta = this._target._width / this._targetWidth;
+                }
+                else
+                    delta = this._target._width - this._targetWidth;
             }
             else {
-                targetX = 0;
-                targetY = 0;
+                if (this._target != this._owner.parent) {
+                    pos = this._target.y;
+                    if (this._target.pivotAsAnchor)
+                        pivot = this._target.pivotY;
+                }
+
+                if (info.percent) {
+                    if (this._targetHeight != 0)
+                        delta = this._target._height / this._targetHeight;
+                }
+                else
+                    delta = this._target._height - this._targetHeight;
             }
-            let v: number, tmp: number;
 
             switch (info.type) {
                 case RelationType.Left_Left:
+                    if (info.percent)
+                        this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                    else if (pivot != 0)
+                        this._owner.x += delta * (-pivot);
                     break;
                 case RelationType.Left_Center:
-                    v = this.$owner.x - (targetX + this.$targetWidth / 2);
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    this.$owner.x = targetX + this.$target.$rawWidth / 2 + v;
+                        this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                    else
+                        this._owner.x += delta * (0.5 - pivot);
                     break;
                 case RelationType.Left_Right:
-                    v = this.$owner.x - (targetX + this.$targetWidth);
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    this.$owner.x = targetX + this.$target.$rawWidth + v;
+                        this._owner.xMin = pos + (this._owner.xMin - pos) * delta;
+                    else
+                        this._owner.x += delta * (1 - pivot);
                     break;
                 case RelationType.Center_Center:
-                    v = this.$owner.x + this.$owner.$rawWidth / 2 - (targetX + this.$targetWidth / 2);
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    this.$owner.x = targetX + this.$target.$rawWidth / 2 + v - this.$owner.$rawWidth / 2;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth * 0.5 - pos) * delta - this._owner._rawWidth * 0.5;
+                    else
+                        this._owner.x += delta * (0.5 - pivot);
                     break;
                 case RelationType.Right_Left:
-                    v = this.$owner.x + this.$owner.$rawWidth - targetX;
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    this.$owner.x = targetX + v - this.$owner.$rawWidth;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                    else if (pivot != 0)
+                        this._owner.x += delta * (-pivot);
                     break;
                 case RelationType.Right_Center:
-                    v = this.$owner.x + this.$owner.$rawWidth - (targetX + this.$targetWidth / 2);
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    this.$owner.x = targetX + this.$target.$rawWidth / 2 + v - this.$owner.$rawWidth;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                    else
+                        this._owner.x += delta * (0.5 - pivot);
                     break;
                 case RelationType.Right_Right:
-                    v = this.$owner.x + this.$owner.$rawWidth - (targetX + this.$targetWidth);
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    this.$owner.x = targetX + this.$target.$rawWidth + v - this.$owner.$rawWidth;
+                        this._owner.xMin = pos + (this._owner.xMin + this._owner._rawWidth - pos) * delta - this._owner._rawWidth;
+                    else
+                        this._owner.x += delta * (1 - pivot);
                     break;
 
                 case RelationType.Top_Top:
+                    if (info.percent)
+                        this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                    else if (pivot != 0)
+                        this._owner.y += delta * (-pivot);
                     break;
                 case RelationType.Top_Middle:
-                    v = this.$owner.y - (targetY + this.$targetHeight / 2);
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    this.$owner.y = targetY + this.$target.$rawHeight / 2 + v;
+                        this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                    else
+                        this._owner.y += delta * (0.5 - pivot);
                     break;
                 case RelationType.Top_Bottom:
-                    v = this.$owner.y - (targetY + this.$targetHeight);
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    this.$owner.y = targetY + this.$target.$rawHeight + v;
+                        this._owner.yMin = pos + (this._owner.yMin - pos) * delta;
+                    else
+                        this._owner.y += delta * (1 - pivot);
                     break;
                 case RelationType.Middle_Middle:
-                    v = this.$owner.y + this.$owner.$rawHeight / 2 - (targetY + this.$targetHeight / 2);
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    this.$owner.y = targetY + this.$target.$rawHeight / 2 + v - this.$owner.$rawHeight / 2;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight * 0.5 - pos) * delta - this._owner._rawHeight * 0.5;
+                    else
+                        this._owner.y += delta * (0.5 - pivot);
                     break;
                 case RelationType.Bottom_Top:
-                    v = this.$owner.y + this.$owner.$rawHeight - targetY;
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    this.$owner.y = targetY + v - this.$owner.$rawHeight;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                    else if (pivot != 0)
+                        this._owner.y += delta * (-pivot);
                     break;
                 case RelationType.Bottom_Middle:
-                    v = this.$owner.y + this.$owner.$rawHeight - (targetY + this.$targetHeight / 2);
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    this.$owner.y = targetY + this.$target.$rawHeight / 2 + v - this.$owner.$rawHeight;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                    else
+                        this._owner.y += delta * (0.5 - pivot);
                     break;
                 case RelationType.Bottom_Bottom:
-                    v = this.$owner.y + this.$owner.$rawHeight - (targetY + this.$targetHeight);
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    this.$owner.y = targetY + this.$target.$rawHeight + v - this.$owner.$rawHeight;
+                        this._owner.yMin = pos + (this._owner.yMin + this._owner._rawHeight - pos) * delta - this._owner._rawHeight;
+                    else
+                        this._owner.y += delta * (1 - pivot);
                     break;
 
                 case RelationType.Width:
-                    if (this.$owner.$inProgressBuilding && this.$owner == this.$target.parent)
-                        v = this.$owner.sourceWidth - this.$target.$initWidth;
+                    if (this._owner._underConstruct && this._owner == this._target.parent)
+                        v = this._owner.sourceWidth - this._target.initWidth;
                     else
-                        v = this.$owner.$rawWidth - this.$targetWidth;
+                        v = this._owner._rawWidth - this._targetWidth;
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    if (this.$target == this.$owner.parent)
-                        this.$owner.setSize(this.$target.$rawWidth + v, this.$owner.$rawHeight, true);
+                        v = v * delta;
+                    if (this._target == this._owner.parent) {
+                        if (this._owner.pivotAsAnchor) {
+                            tmp = this._owner.xMin;
+                            this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                            this._owner.xMin = tmp;
+                        }
+                        else
+                            this._owner.setSize(this._target._width + v, this._owner._rawHeight, true);
+                    }
                     else
-                        this.$owner.width = this.$target.$rawWidth + v;
+                        this._owner.width = this._target._width + v;
                     break;
                 case RelationType.Height:
-                    if (this.$owner.$inProgressBuilding && this.$owner == this.$target.parent)
-                        v = this.$owner.sourceHeight - this.$target.$initHeight;
+                    if (this._owner._underConstruct && this._owner == this._target.parent)
+                        v = this._owner.sourceHeight - this._target.initHeight;
                     else
-                        v = this.$owner.$rawHeight - this.$targetHeight;
+                        v = this._owner._rawHeight - this._targetHeight;
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    if (this.$target == this.$owner.parent)
-                        this.$owner.setSize(this.$owner.$rawWidth, this.$target.$rawHeight + v, true);
+                        v = v * delta;
+                    if (this._target == this._owner.parent) {
+                        if (this._owner.pivotAsAnchor) {
+                            tmp = this._owner.yMin;
+                            this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                            this._owner.yMin = tmp;
+                        }
+                        else
+                            this._owner.setSize(this._owner._rawWidth, this._target._height + v, true);
+                    }
                     else
-                        this.$owner.height = this.$target.$rawHeight + v;
+                        this._owner.height = this._target._height + v;
                     break;
 
                 case RelationType.LeftExt_Left:
+                    tmp = this._owner.xMin;
+                    if (info.percent)
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (-pivot);
+                    this._owner.width = this._owner._rawWidth - v;
+                    this._owner.xMin = tmp + v;
                     break;
                 case RelationType.LeftExt_Right:
-                    v = this.$owner.x - (targetX + this.$targetWidth);
+                    tmp = this._owner.xMin;
                     if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    tmp = this.$owner.x;
-                    this.$owner.x = targetX + this.$target.$rawWidth + v;
-                    this.$owner.width = this.$owner.$rawWidth - (this.$owner.x - tmp);
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (1 - pivot);
+                    this._owner.width = this._owner._rawWidth - v;
+                    this._owner.xMin = tmp + v;
                     break;
                 case RelationType.RightExt_Left:
+                    tmp = this._owner.xMin;
+                    if (info.percent)
+                        v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
+                    else
+                        v = delta * (-pivot);
+                    this._owner.width = this._owner._rawWidth + v;
+                    this._owner.xMin = tmp;
                     break;
                 case RelationType.RightExt_Right:
-                    if (this.$owner.$inProgressBuilding && this.$owner == this.$target.parent)
-                        v = this.$owner.sourceWidth - (targetX + this.$target.$initWidth);
-                    else
-                        v = this.$owner.width - (targetX + this.$targetWidth);
-                    if (this.$owner != this.$target.parent)
-                        v += this.$owner.x;
-                    if (info.percent)
-                        v = v / this.$targetWidth * this.$target.$rawWidth;
-                    if (this.$owner != this.$target.parent)
-                        this.$owner.width = targetX + this.$target.$rawWidth + v - this.$owner.x;
-                    else
-                        this.$owner.width = targetX + this.$target.$rawWidth + v;
+                    tmp = this._owner.xMin;
+                    if (info.percent) {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.width = pos + this._target._width - this._target._width * pivot +
+                                    (this._owner.sourceWidth - pos - this._target.initWidth + this._target.initWidth * pivot) * delta;
+                            else
+                                this._owner.width = pos + (this._owner._rawWidth - pos) * delta;
+                        }
+                        else {
+                            v = pos + (tmp + this._owner._rawWidth - pos) * delta - (tmp + this._owner._rawWidth);
+                            this._owner.width = this._owner._rawWidth + v;
+                            this._owner.xMin = tmp;
+                        }
+                    }
+                    else {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.width = this._owner.sourceWidth + (this._target._width - this._target.initWidth) * (1 - pivot);
+                            else
+                                this._owner.width = this._owner._rawWidth + delta * (1 - pivot);
+                        }
+                        else {
+                            v = delta * (1 - pivot);
+                            this._owner.width = this._owner._rawWidth + v;
+                            this._owner.xMin = tmp;
+                        }
+                    }
                     break;
                 case RelationType.TopExt_Top:
+                    tmp = this._owner.yMin;
+                    if (info.percent)
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (-pivot);
+                    this._owner.height = this._owner._rawHeight - v;
+                    this._owner.yMin = tmp + v;
                     break;
                 case RelationType.TopExt_Bottom:
-                    v = this.$owner.y - (targetY + this.$targetHeight);
+                    tmp = this._owner.yMin;
                     if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    tmp = this.$owner.y;
-                    this.$owner.y = targetY + this.$target.$rawHeight + v;
-                    this.$owner.height = this.$owner.$rawHeight - (this.$owner.y - tmp);
+                        v = pos + (tmp - pos) * delta - tmp;
+                    else
+                        v = delta * (1 - pivot);
+                    this._owner.height = this._owner._rawHeight - v;
+                    this._owner.yMin = tmp + v;
                     break;
                 case RelationType.BottomExt_Top:
+                    tmp = this._owner.yMin;
+                    if (info.percent)
+                        v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
+                    else
+                        v = delta * (-pivot);
+                    this._owner.height = this._owner._rawHeight + v;
+                    this._owner.yMin = tmp;
                     break;
                 case RelationType.BottomExt_Bottom:
-                    if (this.$owner.$inProgressBuilding && this.$owner == this.$target.parent)
-                        v = this.$owner.sourceHeight - (targetY + this.$target.$initHeight);
-                    else
-                        v = this.$owner.$rawHeight - (targetY + this.$targetHeight);
-                    if (this.$owner != this.$target.parent)
-                        v += this.$owner.y;
-                    if (info.percent)
-                        v = v / this.$targetHeight * this.$target.$rawHeight;
-                    if (this.$owner != this.$target.parent)
-                        this.$owner.height = targetY + this.$target.$rawHeight + v - this.$owner.y;
-                    else
-                        this.$owner.height = targetY + this.$target.$rawHeight + v;
+                    tmp = this._owner.yMin;
+                    if (info.percent) {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.height = pos + this._target._height - this._target._height * pivot +
+                                    (this._owner.sourceHeight - pos - this._target.initHeight + this._target.initHeight * pivot) * delta;
+                            else
+                                this._owner.height = pos + (this._owner._rawHeight - pos) * delta;
+                        }
+                        else {
+                            v = pos + (tmp + this._owner._rawHeight - pos) * delta - (tmp + this._owner._rawHeight);
+                            this._owner.height = this._owner._rawHeight + v;
+                            this._owner.yMin = tmp;
+                        }
+                    }
+                    else {
+                        if (this._owner == this._target.parent) {
+                            if (this._owner._underConstruct)
+                                this._owner.height = this._owner.sourceHeight + (this._target._height - this._target.initHeight) * (1 - pivot);
+                            else
+                                this._owner.height = this._owner._rawHeight + delta * (1 - pivot);
+                        }
+                        else {
+                            v = delta * (1 - pivot);
+                            this._owner.height = this._owner._rawHeight + v;
+                            this._owner.yMin = tmp;
+                        }
+                    }
                     break;
             }
         }
 
         private addRefTarget(target: GObject): void {
-            if (target != this.$owner.parent)
-                target.on(DisplayObjectEvent.XY_CHANGED, this.$targetXYChanged, this);
-            target.on(DisplayObjectEvent.SIZE_CHANGED, this.$targetSizeChanged, this);
-            target.on(DisplayObjectEvent.SIZE_DELAY_CHANGE, this.$targetSizeWillChange, this);
+            if (target != this._owner.parent)
+                target.on(DisplayObjectEvent.XY_CHANGED, this.__targetXYChanged, this);
+            target.on(DisplayObjectEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
+            target.on(DisplayObjectEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
 
-            this.$targetX = this.$target.x;
-            this.$targetY = this.$target.y;
-            this.$targetWidth = this.$target.$rawWidth;
-            this.$targetHeight = this.$target.$rawHeight;
+            this._targetX = this._target.x;
+            this._targetY = this._target.y;
+            this._targetWidth = this._target._width;
+            this._targetHeight = this._target._height;
         }
 
         private releaseRefTarget(target: GObject): void {
-            target.off(DisplayObjectEvent.XY_CHANGED, this.$targetXYChanged, this);
-            target.off(DisplayObjectEvent.SIZE_CHANGED, this.$targetSizeChanged, this);
-            target.off(DisplayObjectEvent.SIZE_DELAY_CHANGE, this.$targetSizeWillChange, this);
+            target.off(DisplayObjectEvent.XY_CHANGED, this.__targetXYChanged, this);
+            target.off(DisplayObjectEvent.SIZE_CHANGED, this.__targetSizeChanged, this);
+            target.off(DisplayObjectEvent.SIZE_DELAY_CHANGE, this.__targetSizeWillChange, this);
         }
 
-        private $targetXYChanged(evt: PIXI.interaction.InteractionEvent): void {
-            if (this.$owner.relations.$dealing != null || this.$owner.group != null && this.$owner.group.$updating) {
-                this.$targetX = this.$target.x;
-                this.$targetY = this.$target.y;
+        private __targetXYChanged(evt: PIXI.interaction.InteractionEvent): void {
+            if (this._owner.relations.handling != null || this._owner.group != null && this._owner.group._updating) {
+                this._targetX = this._target.x;
+                this._targetY = this._target.y;
                 return;
             }
 
-            this.$owner.relations.$dealing = this.$target;
+            this._owner.relations.handling = this._target;
 
-            let ox: number = this.$owner.x;
-            let oy: number = this.$owner.y;
-            let dx: number = this.$target.x - this.$targetX;
-            let dy: number = this.$target.y - this.$targetY;
-            this.$defs.forEach(info => {
+            var ox: number = this._owner.x;
+            var oy: number = this._owner.y;
+            var dx: number = this._target.x - this._targetX;
+            var dy: number = this._target.y - this._targetY;
+            var length: number = this._defs.length;
+            for (var i: number = 0; i < length; i++) {
+                var info: RelationDef = this._defs[i];
                 this.applyOnXYChanged(info, dx, dy);
-            }, this);
-            
-            this.$targetX = this.$target.x;
-            this.$targetY = this.$target.y;
+            }
+            this._targetX = this._target.x;
+            this._targetY = this._target.y;
 
-            if (ox != this.$owner.x || oy != this.$owner.y) {
-                ox = this.$owner.x - ox;
-                oy = this.$owner.y - oy;
+            if (ox != this._owner.x || oy != this._owner.y) {
+                ox = this._owner.x - ox;
+                oy = this._owner.y - oy;
 
-                this.$owner.updateGearFromRelations(GearType.XY, ox, oy);
+                this._owner.updateGearFromRelations(1, ox, oy);
 
-                if (this.$owner.parent != null && this.$owner.parent.$transitions.length > 0) {
-                    this.$owner.parent.$transitions.forEach(t => {
-                        t.updateFromRelations(this.$owner.id, ox, oy);
-                    }, this);
+                if (this._owner.parent != null) {
+                    var len: number = this._owner.parent._transitions.length;
+                    if (len > 0) {
+                        for (var i: number = 0; i < len; ++i) {
+                            this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
+                        }
+                    }
                 }
             }
-            this.$owner.relations.$dealing = null;
+            this._owner.relations.handling = null;
         }
 
-        private $targetSizeChanged(evt: PIXI.interaction.InteractionEvent): void {
-            if (this.$owner.relations.$dealing != null)
+        private __targetSizeChanged(evt: PIXI.interaction.InteractionEvent): void {
+            if (this._owner.relations.handling != null)
                 return;
 
-            this.$owner.relations.$dealing = this.$target;
+            this._owner.relations.handling = this._target;
 
-            let ox: number = this.$owner.x;
-            let oy: number = this.$owner.y;
-            let ow: number = this.$owner.$rawWidth;
-            let oh: number = this.$owner.$rawHeight;
-            this.$defs.forEach(info => {
+            var ox: number = this._owner.x;
+            var oy: number = this._owner.y;
+            var ow: number = this._owner._rawWidth;
+            var oh: number = this._owner._rawHeight;
+            var length: number = this._defs.length;
+            for (var i: number = 0; i < length; i++) {
+                var info: RelationDef = this._defs[i];
                 this.applyOnSizeChanged(info);
-            }, this);
+            }
+            this._targetWidth = this._target._width;
+            this._targetHeight = this._target._height;
 
-            this.$targetWidth = this.$target.$rawWidth;
-            this.$targetHeight = this.$target.$rawHeight;
+            if (ox != this._owner.x || oy != this._owner.y) {
+                ox = this._owner.x - ox;
+                oy = this._owner.y - oy;
 
-            if (ox != this.$owner.x || oy != this.$owner.y) {
-                ox = this.$owner.x - ox;
-                oy = this.$owner.y - oy;
+                this._owner.updateGearFromRelations(1, ox, oy);
 
-                this.$owner.updateGearFromRelations(GearType.XY, ox, oy);
-
-                if (this.$owner.parent != null && this.$owner.parent.$transitions.length > 0) {
-                    this.$owner.parent.$transitions.forEach(t => {
-                        t.updateFromRelations(this.$owner.id, ox, oy);
-                    }, this);
+                if (this._owner.parent != null) {
+                    var len: number = this._owner.parent._transitions.length;
+                    if (len > 0) {
+                        for (var i: number = 0; i < len; ++i) {
+                            this._owner.parent._transitions[i].updateFromRelations(this._owner.id, ox, oy);
+                        }
+                    }
                 }
             }
 
-            if (ow != this.$owner.$rawWidth || oh != this.$owner.$rawHeight) {
-                ow = this.$owner.$rawWidth - ow;
-                oh = this.$owner.$rawHeight - oh;
+            if (ow != this._owner._rawWidth || oh != this._owner._rawHeight) {
+                ow = this._owner._rawWidth - ow;
+                oh = this._owner._rawHeight - oh;
 
-                this.$owner.updateGearFromRelations(GearType.Size, ow, oh);
+                this._owner.updateGearFromRelations(2, ow, oh);
             }
 
-            this.$owner.relations.$dealing = null;
+            this._owner.relations.handling = null;
         }
 
-        private $targetSizeWillChange(evt: Event): void {
-            this.$owner.relations.sizeDirty = true;
+        private __targetSizeWillChange(evt: Event): void {
+            this._owner.relations.sizeDirty = true;
         }
     }
 
     export class RelationDef {
         public percent: boolean;
         public type: number;
+        public axis: number;
+
+        public constructor() {
+        }
 
         public copyFrom(source: RelationDef): void {
             this.percent = source.percent;
             this.type = source.type;
+            this.axis = source.axis;
         }
     }
 }

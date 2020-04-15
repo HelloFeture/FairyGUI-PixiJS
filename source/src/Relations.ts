@@ -2,13 +2,14 @@ namespace fgui {
 
     export class Relations {
 
-        protected $owner: GObject;
-        protected $items: RelationItem[];
+        protected _owner: GObject;
+        protected _items: RelationItem[];
+        public handling: GObject;
 
         public sizeDirty: boolean = false;
 
         /**@internal */
-        $dealing: GObject;  //currently deal with
+        _dealing: GObject;  //currently deal with
 
         private static RELATION_NAMES: string[] =
         [
@@ -39,23 +40,23 @@ namespace fgui {
         ];
 
         public constructor(owner: GObject) {
-            this.$owner = owner;
-            this.$items = [];
+            this._owner = owner;
+            this._items = [];
         }
 
         public add(target: GObject, relationType: number, usePercent: boolean = false): void {
-            let length: number = this.$items.length;
+            let length: number = this._items.length;
             for (let i: number = 0; i < length; i++) {
-                let item: RelationItem = this.$items[i];
+                let item: RelationItem = this._items[i];
                 if (item.target == target) {
                     item.add(relationType, usePercent);
                     return;
                 }
             }
-            let newItem: RelationItem = new RelationItem(this.$owner);
+            let newItem: RelationItem = new RelationItem(this._owner);
             newItem.target = target;
             newItem.add(relationType, usePercent);
-            this.$items.push(newItem);
+            this._items.push(newItem);
         }
 
         public addItems(target: GObject, sidePairs: string): void {
@@ -86,15 +87,15 @@ namespace fgui {
         }
 
         public remove(target: GObject, relationType: number = 0): void {
-            let cnt: number = this.$items.length;
+            let cnt: number = this._items.length;
             let i: number = 0;
             while (i < cnt) {
-                let item: RelationItem = this.$items[i];
+                let item: RelationItem = this._items[i];
                 if (item.target == target) {
                     item.remove(relationType);
                     if (item.isEmpty) {
                         item.dispose();
-                        this.$items.splice(i, 1);
+                        this._items.splice(i, 1);
                         cnt--;
                     }
                     else
@@ -106,22 +107,22 @@ namespace fgui {
         }
 
         public contains(target: GObject): boolean {
-            let length: number = this.$items.length;
+            let length: number = this._items.length;
             for (let i: number = 0; i < length; i++) {
-                if (this.$items[i].target == target)
+                if (this._items[i].target == target)
                     return true;
             }
             return false;
         }
 
         public clearFor(target: GObject): void {
-            let cnt: number = this.$items.length;
+            let cnt: number = this._items.length;
             let i: number = 0;
             while (i < cnt) {
-                let item: RelationItem = this.$items[i];
+                let item: RelationItem = this._items[i];
                 if (item.target == target) {
                     item.dispose();
-                    this.$items.splice(i, 1);
+                    this._items.splice(i, 1);
                     cnt--;
                 }
                 else
@@ -130,69 +131,103 @@ namespace fgui {
         }
 
         public clearAll(): void {
-            this.$items.forEach(item => {
+            this._items.forEach(item => {
                 item.dispose();
             }, this);
-            this.$items.length = 0;
+            this._items.length = 0;
         }
 
         public copyFrom(source: Relations): void {
             this.clearAll();
-            source.$items.forEach(ri => {
-                let item: RelationItem = new RelationItem(this.$owner);
+
+            var arr: Array<RelationItem> = source._items;
+            var length: number = arr.length;
+            for (var i: number = 0; i < length; i++) {
+                var ri: RelationItem = arr[i];
+                var item: RelationItem = new RelationItem(this._owner);
                 item.copyFrom(ri);
-                this.$items.push(item);
-            }, this);
+                this._items.push(item);
+            }
         }
 
         public dispose(): void {
             this.clearAll();
         }
 
-        public onOwnerSizeChanged(dWidth: number, dHeight: number): void {
-            if (this.$items.length <= 0)
+        public onOwnerSizeChanged(dWidth: number, dHeight: number, applyPivot: boolean): void {
+            if (this._items.length == 0)
                 return;
-            this.$items.forEach(item => {
-                item.applyOnSelfResized(dWidth, dHeight);
-            }, this);
+
+            var length: number = this._items.length;
+            for (var i: number = 0; i < length; i++) {
+                var item: RelationItem = this._items[i];
+                item.applyOnSelfResized(dWidth, dHeight, applyPivot);
+            }
         }
 
         public ensureRelationsSizeCorrect(): void {
-            if (this.$items.length == 0)
+            if (this._items.length == 0)
                 return;
 
             this.sizeDirty = false;
-            this.$items.forEach(item => {
+            var length: number = this._items.length;
+            for (var i: number = 0; i < length; i++) {
+                var item: RelationItem = this._items[i];
                 item.target.ensureSizeCorrect();
-            }, this);
+            }
         }
 
         public get empty(): boolean {
-            return this.$items.length == 0;
+            return this._items.length == 0;
         }
 
-        public setup(xml: utils.XmlNode): void {
-            xml.children.forEach(cxml => {
-                if (cxml.nodeName != "relation")
-                    return;
+        public setup(buffer: ByteBuffer, parentToChild: boolean): void {
+            var cnt: number = buffer.readByte();
+            var target: GObject;
+            for (var i: number = 0; i < cnt; i++) {
+                var targetIndex: number = buffer.readShort();
+                if (targetIndex == -1)
+                    target = this._owner.parent;
+                else if (parentToChild)
+                    target = (<GComponent>this._owner).getChildAt(targetIndex);
+                else
+                    target = this._owner.parent.getChildAt(targetIndex);
 
-                let targetId: string;
-                let target: GObject;
+                var newItem: RelationItem = new RelationItem(this._owner);
+                newItem.target = target;
+                this._items.push(newItem);
 
-                targetId = cxml.attributes.target;
-                if (this.$owner.parent) {
-                    if (targetId)
-                        target = this.$owner.parent.getChildById(targetId);
-                    else
-                        target = this.$owner.parent;
+                var cnt2: number = buffer.readByte();
+                for (var j: number = 0; j < cnt2; j++) {
+                    var rt: number = buffer.readByte();
+                    var usePercent: boolean = buffer.readBool();
+                    newItem.internalAdd(rt, usePercent);
                 }
-                else {
-                    //call from the component's constructor
-                    target = (this.$owner as GComponent).getChildById(targetId);
-                }
-                if (target)
-                    this.addItems(target, cxml.attributes.sidePair);
-            }, this);
+            }
         }
+
+        // public setup(xml: utils.XmlNode): void {
+        //     xml.children.forEach(cxml => {
+        //         if (cxml.nodeName != "relation")
+        //             return;
+
+        //         let targetId: string;
+        //         let target: GObject;
+
+        //         targetId = cxml.attributes.target;
+        //         if (this._owner.parent) {
+        //             if (targetId)
+        //                 target = this._owner.parent.getChildById(targetId);
+        //             else
+        //                 target = this._owner.parent;
+        //         }
+        //         else {
+        //             //call from the component's constructor
+        //             target = (this._owner as GComponent).getChildById(targetId);
+        //         }
+        //         if (target)
+        //             this.addItems(target, cxml.attributes.sidePair);
+        //     }, this);
+        // }
     }
 }

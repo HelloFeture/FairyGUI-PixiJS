@@ -1,50 +1,54 @@
 /// <reference path="./GObject.ts" />
-/// <reference path="./utils/GObjectRecycler.ts" />
+/// <reference path="./GObjectPool.ts" />
 
 namespace fgui {
 
     export class GLoader extends GObject implements IAnimationGear, IColorGear {
 
-        protected $url: string;
-        protected $align: AlignType;
-        protected $verticalAlign: VertAlignType;
-        protected $autoSize: boolean;
-        protected $fill: LoaderFillType;
-        protected $showErrorSign: boolean;
-        protected $playing: boolean;
-        protected $frame: number = 0;
-        protected $color: number = 0;
+        protected _url: string;
+        protected _align: AlignType;
+        protected _verticalAlign: VertAlignType;
+        protected _autoSize: boolean;
+        protected _fill: LoaderFillType;
+        private _shrinkOnly: boolean;
+        protected _showErrorSign: boolean;
+        protected _playing: boolean;
+        protected _frame: number = 0;
+        protected _color: number = 0;
 
-        private $contentItem: PackageItem;
-        private $contentSourceWidth: number = 0;
-        private $contentSourceHeight: number = 0;
-        private $contentWidth: number = 0;
-        private $contentHeight: number = 0;
+        private _contentItem: PackageItem;
+        private _contentSourceWidth: number = 0;
+        private _contentSourceHeight: number = 0;
+        private _contentWidth: number = 0;
+        private _contentHeight: number = 0;
 
-        protected $container: UIContainer;
-        protected $content: UIImage | MovieClip;
-        protected $errorSign: GObject;
+        protected _container: UIContainer;
+        protected _content: UIImage | MovieClip;
+        protected _errorSign: GObject;
 
-        private $updatingLayout: boolean;
+        private _updatingLayout: boolean;
 
-        private static $errorSignPool: utils.GObjectRecycler = new utils.GObjectRecycler();
+        private static _errorSignPool: GObjectPool = new GObjectPool();
         
         public constructor() {
             super();
-            this.$playing = true;
-            this.$url = "";
-            this.$fill = LoaderFillType.None;
-            this.$align = AlignType.Left;
-            this.$verticalAlign = VertAlignType.Top;
-            this.$showErrorSign = true;
-            this.$color = 0xFFFFFF;
+            this._playing = true;
+            this._url = "";
+            this._fill = LoaderFillType.None;
+            this._align = AlignType.Left;
+            this._verticalAlign = VertAlignType.Top;
+            this._showErrorSign = true;
+            this._color = 0xFFFFFF;
         }
 
         protected createDisplayObject(): void {
-            this.$container = new UIContainer(this);
-            this.$container.hitArea = new PIXI.Rectangle();
-            this.setDisplayObject(this.$container);
-            this.$container.interactiveChildren = false;
+            this._container = new UIContainer(this);
+            this._container.hitArea = new PIXI.Rectangle();
+            this.setDisplayObject(this._container);
+            this._container.interactiveChildren = false;
+
+            this._content = new MovieClip(this);
+            this._container.addChild(this._content);
         }
 
         public dispose(): void {
@@ -53,20 +57,20 @@ namespace fgui {
         }
 
         public get url(): string {
-            return this.$url;
+            return this._url;
         }
 
         public set url(value: string) {
-            if (this.$url == value)
+            if (this._url == value)
                 return;
 
-            this.$url = value;
+            this._url = value;
             this.loadContent();
             this.updateGear(GearType.Icon);
         }
 
         public get icon(): string {
-            return this.$url;
+            return this._url;
         }
 
         public set icon(value: string) {
@@ -74,107 +78,109 @@ namespace fgui {
         }
 
         public get align(): AlignType {
-            return this.$align;
+            return this._align;
         }
 
         public set align(value: AlignType) {
-            if (this.$align != value) {
-                this.$align = value;
+            if (this._align != value) {
+                this._align = value;
                 this.updateLayout();
             }
         }
 
         public get verticalAlign(): VertAlignType {
-            return this.$verticalAlign;
+            return this._verticalAlign;
         }
 
         public set verticalAlign(value: VertAlignType) {
-            if (this.$verticalAlign != value) {
-                this.$verticalAlign = value;
+            if (this._verticalAlign != value) {
+                this._verticalAlign = value;
                 this.updateLayout();
             }
         }
 
         public get fill(): LoaderFillType {
-            return this.$fill;
+            return this._fill;
         }
 
         public set fill(value: LoaderFillType) {
-            if (this.$fill != value) {
-                this.$fill = value;
+            if (this._fill != value) {
+                this._fill = value;
                 this.updateLayout();
             }
         }
 
         public get autoSize(): boolean {
-            return this.$autoSize;
+            return this._autoSize;
         }
 
         public set autoSize(value: boolean) {
-            if (this.$autoSize != value) {
-                this.$autoSize = value;
+            if (this._autoSize != value) {
+                this._autoSize = value;
                 this.updateLayout();
             }
         }
 
         public get playing(): boolean {
-            return this.$playing;
+            return this._playing;
         }
 
         public set playing(value: boolean) {
-            if (this.$playing != value) {
-                this.$playing = value;
-                if (this.$content instanceof MovieClip)
-                    this.$content.playing = value;
+            if (this._playing != value) {
+                this._playing = value;
+                if (this._content instanceof MovieClip)
+                    this._content.playing = value;
                 this.updateGear(GearType.Animation);
             }
         }
 
         public get frame(): number {
-            return this.$frame;
+            return this._frame;
         }
 
         public set frame(value: number) {
-            if (this.$frame != value) {
-                this.$frame = value;
-                if (this.$content instanceof MovieClip)
-                    this.$content.currentFrame = value;
+            if (this._frame != value) {
+                this._frame = value;
+                if (this._content instanceof MovieClip) {
+                    this._content.currentFrame = value;
+                }
                 this.updateGear(GearType.Animation);
             }
         }
 
         public get color(): number {
-            return this.$color;
+            return this._color;
         }
 
         public set color(value: number) {
-            if (this.$color != value) {
-                this.$color = value;
+            if (this._color != value) {
+                this._color = value;
                 this.updateGear(GearType.Color);
                 this.applyColor();
             }
         }
 
         private applyColor(): void {
-            if (this.$content)
-                this.$content.tint = this.$color;
+            if (this._content){
+                this._content.tint = this._color;
+            }
         }
 
         public get showErrorSign(): boolean {
-            return this.$showErrorSign;
+            return this._showErrorSign;
         }
 
         public set showErrorSign(value: boolean) {
-            this.$showErrorSign = value;
+            this._showErrorSign = value;
         }
 
         public get content(): UIImage | MovieClip {
-            return this.$content;
+            return this._content;
         }
 
         public get texture(): PIXI.Texture {
-            if (this.$content instanceof UIImage)
-                return this.$content.texture;
+            if (this._content instanceof UIImage)
+                return this._content.texture;
             else
                 return null;
         }
@@ -183,15 +189,15 @@ namespace fgui {
             this.url = null;
             this.switchToMovieMode(false);
 
-            if(this.$content instanceof UIImage)
-                this.$content.texture = value;
+            if(this._content instanceof UIImage)
+                this._content.texture = value;
 
             if (value) {
-                this.$contentSourceWidth = value.orig.width;
-                this.$contentSourceHeight = value.orig.height;
+                this._contentSourceWidth = value.orig.width;
+                this._contentSourceHeight = value.orig.height;
             }
             else
-                this.$contentSourceWidth = this.$contentHeight = 0;
+                this._contentSourceWidth = this._contentHeight = 0;
 
             this.updateLayout();
         }
@@ -199,78 +205,80 @@ namespace fgui {
         protected loadContent(): void {
             this.clearContent();
 
-            if (!this.$url)
+            if (!this._url)
                 return;
 
-            if (utils.StringUtil.startsWith(this.$url, "ui://"))
-                this.loadFromPackage(this.$url);
+            if (utils.StringUtil.startsWith(this._url, "ui://"))
+                this.loadFromPackage(this._url);
             else
                 this.loadExternal();
         }
         
         protected loadFromPackage(itemURL: string): void {
-            this.$contentItem = UIPackage.getItemByURL(itemURL);
-            if (this.$contentItem) {
-                this.$contentItem.load();
+            this._contentItem = UIPackage.getItemByURL(itemURL);
+            if (this._contentItem) {
+                this._contentItem.load();
 
-                if (this.$contentItem.type == PackageItemType.Image) {
-                    if (this.$contentItem.texture == null) {
+                if (this._contentItem.type == PackageItemType.Image) {
+                    if (this._contentItem.texture == null) {
                         this.setErrorState();
                     }
                     else {
                         this.switchToMovieMode(false);
-                        (this.$content as UIImage).$initDisp(this.$contentItem);
-                        this.$contentSourceWidth = this.$contentItem.width;
-                        this.$contentSourceHeight = this.$contentItem.height;
+                        (this._content as UIImage).initDisp(this._contentItem);
+                        this._contentSourceWidth = this._contentItem.width;
+                        this._contentSourceHeight = this._contentItem.height;
                         this.updateLayout();
                     }
                 }
-                else if (this.$contentItem.type == PackageItemType.MovieClip) {
+                else if (this._contentItem.type == PackageItemType.MovieClip) {
                     this.switchToMovieMode(true);
-                    this.$contentSourceWidth = this.$contentItem.width;
-                    this.$contentSourceHeight = this.$contentItem.height;
-                    let mc: MovieClip = this.$content as MovieClip;
-                    mc.interval = this.$contentItem.interval;
-                    mc.swing = this.$contentItem.swing;
-                    mc.repeatDelay = this.$contentItem.repeatDelay;
-                    mc.frames = this.$contentItem.frames;
-                    mc.boundsRect = new PIXI.Rectangle(0, 0, this.$contentSourceWidth, this.$contentSourceHeight);
+                    this._contentSourceWidth = this._contentItem.width;
+                    this._contentSourceHeight = this._contentItem.height;
+                    let mc: MovieClip = this._content as MovieClip;
+                    mc.interval = this._contentItem.interval;
+                    mc.swing = this._contentItem.swing;
+                    mc.repeatDelay = this._contentItem.repeatDelay;
+                    mc.frames = this._contentItem.frames;
+                    // TODO
+                    //mc.boundsRect = new PIXI.Rectangle(0, 0, this._contentSourceWidth, this._contentSourceHeight);
+                    mc.width = this._contentSourceWidth;
+                    mc.height = this._contentSourceHeight;
                     this.updateLayout();
-                }
-                else
+                } else {
                     this.setErrorState();
-            }
-            else
+                }
+            } else {
                 this.setErrorState();
+            }
         }
 
         private switchToMovieMode(value: boolean): void {
-            this.$container.removeChildren();
+            this._container.removeChildren();
             if (value) {
-                if (!(this.$content instanceof MovieClip))
-                    this.$content = new MovieClip(this);
+                if (!(this._content instanceof MovieClip))
+                    this._content = new MovieClip(this);
             }
             else {
-                if (!(this.$content instanceof UIImage))
-                    this.$content = new UIImage(null);
+                if (!(this._content instanceof UIImage))
+                    this._content = new UIImage(null);
             }
-            this.$container.addChild(this.$content);
+            this._container.addChild(this._content);
         }
 
-        private $loadingTexture:PIXI.Texture = null;
+        private _loadingTexture:PIXI.Texture = null;
 
         /**overwrite this method if you need to load resources by your own way*/
         protected loadExternal(): void {
-            //let texture = PIXI.Texture.fromImage(this.$url, true);
-            // @FIXME
-            let texture = PIXI.Texture.from(this.$url, true);
-            this.$loadingTexture = texture;
+            
+            let texture = PIXI.Texture.from(this._url, true);
+            this._loadingTexture = texture;
             //TODO: Texture does not have error event... monitor error event on baseTexture will casue cross-error-event problem.
             texture.once("update", () => {
                 if (!texture.width || !texture.height)
-                    this.$loadResCompleted(null);
+                    this._loadResCompleted(null);
                 else
-                    this.$loadResCompleted(texture);
+                    this._loadResCompleted(texture);
             });
         }
 
@@ -280,33 +288,33 @@ namespace fgui {
             texture.destroy(texture.baseTexture != null);
         }
 
-        private $loadResCompleted(res: PIXI.Texture): void {
+        private _loadResCompleted(res: PIXI.Texture): void {
             if (res)
                 this.onExternalLoadSuccess(res);
             else {
                 this.onExternalLoadFailed();
-                this.$loadingTexture.removeAllListeners();
-                this.freeExternal(this.$loadingTexture);
-                this.$loadingTexture = null;
+                this._loadingTexture.removeAllListeners();
+                this.freeExternal(this._loadingTexture);
+                this._loadingTexture = null;
             }
-            this.$loadingTexture = null;
+            this._loadingTexture = null;
         }
         
         /**content loaded */
         protected onExternalLoadSuccess(texture: PIXI.Texture): void {
-            this.$container.removeChildren();
-            if (!this.$content || !(this.$content instanceof UIImage)) {
-                this.$content = new UIImage(null);
-                this.$content.$initDisp();
-                this.$container.addChild(this.$content);
+            this._container.removeChildren();
+            if (!this._content || !(this._content instanceof UIImage)) {
+                this._content = new UIImage(null);
+                this._content.initDisp();
+                this._container.addChild(this._content);
+            } else {
+                this._container.addChild(this._content);
             }
-            else
-                this.$container.addChild(this.$content);
             //baseTexture loaded, so update frame info
             texture.frame = new PIXI.Rectangle(0, 0, texture.baseTexture.width, texture.baseTexture.height);
-            this.$content.texture = texture;
-            this.$contentSourceWidth = texture.width;
-            this.$contentSourceHeight = texture.height;
+            this._content.texture = texture;
+            this._contentSourceWidth = texture.width;
+            this._contentSourceHeight = texture.height;
             this.updateLayout();
         }
 
@@ -315,165 +323,166 @@ namespace fgui {
         }
 
         private setErrorState(): void {
-            if (!this.$showErrorSign)
+            if (!this._showErrorSign)
                 return;
 
-            if (this.$errorSign == null) {
+            if (this._errorSign == null) {
                 if (UIConfig.loaderErrorSign) {
-                    this.$errorSign = GLoader.$errorSignPool.get(UIConfig.loaderErrorSign);
+                    this._errorSign = GLoader._errorSignPool.getObject(UIConfig.loaderErrorSign);
                 }
             }
 
-            if (this.$errorSign) {
-                this.$errorSign.width = this.width;
-                this.$errorSign.height = this.height;
-                this.$container.addChild(this.$errorSign.displayObject);
+            if (this._errorSign) {
+                this._errorSign.width = this.width;
+                this._errorSign.height = this.height;
+                this._container.addChild(this._errorSign.displayObject);
             }
         }
 
         private clearErrorState(): void {
-            if (this.$errorSign) {
-                this.$container.removeChild(this.$errorSign.displayObject);
-                GLoader.$errorSignPool.recycle(this.$errorSign.resourceURL, this.$errorSign);
-                this.$errorSign = null;
+            if (this._errorSign) {
+                this._container.removeChild(this._errorSign.displayObject);
+                GLoader._errorSignPool.returnObject(this._errorSign);
+                this._errorSign = null;
             }
         }
 
         private updateLayout(): void {
-            if (this.$content == null) {
-                if (this.$autoSize) {
-                    this.$updatingLayout = true;
+            if (this._content == null) {
+                if (this._autoSize) {
+                    this._updatingLayout = true;
                     this.setSize(50, 30);
-                    this.$updatingLayout = false;
+                    this._updatingLayout = false;
                 }
                 return;
             }
 
-            this.$content.position.set(0, 0);
-            this.$content.scale.set(1, 1);
-            this.$contentWidth = this.$contentSourceWidth;
-            this.$contentHeight = this.$contentSourceHeight;
+            this._content.position.set(0, 0);
+            this._content.scale.set(1, 1);
+            this._contentWidth = this._contentSourceWidth;
+            this._contentHeight = this._contentSourceHeight;
 
-            if (this.$autoSize) {
-                this.$updatingLayout = true;
-                if (this.$contentWidth == 0)
-                    this.$contentWidth = 50;
-                if (this.$contentHeight == 0)
-                    this.$contentHeight = 30;
-                this.setSize(this.$contentWidth, this.$contentHeight);
-                this.$updatingLayout = false;
+            if (this._autoSize) {
+                this._updatingLayout = true;
+                if (this._contentWidth == 0)
+                    this._contentWidth = 50;
+                if (this._contentHeight == 0)
+                    this._contentHeight = 30;
+                this.setSize(this._contentWidth, this._contentHeight);
+                this._updatingLayout = false;
             }
             else {
                 let sx: number = 1, sy: number = 1;
-                if (this.$fill != LoaderFillType.None) {
-                    sx = this.width / this.$contentSourceWidth;
-                    sy = this.height / this.$contentSourceHeight;
+                if (this._fill != LoaderFillType.None) {
+                    sx = this.width / this._contentSourceWidth;
+                    sy = this.height / this._contentSourceHeight;
 
                     if (sx != 1 || sy != 1) {
-                        if (this.$fill == LoaderFillType.ScaleMatchHeight)
+                        if (this._fill == LoaderFillType.ScaleMatchHeight)
                             sx = sy;
-                        else if (this.$fill == LoaderFillType.ScaleMatchWidth)
+                        else if (this._fill == LoaderFillType.ScaleMatchWidth)
                             sy = sx;
-                        else if (this.$fill == LoaderFillType.Scale) {
+                        else if (this._fill == LoaderFillType.Scale) {
                             if (sx > sy)
                                 sx = sy;
                             else
                                 sy = sx;
                         }
-                        else if (this.$fill == LoaderFillType.ScaleNoBorder) {
+                        else if (this._fill == LoaderFillType.ScaleNoBorder) {
                             if (sx > sy)
                                 sy = sx;
                             else
                                 sx = sy;
                         }
-                        this.$contentWidth = this.$contentSourceWidth * sx;
-                        this.$contentHeight = this.$contentSourceHeight * sy;
+                        this._contentWidth = this._contentSourceWidth * sx;
+                        this._contentHeight = this._contentSourceHeight * sy;
                     }
                 }
 
-                if (this.$content instanceof UIImage) {
-                    this.$content.width = this.$contentWidth;
-                    this.$content.height = this.$contentHeight;
+                if (this._content instanceof UIImage) {
+                    this._content.width = this._contentWidth;
+                    this._content.height = this._contentHeight;
                 }
                 else
-                    this.$content.scale.set(sx, sy);
+                    this._content.scale.set(sx, sy);
 
-                if (this.$align == AlignType.Center)
-                    this.$content.x = Math.floor((this.width - this.$contentWidth) / 2);
-                else if (this.$align == AlignType.Right)
-                    this.$content.x = this.width - this.$contentWidth;
-                if (this.$verticalAlign == VertAlignType.Middle)
-                    this.$content.y = Math.floor((this.height - this.$contentHeight) / 2);
-                else if (this.$verticalAlign == VertAlignType.Bottom)
-                    this.$content.y = this.height - this.$contentHeight;
+                if (this._align == AlignType.Center)
+                    this._content.x = Math.floor((this.width - this._contentWidth) / 2);
+                else if (this._align == AlignType.Right)
+                    this._content.x = this.width - this._contentWidth;
+                if (this._verticalAlign == VertAlignType.Middle)
+                    this._content.y = Math.floor((this.height - this._contentHeight) / 2);
+                else if (this._verticalAlign == VertAlignType.Bottom)
+                    this._content.y = this.height - this._contentHeight;
             }
         }
 
         private clearContent(): void {
             this.clearErrorState();
 
-            if (this.$content && this.$content.parent)
-                this.$container.removeChild(this.$content);
+            if (this._content && this._content.parent)
+                this._container.removeChild(this._content);
 
-            if(this.$loadingTexture) {
-                this.$loadingTexture.removeAllListeners();
-                this.freeExternal(this.$loadingTexture);
-                this.$loadingTexture = null;
+            if(this._loadingTexture) {
+                this._loadingTexture.removeAllListeners();
+                this.freeExternal(this._loadingTexture);
+                this._loadingTexture = null;
             }
 
-            if (this.$contentItem == null && this.$content instanceof UIImage)
-               this.freeExternal(this.$content.texture);
+            if (this._contentItem == null && this._content instanceof UIImage)
+               this.freeExternal(this._content.texture);
             
-            this.$content && this.$content.destroy();
-            this.$content = null;
+            this._content && this._content.destroy();
+            this._content = null;
             
-            this.$contentItem = null;
+            this._contentItem = null;
         }
 
         protected handleSizeChanged(): void {
-            if (!this.$updatingLayout)
+            if (!this._updatingLayout){
                 this.updateLayout();
+            }
 
-            let rect: PIXI.Rectangle = this.$container.hitArea as PIXI.Rectangle;  //TODO: hitArea can be Rectangle | Circle | Ellipse | Polygon | RoundedRectangle
+            let rect: PIXI.Rectangle = this._container.hitArea as PIXI.Rectangle;  //TODO: hitArea can be Rectangle | Circle | Ellipse | Polygon | RoundedRectangle
             rect.x = rect.y = 0;
             rect.width = this.width;
             rect.height = this.height;
         }
 
-        public setupBeforeAdd(xml: utils.XmlNode): void {
-            super.setupBeforeAdd(xml);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
 
-            let str: string;
-            str = xml.attributes.url;
-            if (str)
-                this.$url = str;
+            buffer.seek(beginPos, 5);
 
-            str = xml.attributes.align;
-            if (str)
-                this.$align = ParseAlignType(str);
+            this._url = buffer.readS();
+            let align = buffer.readByte();
+            this._align = AlignMap[align] || AlignType.Center;
+            this._verticalAlign = buffer.readByte();
+            this._fill = buffer.readByte();
+            this._shrinkOnly = buffer.readBool();
+            this._autoSize = buffer.readBool();
+            this._showErrorSign = buffer.readBool();
+            this._content.playing = buffer.readBool();
+            let frame = buffer.readInt();
+            if (this._content instanceof GMovieClip) {
+                this._content.frame = frame;
+            }
+            
 
-            str = xml.attributes.vAlign;
-            if (str)
-                this.$verticalAlign = ParseVertAlignType(str);
+            if (buffer.readBool()){
+                this.color = buffer.readColor();
+            }
+            // @TODO
+            this._content.fillMethod = buffer.readByte();
+            if (this._content.fillMethod != 0) {
+                this._content.fillOrigin = buffer.readByte();
+                this._content.fillClockwise = buffer.readBool();
+                this._content.fillAmount = buffer.readFloat();
+            }
 
-            str = xml.attributes.fill;
-            if (str)
-                this.$fill = ParseLoaderFillType(str);
-
-            this.$autoSize = xml.attributes.autoSize == "true";
-
-            str = xml.attributes.errorSign;
-            if (str)
-                this.$showErrorSign = str == "true";
-
-            this.$playing = xml.attributes.playing != "false";
-
-            str = xml.attributes.color;
-            if (str)
-                this.color = utils.StringUtil.convertFromHtmlColor(str);
-
-            if (this.$url)
+            if (this._url){
                 this.loadContent();
+            }
         }
     }
 }

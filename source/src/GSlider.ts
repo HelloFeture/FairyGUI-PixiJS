@@ -1,196 +1,190 @@
 namespace fgui {
 
     export class GSlider extends GComponent {
-        protected $max: number = 0;
-        protected $value: number = 0;
-        protected $titleType: ProgressTitleType;
+        private _min: number = 0;
+        protected _max: number = 0;
+        protected _value: number = 0;
+        protected _titleType: ProgressTitleType;
 
-        protected $titleObject: GTextField;
-        protected $aniObject: GObject;
-        protected $barObjectH: GObject;
-        protected $barObjectV: GObject;
+        protected _titleObject: GTextField;
+        protected _aniObject: GObject;
+        protected _barObjectH: GObject;
+        protected _barObjectV: GObject;
 
-        protected $barMaxWidth: number = 0;
-        protected $barMaxHeight: number = 0;
-        protected $barMaxWidthDelta: number = 0;
-        protected $barMaxHeightDelta: number = 0;
-        protected $gripObject: GObject;
+        protected _barMaxWidth: number = 0;
+        protected _barMaxHeight: number = 0;
+        protected _barMaxWidthDelta: number = 0;
+        protected _barMaxHeightDelta: number = 0;
+        protected _gripObject: GObject;
 
-        private $clickPos: PIXI.Point;
-        private $clickPercent: number;
+        private _clickPos: PIXI.Point;
+        private _clickPercent: number;
 
         public constructor() {
             super();
 
-            this.$titleType = ProgressTitleType.Percent;
-            this.$value = 50;
-            this.$max = 100;
-            this.$clickPos = new PIXI.Point();
+            this._titleType = ProgressTitleType.Percent;
+            this._value = 50;
+            this._max = 100;
+            this._clickPos = new PIXI.Point();
         }
 
         public get titleType(): ProgressTitleType {
-            return this.$titleType;
+            return this._titleType;
         }
 
         public set titleType(value: ProgressTitleType) {
-            this.$titleType = value;
+            this._titleType = value;
         }
 
         public get max(): number {
-            return this.$max;
+            return this._max;
         }
 
         public set max(value: number) {
-            if (this.$max != value) {
-                this.$max = value;
+            if (this._max != value) {
+                this._max = value;
                 this.update();
             }
         }
 
         public get value(): number {
-            return this.$value;
+            return this._value;
         }
 
         public set value(value: number) {
-            if (this.$value != value) {
-                this.$value = value;
+            if (this._value != value) {
+                this._value = value;
                 this.update();
             }
         }
 
         public update(): void {
-            let percent: number = Math.min(this.$value / this.$max, 1);
+            let percent: number = Math.min(this._value / this._max, 1);
             this.updateWidthPercent(percent);
         }
 
         private updateWidthPercent(percent: number): void {
-            if (this.$titleObject) {
-                switch (this.$titleType) {
+            if (this._titleObject) {
+                switch (this._titleType) {
                     case ProgressTitleType.Percent:
-                        this.$titleObject.text = `${Math.round(percent * 100)}%`;
+                        this._titleObject.text = `${Math.round(percent * 100)}%`;
                         break;
 
                     case ProgressTitleType.ValueAndMax:
-                        this.$titleObject.text = `${this.$value}/${this.$max}`;
+                        this._titleObject.text = `${this._value}/${this._max}`;
                         break;
 
                     case ProgressTitleType.Value:
-                        this.$titleObject.text = `${this.$value}`;
+                        this._titleObject.text = `${this._value}`;
                         break;
 
                     case ProgressTitleType.Max:
-                        this.$titleObject.text = `${this.$max}`;
+                        this._titleObject.text = `${this._max}`;
                         break;
                 }
             }
 
-            if (this.$barObjectH)
-                this.$barObjectH.width = (this.width - this.$barMaxWidthDelta) * percent;
-            if (this.$barObjectV)
-                this.$barObjectV.height = (this.height - this.$barMaxHeightDelta) * percent;
+            if (this._barObjectH)
+                this._barObjectH.width = (this.width - this._barMaxWidthDelta) * percent;
+            if (this._barObjectV)
+                this._barObjectV.height = (this.height - this._barMaxHeightDelta) * percent;
 
-            if (this.$aniObject instanceof GMovieClip)
-                (this.$aniObject as GMovieClip).frame = Math.round(percent * 100);
+            if (this._aniObject instanceof GMovieClip)
+                (this._aniObject as GMovieClip).frame = Math.round(percent * 100);
         }
 
         protected handleSizeChanged(): void {
             super.handleSizeChanged();
 
-            if (this.$barObjectH)
-                this.$barMaxWidth = this.width - this.$barMaxWidthDelta;
-            if (this.$barObjectV)
-                this.$barMaxHeight = this.height - this.$barMaxHeightDelta;
-            if (!this.$inProgressBuilding)
+            if (this._barObjectH)
+                this._barMaxWidth = this.width - this._barMaxWidthDelta;
+            if (this._barObjectV)
+                this._barMaxHeight = this.height - this._barMaxHeightDelta;
+            if (!this._inProgressBuilding)
                 this.update();
         }
 
-        public setupAfterAdd(xml: utils.XmlNode): void {
-            super.setupAfterAdd(xml);
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
-            xml = utils.XmlParser.getChildNodes(xml, "Slider")[0];
-            if (xml) {
-                this.$value = parseInt(xml.attributes.value);
-                this.$max = parseInt(xml.attributes.max);
+            if (!buffer.seek(beginPos, 6)) {
+                this.update();
+                return;
             }
+
+            if (buffer.readByte() != this.packageItem.objectType) {
+                this.update();
+                return;
+            }
+
+            this._value = buffer.readInt();
+            this._max = buffer.readInt();
+            if (buffer.version >= 2)
+                this._min = buffer.readInt();
 
             this.update();
         }
 
-        protected constructFromXML(xml: utils.XmlNode): void {
-            super.constructFromXML(xml);
+        // public setupAfterAdd(xml: utils.XmlNode): void {
+        //     super.setupAfterAdd(xml);
 
-            xml = utils.XmlParser.getChildNodes(xml, "Slider")[0];
+        //     xml = utils.XmlParser.getChildNodes(xml, "Slider")[0];
+        //     if (xml) {
+        //         this._value = parseInt(xml.attributes.value);
+        //         this._max = parseInt(xml.attributes.max);
+        //     }
 
-            let str: string;
-            if (xml) {
-                str = xml.attributes.titleType;
-                if (str)
-                    this.$titleType = ParseProgressTitleType(str);
-            }
+        //     this.update();
+        // }
 
-            this.$titleObject = this.getChild("title") as GTextField;
-            this.$barObjectH = this.getChild("bar");
-            this.$barObjectV = this.getChild("bar_v");
-            this.$aniObject = this.getChild("ani");
-            this.$gripObject = this.getChild("grip");
+       
 
-            if (this.$barObjectH) {
-                this.$barMaxWidth = this.$barObjectH.width;
-                this.$barMaxWidthDelta = this.width - this.$barMaxWidth;
-            }
-            if (this.$barObjectV) {
-                this.$barMaxHeight = this.$barObjectV.height;
-                this.$barMaxHeightDelta = this.height - this.$barMaxHeight;
-            }
-            if (this.$gripObject)
-                this.$gripObject.on(InteractiveEvents.Down, this.$gripMouseDown, this);
-        }
+        private _gripMouseDown(evt: PIXI.interaction.InteractionEvent): void {
+            this._clickPos = this.globalToLocal(evt.data.global.x, evt.data.global.y);
+            this._clickPercent = this._value / this._max;
 
-        private $gripMouseDown(evt: PIXI.interaction.InteractionEvent): void {
-            this.$clickPos = this.globalToLocal(evt.data.global.x, evt.data.global.y);
-            this.$clickPercent = this.$value / this.$max;
-
-            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this.$gripMouseMove, this);
-            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this.$gripMouseUp, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this._gripMouseMove, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this._gripMouseUp, this);
         }
 
         private static sSilderHelperPoint: PIXI.Point = new PIXI.Point();
 
-        private $gripMouseMove(evt: PIXI.interaction.InteractionEvent): void {
+        private _gripMouseMove(evt: PIXI.interaction.InteractionEvent): void {
             let pt: PIXI.Point = this.globalToLocal(evt.data.global.x, evt.data.global.y, GSlider.sSilderHelperPoint);
-            let deltaX: number = pt.x - this.$clickPos.x;
-            let deltaY: number = pt.y - this.$clickPos.y;
+            let deltaX: number = pt.x - this._clickPos.x;
+            let deltaY: number = pt.y - this._clickPos.y;
 
             let percent: number;
-            if (this.$barObjectH)
-                percent = this.$clickPercent + deltaX / this.$barMaxWidth;
+            if (this._barObjectH)
+                percent = this._clickPercent + deltaX / this._barMaxWidth;
             else
-                percent = this.$clickPercent + deltaY / this.$barMaxHeight;
+                percent = this._clickPercent + deltaY / this._barMaxHeight;
             if (percent > 1)
                 percent = 1;
             else if (percent < 0)
                 percent = 0;
-            let newValue: number = Math.round(this.$max * percent);
-            if (newValue != this.$value) {
-                this.$value = newValue;
+            let newValue: number = Math.round(this._max * percent);
+            if (newValue != this._value) {
+                this._value = newValue;
                 this.emit(StateChangeEvent.CHANGED, this);
             }
             this.updateWidthPercent(percent);
         }
 
-        private $gripMouseUp(evt: PIXI.interaction.InteractionEvent): void {
-            let percent: number = this.$value / this.$max;
+        private _gripMouseUp(evt: PIXI.interaction.InteractionEvent): void {
+            let percent: number = this._value / this._max;
             this.updateWidthPercent(percent);
 
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.$gripMouseMove, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$gripMouseUp, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._gripMouseMove, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._gripMouseUp, this);
         }
 
         public dispose():void {
-            if (this.$gripObject)
-                this.$gripObject.off(InteractiveEvents.Down, this.$gripMouseDown, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.$gripMouseMove, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$gripMouseUp, this);
+            if (this._gripObject)
+                this._gripObject.off(InteractiveEvents.Down, this._gripMouseDown, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._gripMouseMove, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._gripMouseUp, this);
             super.dispose();
         }
     }

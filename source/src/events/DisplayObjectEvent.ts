@@ -5,6 +5,7 @@ namespace fgui {
         SIZE_CHANGED = "__sizeChanged",
         VISIBLE_CHANGED = "__visibleChanged",
         SIZE_DELAY_CHANGE = "__sizeDelayChange",
-        MOUSE_WHEEL = "__mouseWheel"
+        MOUSE_WHEEL = "__mouseWheel",
+        GEAR_STOP = "gearStop",
     }
 }

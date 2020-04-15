@@ -1,4 +1,4 @@
-namespace PIXIExtend {
+namespace fgui.pixi_extend {
     
     export class InteractionManager extends PIXI.interaction.InteractionManager {
 

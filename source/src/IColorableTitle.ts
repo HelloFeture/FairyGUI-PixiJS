@@ -1,7 +1,13 @@
 namespace fgui {
 
+    /**
+     * 文本颜色，见 
+     * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fillStyle
+     */
+    export type TextColor = string | string[] | number | number[] | CanvasGradient | CanvasPattern;
+    
     export interface IColorableTitle {
-        titleColor: number;
+        titleColor: TextColor;
         fontSize: number;
     }
 

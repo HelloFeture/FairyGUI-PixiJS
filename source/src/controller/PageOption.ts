@@ -1,44 +1,44 @@
-namespace fgui.controller {
+namespace fgui {
     export class PageOption {
-        private $controller: Controller;
-        private $id: string;
+        private _controller: Controller;
+        private _id: string;
 
         public set controller(val: Controller) {
-            this.$controller = val;
+            this._controller = val;
         }
 
         public set name(pageName: string) {
-            this.$id = this.$controller.getPageIdByName(pageName);
+            this._id = this._controller.getPageIdByName(pageName);
         }
 
         public get name(): string {
-            if (this.$id)
-                return this.$controller.getPageNameById(this.$id);
+            if (this._id)
+                return this._controller.getPageNameById(this._id);
             else
                 return null;
         }
 
         public set index(pageIndex: number) {
-            this.$id = this.$controller.getPageId(pageIndex);
+            this._id = this._controller.getPageId(pageIndex);
         }
 
         public get index(): number {
-            if (this.$id)
-                return this.$controller.getPageIndexById(this.$id);
+            if (this._id)
+                return this._controller.getPageIndexById(this._id);
             else
                 return -1;
         }
 
         public clear(): void {
-            this.$id = null;
+            this._id = null;
         }
 
         public set id(id: string) {
-            this.$id = id;
+            this._id = id;
         }
 
         public get id(): string {
-            return this.$id;
+            return this._id;
         }
     }
 }

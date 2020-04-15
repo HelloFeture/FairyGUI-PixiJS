@@ -1,246 +1,360 @@
-namespace fgui.controller {
+namespace fgui {
 
+    /**
+     * 控制器
+     */
     export class Controller extends PIXI.utils.EventEmitter {
 
-        private $name: string;
-        private $selectedIndex: number = 0;
-        private $previousIndex: number = 0;
-        private $pageIds: string[];
-        private $pageNames: string[];
-        private $actions: Action[];
+     
+        private _selectedIndex: number = 0;
+        private _previousIndex: number = 0;
+        private _pageIds: string[];
+        private _pageNames: string[];
+        private _actions: Action[];
+        /** 控制器名称 */
+        public name: string;
+        /** 所属组件  */
+        public parent: GComponent;
+        public autoRadioGroupDepth: boolean;
+        public changing: boolean = false;
+  
 
-        /**@internal */
-        $parent: GComponent;
-        /**@internal */
-        $autoRadioGroupDepth: boolean;
-        /**@internal */
-        $updating: boolean;
-
-        private static $nextPageId: number = 0;
+        private static _nextPageId: number = 0;
 
         public constructor() {
             super();
-            this.$pageIds = [];
-            this.$pageNames = [];
-            this.$selectedIndex = -1;
-            this.$previousIndex = -1;
-        }
-
-        public get name(): string {
-            return this.$name;
-        }
-
-        public set name(value: string) {
-            this.$name = value;
-        }
-
-        public get parent(): GComponent {
-            return this.$parent;
+            this._pageIds = [];
+            this._pageNames = [];
+            this._selectedIndex = -1;
+            this._previousIndex = -1;
         }
 
         public get selectedIndex(): number {
-            return this.$selectedIndex;
+            return this._selectedIndex;
         }
 
         public set selectedIndex(value: number) {
-            if (this.$selectedIndex != value) {
-                if (value > this.$pageIds.length - 1)
-                    throw new Error(`index out of range: ${value}`);
+            if (this._selectedIndex != value) {
+                if (value > this._pageIds.length - 1) {
+                    throw "index out of bounds: " + value;
+                }
 
-                this.$updating = true;
-                this.$previousIndex = this.$selectedIndex;
-                this.$selectedIndex = value;
-                this.$parent.applyController(this);
+                this.changing = true;
+                this._previousIndex = this._selectedIndex;
+                this._selectedIndex = value;
+                this.parent.applyController(this);
 
                 this.emit(StateChangeEvent.CHANGED, this);
 
-                this.$updating = false;
+                this.changing = false;
             }
         }
 
         //same effect as selectedIndex but without event emitted
         public setSelectedIndex(value: number = 0): void {
-            if (this.$selectedIndex != value) {
-                if (value > this.$pageIds.length - 1)
-                    throw new Error(`index out of range: ${value}`);
+            if (this._selectedIndex != value) {
+                if (value > this._pageIds.length - 1) {
+                    throw "index out of bounds: " + value;
+                }
 
-                this.$updating = true;
-                this.$previousIndex = this.$selectedIndex;
-                this.$selectedIndex = value;
-                this.$parent.applyController(this);
-                this.$updating = false;
+                this.changing = true;
+                this._previousIndex = this._selectedIndex;
+                this._selectedIndex = value;
+                this.parent.applyController(this);
+                this.changing = false;
             }
         }
 
         public get previsousIndex(): number {
-            return this.$previousIndex;
+            return this._previousIndex;
         }
 
         public get selectedPage(): string {
-            if (this.$selectedIndex == -1)
+            if (this._selectedIndex == -1)
                 return null;
             else
-                return this.$pageNames[this.$selectedIndex];
+                return this._pageNames[this._selectedIndex];
         }
 
         public set selectedPage(val: string) {
-            this.selectedIndex = Math.max(0, this.$pageNames.indexOf(val));
+            this.selectedIndex = Math.max(0, this._pageNames.indexOf(val));
         }
 
         public setSelectedPage(value: string): void {
-            this.setSelectedIndex(Math.max(0, this.$pageNames.indexOf(value)));
+            this.setSelectedIndex(Math.max(0, this._pageNames.indexOf(value)));
         }
 
+        /** @readonly 上次页面名称 */
         public get previousPage(): string {
-            if (this.$previousIndex == -1)
+            if (this._previousIndex == -1)
                 return null;
             else
-                return this.$pageNames[this.$previousIndex];
+                return this._pageNames[this._previousIndex];
         }
 
+        /** @readonly page数量 */
         public get pageCount(): number {
-            return this.$pageIds.length;
+            return this._pageIds.length;
         }
 
+        /**
+         * 获取指定下标的夜名称
+         * @param index 下标
+         */
         public getPageName(index: number = 0): string {
-            return this.$pageNames[index];
+            return this._pageNames[index];
         }
 
+        /** 
+         * 增加页面到尾部
+         * @param name 页面名称
+         */
         public addPage(name: string = ""): void {
-            this.addPageAt(name, this.$pageIds.length);
+            this.addPageAt(name, this._pageIds.length);
         }
 
+        /** 
+         * 增加页面到指定下标
+         * @param name 页面名称
+         * @param index 下标，默认为0 
+         */
         public addPageAt(name: string, index: number = 0): void {
-            let nid: string = `${Controller.$nextPageId++}`;
-            if (index == this.$pageIds.length) {
-                this.$pageIds.push(nid);
-                this.$pageNames.push(name);
-            }
-            else {
-                this.$pageIds.splice(index, 0, nid);
-                this.$pageNames.splice(index, 0, name);
+            let nid: string = `${Controller._nextPageId++}`;
+            if (index == this._pageIds.length) {
+                this._pageIds.push(nid);
+                this._pageNames.push(name);
+            } else {
+                this._pageIds.splice(index, 0, nid);
+                this._pageNames.splice(index, 0, name);
             }
         }
 
+        /**
+         * 删除一个页面
+         * @param name 页面名称
+         */
         public removePage(name: string): void {
-            let i: number = this.$pageNames.indexOf(name);
+            let i: number = this._pageNames.indexOf(name);
             if (i != -1) {
-                this.$pageIds.splice(i, 1);
-                this.$pageNames.splice(i, 1);
-                if (this.$selectedIndex >= this.$pageIds.length)
-                    this.selectedIndex = this.$selectedIndex - 1;
+                this._pageIds.splice(i, 1);
+                this._pageNames.splice(i, 1);
+                if (this._selectedIndex >= this._pageIds.length)
+                    this.selectedIndex = this._selectedIndex - 1;
                 else
-                    this.$parent.applyController(this);
+                    this.parent.applyController(this);
             }
         }
 
+        /**
+         * 删除一个页面
+         * @param index 页下标
+         */
         public removePageAt(index: number = 0): void {
-            this.$pageIds.splice(index, 1);
-            this.$pageNames.splice(index, 1);
-            if (this.$selectedIndex >= this.$pageIds.length)
-                this.selectedIndex = this.$selectedIndex - 1;
+            this._pageIds.splice(index, 1);
+            this._pageNames.splice(index, 1);
+            if (this._selectedIndex >= this._pageIds.length)
+                this.selectedIndex = this._selectedIndex - 1;
             else
-                this.$parent.applyController(this);
+                this.parent.applyController(this);
         }
 
+        /**
+         * 删除所有页面
+         */
         public clearPages(): void {
-            this.$pageIds.length = 0;
-            this.$pageNames.length = 0;
-            if (this.$selectedIndex != -1)
+            this._pageIds.length = 0;
+            this._pageNames.length = 0;
+            if (this._selectedIndex != -1)
                 this.selectedIndex = -1;
             else
-                this.$parent.applyController(this);
+                this.parent.applyController(this);
         }
 
+        /**
+         * 是否包含某个页面
+         * @param aName 页面名称
+         */
         public hasPage(aName: string): boolean {
-            return this.$pageNames.indexOf(aName) >= 0;
+            return this._pageNames.indexOf(aName) >= 0;
         }
 
+        /**
+         * @hide 
+         * 根据页ID获取下标
+         * @param aId 
+         */
         public getPageIndexById(aId: string): number {
-            return this.$pageIds.indexOf(aId);
+            return this._pageIds.indexOf(aId);
         }
 
+        /**
+         * @hide 
+         * 根据页名称获取页ID
+         * @param aName 
+         */
         public getPageIdByName(aName: string): string {
-            let i: number = this.$pageNames.indexOf(aName);
+            let i: number = this._pageNames.indexOf(aName);
             if (i != -1)
-                return this.$pageIds[i];
+                return this._pageIds[i];
             else
                 return null;
         }
 
+        /**
+         * @hide 
+         * 根据页ID获取页名称
+         * @param aId 
+         */
         public getPageNameById(aId: string): string {
-            let i: number = this.$pageIds.indexOf(aId);
+            let i: number = this._pageIds.indexOf(aId);
             if (i != -1)
-                return this.$pageNames[i];
+                return this._pageNames[i];
             else
                 return null;
         }
 
+        /**
+         * @hide 
+         * 获取指定页的下标
+         * @param index 下表
+         */
         public getPageId(index: number = 0): string {
-            return this.$pageIds[index];
+            return this._pageIds[index];
         }
 
+        /**
+         * 获取选择的页ID
+         */
         public get selectedPageId(): string {
-            if (this.$selectedIndex == -1)
+            if (this._selectedIndex == -1)
                 return null;
             else
-                return this.$pageIds[this.$selectedIndex];
+                return this._pageIds[this._selectedIndex];
         }
 
+        /**
+         * 设置选择的页ID
+         */
         public set selectedPageId(val: string) {
-            this.selectedIndex = this.$pageIds.indexOf(val);
+            this.selectedIndex = this._pageIds.indexOf(val);
         }
 
         public set oppositePageId(val: string) {
-            let i: number = this.$pageIds.indexOf(val);
+            let i: number = this._pageIds.indexOf(val);
             if (i > 0)
                 this.selectedIndex = 0;
-            else if (this.$pageIds.length > 1)
+            else if (this._pageIds.length > 1)
                 this.selectedIndex = 1;
         }
 
         public get previousPageId(): string {
-            if (this.$previousIndex == -1)
+            if (this._previousIndex == -1)
                 return null;
             else
-                return this.$pageIds[this.$previousIndex];
+                return this._pageIds[this._previousIndex];
         }
 
         public executeActions(): void {
-            if (this.$actions && this.$actions.length > 0) {
-                this.$actions.forEach(a => {
+            if (this._actions && this._actions.length > 0) {
+                this._actions.forEach(a => {
                     a.execute(this, this.previousPageId, this.selectedPageId);
                 });
             }
         }
 
-        public setup(xml: utils.XmlNode): void {
-            this.$name = xml.attributes.name;
-            this.$autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
+        /**
+         * @param buffer 
+         */
+        public setup(buffer: ByteBuffer): void {
+            var beginPos: number = buffer.position;
+            buffer.seek(beginPos, 0);
+            // 名称 string
+            this.name = buffer.readS();
+            this.autoRadioGroupDepth = buffer.readBool();
+            // ?
+            buffer.seek(beginPos, 1);
+
+            var i: number;
+            var nextPos: number;
+            var cnt: number = buffer.readShort();
+            for (i = 0; i < cnt; i++) {
+                this._pageIds.push(buffer.readS());
+                this._pageNames.push(buffer.readS());
+            }
+
+            var homePageIndex: number = 0;
+            if (buffer.version >= 2) {
+                var homePageType: number = buffer.readByte();
+                switch (homePageType) {
+                    case 1:
+                        homePageIndex = buffer.readShort();
+                        break;
+
+                    case 2:
+                        homePageIndex = this._pageNames.indexOf(UIPackage.branch);
+                        if (homePageIndex == -1)
+                            homePageIndex = 0;
+                        break;
+
+                    case 3:
+                        homePageIndex = this._pageNames.indexOf(UIPackage.getVar(buffer.readS()));
+                        if (homePageIndex == -1)
+                            homePageIndex = 0;
+                        break;
+                }
+            }
+
+            buffer.seek(beginPos, 2);
+
+            cnt = buffer.readShort();
+            if (cnt > 0) {
+                this._actions = this._actions || [];
+                for (i = 0; i < cnt; i++) {
+                    nextPos = buffer.readShort();
+                    nextPos += buffer.position;
+
+                    var action: Action = Action.createAction(buffer.readByte());
+                    action.setup(buffer);
+                    this._actions.push(action);
+
+                    buffer.position = nextPos;
+                }
+            }
+
+            if (this.parent != null && this._pageIds.length > 0)
+                this._selectedIndex = homePageIndex;
+            else
+                this._selectedIndex = -1;
+        }
+
+
+        public setupv1(xml: utils.XmlNode): void {
+            this.name = xml.attributes.name;
+            this.autoRadioGroupDepth = xml.attributes.autoRadioGroupDepth == "true";
 
             let str: string = xml.attributes.pages;
             if (str) {
                 let arr = str.split(",");
                 let cnt = arr.length;
                 for (let i = 0; i < cnt; i += 2) {
-                    this.$pageIds.push(arr[i]);
-                    this.$pageNames.push(arr[i + 1]);
+                    this._pageIds.push(arr[i]);
+                    this._pageNames.push(arr[i + 1]);
                 }
             }
 
             let col: utils.XmlNode[] = xml.children;
             if (col.length > 0) {
-                this.$actions = this.$actions || [];
+                this._actions = this._actions || [];
                 col.forEach(cxml => {
                     let action: Action = Action.create(cxml.attributes.type);
-                    action.setup(cxml);
-                    this.$actions.push(action);
+                    action.setupv1(cxml);
+                    this._actions.push(action);
                 });
             }
 
             str = xml.attributes.transitions;
             if (str) {
-                this.$actions = this.$actions || [];
+                this._actions = this._actions || [];
                 let k: number, e: number;
                 str.split(",").forEach(str => {
                     if (str && str.length) {
@@ -250,24 +364,24 @@ namespace fgui.controller {
                         str = str.substring(0, k);
                         k = str.indexOf("-");
                         e = parseInt(str.substring(k + 1));
-                        if (e < this.$pageIds.length)
-                            pt.toPage = [this.$pageIds[e]];
+                        if (e < this._pageIds.length)
+                            pt.toPage = [this._pageIds[e]];
                         str = str.substring(0, k);
                         if (str != "*") {
                             e = parseInt(str);
-                            if (e < this.$pageIds.length)
-                                pt.fromPage = [this.$pageIds[e]];
+                            if (e < this._pageIds.length)
+                                pt.fromPage = [this._pageIds[e]];
                         }
                         pt.stopOnExit = true;
-                        this.$actions.push(pt);
+                        this._actions.push(pt);
                     }
                 });
             }
 
-            if (this.$parent && this.$pageIds.length > 0)
-                this.$selectedIndex = 0;
+            if (this.parent && this._pageIds.length > 0)
+                this._selectedIndex = 0;
             else
-                this.$selectedIndex = -1;
+                this._selectedIndex = -1;
         }
     }
 }

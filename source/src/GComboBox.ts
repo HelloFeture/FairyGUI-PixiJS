@@ -1,341 +1,433 @@
+/// <reference path="./IColorableTitle.ts" />
+
 namespace fgui {
 
     export class GComboBox extends GComponent {
 
-        protected $dropdown: GComponent;
+        public dropdown: GComponent;
 
-        protected $titleObject: GObject;
-        protected $iconObject: GObject;
-        protected $list: GList;
+        protected _titleObject: GObject;
+        protected _iconObject: GObject;
+        protected _list: GList;
 
-        private $items: string[];
-        private $values: string[];
-        private $icons: string[];
+        private _items: string[];
+        private _values: string[];
+        private _icons: string[];
 
-        private $visibleItemCount: number = 0;
-        private $itemsUpdated: boolean;
-        private $selectedIndex: number = 0;
-        private $buttonController: controller.Controller;
-        private $popupDir: PopupDirection = PopupDirection.Down;
+        private _visibleItemCount: number = 0;
+        private _itemsUpdated: boolean;
+        private _selectedIndex: number = 0;
+        private _buttonController: Controller;
+        private _popupDirection: PopupDirection = PopupDirection.Down;
+        private _selectionController: Controller;
 
-        private $over: boolean;
-        private $down: boolean;
+        private _over: boolean;
+        private _down: boolean;
 
         public constructor() {
             super();
-            this.$visibleItemCount = UIConfig.defaultComboBoxVisibleItemCount;
-            this.$itemsUpdated = true;
-            this.$selectedIndex = -1;
-            this.$items = [];
-            this.$values = [];
+            this._visibleItemCount = UIConfig.defaultComboBoxVisibleItemCount;
+            this._itemsUpdated = true;
+            this._selectedIndex = -1;
+            this._items = [];
+            this._values = [];
         }
 
         public get text(): string {
-            if (this.$titleObject)
-                return this.$titleObject.text;
+            if (this._titleObject)
+                return this._titleObject.text;
             else
                 return null;
         }
 
         public set text(value: string) {
-            if (this.$titleObject)
-                this.$titleObject.text = value;
+            if (this._titleObject)
+                this._titleObject.text = value;
             this.updateGear(GearType.Text);
         }
 
         public get icon(): string {
-            if (this.$iconObject)
-                return this.$iconObject.icon;
+            if (this._iconObject)
+                return this._iconObject.icon;
             else
                 return null;
         }
 
         public set icon(value: string) {
-            if (this.$iconObject)
-                this.$iconObject.icon = value;
+            if (this._iconObject)
+                this._iconObject.icon = value;
             this.updateGear(GearType.Icon);
         }
 
-        public get titleColor(): number {
-            if(fgui.isColorableTitle(this.$titleObject))
-                return this.$titleObject.titleColor;
+        public get titleColor(): TextColor {
+            if(fgui.isColorableTitle(this._titleObject))
+                return this._titleObject.titleColor;
             return 0;
         }
 
-        public set titleColor(value: number) {
-            if(fgui.isColorableTitle(this.$titleObject))
-                this.$titleObject.titleColor = value;
+        public set titleColor(value: TextColor) {
+            if(fgui.isColorableTitle(this._titleObject))
+                this._titleObject.titleColor = value;
         }
 
         public get visibleItemCount(): number {
-            return this.$visibleItemCount;
+            return this._visibleItemCount;
         }
 
         public set visibleItemCount(value: number) {
-            this.$visibleItemCount = value;
+            this._visibleItemCount = value;
         }
 
         public get popupDirection(): PopupDirection {
-            return this.$popupDir;
+            return this._popupDirection;
         }
 
         public set popupDirection(value: PopupDirection) {
-            this.$popupDir = value;
+            this._popupDirection = value;
         }
 
         public get items(): Array<string> {
-            return this.$items;
+            return this._items;
         }
 
         public set items(value: string[]) {
             if (!value)
-                this.$items.length = 0;
+                this._items.length = 0;
             else
-                this.$items = value.concat();
-            if (this.$items.length > 0) {
-                if (this.$selectedIndex >= this.$items.length)
-                    this.$selectedIndex = this.$items.length - 1;
-                else if (this.$selectedIndex == -1)
-                    this.$selectedIndex = 0;
+                this._items = value.concat();
+            if (this._items.length > 0) {
+                if (this._selectedIndex >= this._items.length)
+                    this._selectedIndex = this._items.length - 1;
+                else if (this._selectedIndex == -1)
+                    this._selectedIndex = 0;
 
-                this.text = this.$items[this.$selectedIndex];
-                if (this.$icons != null && this.$selectedIndex < this.$icons.length)
-                    this.icon = this.$icons[this.$selectedIndex];
+                this.text = this._items[this._selectedIndex];
+                if (this._icons != null && this._selectedIndex < this._icons.length)
+                    this.icon = this._icons[this._selectedIndex];
             }
             else {
                 this.text = "";
-                if (this.$icons != null)
+                if (this._icons != null)
                     this.icon = null;
-                this.$selectedIndex = -1;
+                this._selectedIndex = -1;
             }
-            this.$itemsUpdated = true;
+            this._itemsUpdated = true;
         }
 
         public get icons(): string[] {
-            return this.$icons;
+            return this._icons;
         }
 
         public set icons(value: string[]) {
-            this.$icons = value;
-            if (this.$icons != null && this.$selectedIndex != -1 && this.$selectedIndex < this.$icons.length)
-                this.icon = this.$icons[this.$selectedIndex];
+            this._icons = value;
+            if (this._icons != null && this._selectedIndex != -1 && this._selectedIndex < this._icons.length)
+                this.icon = this._icons[this._selectedIndex];
         }
 
         public get values(): string[] {
-            return this.$values;
+            return this._values;
         }
 
         public set values(value: string[]) {
             if (!value)
-                this.$values.length = 0;
+                this._values.length = 0;
             else
-                this.$values = value.concat();
+                this._values = value.concat();
         }
 
         public get selectedIndex(): number {
-            return this.$selectedIndex;
+            return this._selectedIndex;
         }
 
         public set selectedIndex(val: number) {
-            if (this.$selectedIndex == val)
+            if (this._selectedIndex == val)
                 return;
 
-            this.$selectedIndex = val;
-            if (this.selectedIndex >= 0 && this.selectedIndex < this.$items.length) {
-                this.text = this.$items[this.$selectedIndex];
-                if (this.$icons != null && this.$selectedIndex < this.$icons.length)
-                    this.icon = this.$icons[this.$selectedIndex];
+            this._selectedIndex = val;
+            if (this.selectedIndex >= 0 && this.selectedIndex < this._items.length) {
+                this.text = this._items[this._selectedIndex];
+                if (this._icons != null && this._selectedIndex < this._icons.length)
+                    this.icon = this._icons[this._selectedIndex];
             }
             else {
                 this.text = "";
-                if (this.$icons != null)
+                if (this._icons != null)
                     this.icon = null;
             }
         }
 
         public get value(): string {
-            return this.$values[this.$selectedIndex];
+            return this._values[this._selectedIndex];
         }
 
         public set value(val: string) {
-            this.selectedIndex = this.$values.indexOf(val);
+            this.selectedIndex = this._values.indexOf(val);
         }
+
+        public get selectionController(): Controller {
+            return this._selectionController;
+        }
+
+        public set selectionController(value: Controller) {
+            this._selectionController = value;
+        }
+
+        public getTextField(): GTextField {
+            if (this._titleObject instanceof GTextField)
+                return (<GTextField>this._titleObject);
+            else if (this._titleObject instanceof GLabel)
+                return (<GLabel>this._titleObject).getTextField();
+            else if (this._titleObject instanceof GButton)
+                return (<GButton>this._titleObject).getTextField();
+            else
+                return null;
+        }
+
+
 
         protected setState(val: string): void {
-            if (this.$buttonController)
-                this.$buttonController.selectedPage = val;
+            if (this._buttonController){
+                this._buttonController.selectedPage = val;
+            }
         }
 
-        protected constructFromXML(xml: utils.XmlNode): void {
-            super.constructFromXML(xml);
+        public getProp(index: number): any {
+            switch (index) {
+                case ObjectPropID.Color:
+                    return this.titleColor;
+                case ObjectPropID.OutlineColor:
+                    {
+                        var tf: GTextField = this.getTextField();
+                        if (tf)
+                            return tf.strokeColor;
+                        else
+                            return 0;
+                    }
+                case ObjectPropID.FontSize:
+                    {
+                        tf = this.getTextField();
+                        if (tf)
+                            return tf.fontSize;
+                        else
+                            return 0;
+                    }
+                default:
+                    return super.getProp(index);
+            }
+        }
 
-            xml = utils.XmlParser.getChildNodes(xml, "ComboBox")[0];
+        public setProp(index: number, value: any): void {
+            switch (index) {
+                case ObjectPropID.Color:
+                    this.titleColor = value;
+                    break;
+                case ObjectPropID.OutlineColor:
+                    {
+                        var tf: GTextField = this.getTextField();
+                        if (tf)
+                            tf.strokeColor = value;
+                    }
+                    break;
+                case ObjectPropID.FontSize:
+                    {
+                        tf = this.getTextField();
+                        if (tf)
+                            tf.fontSize = value;
+                    }
+                    break;
+                default:
+                    super.setProp(index, value);
+                    break;
+            }
+        }
+        
+        protected constructExtension(buffer: ByteBuffer): void {
+            var str: string;
 
-            let str: string;
+            this._buttonController = this.getController("button");
+            this._titleObject = this.getChild("title");
+            this._iconObject = this.getChild("icon");
 
-            this.$buttonController = this.getController("button");
-            this.$titleObject = this.getChild("title");
-            this.$iconObject = this.getChild("icon");
-
-            str = xml.attributes.dropdown;
+            str = buffer.readS();
             if (str) {
-                this.$dropdown = UIPackage.createObjectFromURL(str) as GComponent;
-                if (!this.$dropdown)
-                    throw new Error("the 'dropdown' is not specified, it must be a component definied in the package pool");
+                this.dropdown = <GComponent><any>(UIPackage.createObjectFromURL(str));
+                if (!this.dropdown) {
+                    console.error("下拉框必须为元件");
+                    return;
+                }
+                this.dropdown.name = "this.dropdown";
+                this._list = this.dropdown.getChild("list").asList;
+                if (this._list == null) {
+                    console.error(this.resourceURL + ": 下拉框的弹出元件里必须包含名为list的列表");
+                    return;
+                }
+                this._list.on(ListEvent.ItemClick, this.__clickItem, this);
 
-                this.$dropdown.name = "this.dropdown";
-                this.$list = this.$dropdown.getChild("list") as GList;
-                if (this.$list == null)
-                    throw new Error(`${this.resourceURL}: the dropdown component must have a GList child and named 'list'.`);
+                this._list.addRelation(this.dropdown, RelationType.Width);
+                this._list.removeRelation(this.dropdown, RelationType.Height);
 
-                this.$list.on(ListEvent.ItemClick, this.$clickItem, this);
+                this.dropdown.addRelation(this._list, RelationType.Height);
+                this.dropdown.removeRelation(this._list, RelationType.Width);
 
-                this.$list.addRelation(this.$dropdown, RelationType.Width);
-                this.$list.removeRelation(this.$dropdown, RelationType.Height);
-
-                this.$dropdown.addRelation(this.$list, RelationType.Height);
-                this.$dropdown.removeRelation(this.$list, RelationType.Width);
-
-                this.$dropdown.on("removed", this.$popupWinClosed, this);
+                this.dropdown.displayObject.on("removed", this.__popupWinClosed, this);
             }
-            
+
             if (!PIXI.utils.isMobile.any) {
-                this.on(InteractiveEvents.Over, this.$rollover, this);
-                this.on(InteractiveEvents.Out, this.$rollout, this);
+                this.on(InteractiveEvents.Over, this.__rollover, this);
+                this.on(InteractiveEvents.Out, this.__rollout, this);
             }
 
-            this.on(InteractiveEvents.Down, this.$mousedown, this);
+            this.on(InteractiveEvents.Down, this.__mousedown, this);
         }
+
+        
 
         public dispose(): void {
             GTimer.inst.remove(this.delayedClickItem, this);
-            this.$list.off(ListEvent.ItemClick, this.$clickItem, this);
-            this.$dropdown.off("removed", this.$popupWinClosed, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$mouseup, this);
-            this.$popupWinClosed(null);
-            if (this.$dropdown) {
-                this.$dropdown.dispose();
-                this.$dropdown = null;
+            this._list.off(ListEvent.ItemClick, this.__clickItem, this);
+            this.dropdown.off("removed", this.__popupWinClosed, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._mouseup, this);
+            this.__popupWinClosed(null);
+            if (this.dropdown) {
+                this.dropdown.dispose();
+                this.dropdown = null;
             }
             super.dispose();
         }
 
-        public setupAfterAdd(xml: utils.XmlNode): void {
-            super.setupAfterAdd(xml);
+        // FIXIME
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_afterAdd(buffer, beginPos);
 
-            xml = utils.XmlParser.getChildNodes(xml, "ComboBox")[0];
-            if (xml) {
-                let str: string;
-                str = xml.attributes.titleColor;
-                if (str)
-                    this.titleColor = utils.StringUtil.convertFromHtmlColor(str);
-                str = xml.attributes.visibleItemCount;
-                if (str)
-                    this.$visibleItemCount = parseInt(str);
+            if (!buffer.seek(beginPos, 6))
+                return;
 
-                let col: utils.XmlNode[] = xml.children;
-                if (col) {
-                    col.forEach((x: utils.XmlNode, i: number) => {
-                        if (x.nodeName == "item") {
-                            this.$items.push(x.attributes.title);
-                            this.$values.push(x.attributes.value);
-                            str = x.attributes.icon;
-                            if (str) {
-                                if (!this.$icons)
-                                    this.$icons = new Array<string>(length);
-                                this.$icons[i] = str;
-                            }
-                        }
-                    });
+            if (buffer.readByte() != this.packageItem.objectType)
+                return;
+
+            var i: number;
+            var iv: number;
+            var nextPos: number;
+            var str: string;
+            var itemCount: number = buffer.readShort();
+            for (i = 0; i < itemCount; i++) {
+                nextPos = buffer.readShort();
+                nextPos += buffer.position;
+
+                this._items[i] = buffer.readS();
+                this._values[i] = buffer.readS();
+                str = buffer.readS();
+                if (str != null) {
+                    if (this._icons == null)
+                        this._icons = new Array<string>();
+                    this._icons[i] = str;
                 }
 
-                str = xml.attributes.title;
-                if (str) {
-                    this.text = str;
-                    this.$selectedIndex = this.$items.indexOf(str);
-                }
-                else if (this.$items.length > 0) {
-                    this.$selectedIndex = 0;
-                    this.text = this.$items[0];
-                }
-                else
-                    this.$selectedIndex = -1;
-
-                str = xml.attributes.icon;
-                if (str)
-                    this.icon = str;
-
-                str = xml.attributes.direction;
-                if (str) {
-                    if (str == "up")
-                        this.$popupDir = PopupDirection.Up;
-                    else if (str == "auto")
-                        this.$popupDir = PopupDirection.Auto;
-                }
+                buffer.position = nextPos;
             }
+
+            str = buffer.readS();
+            if (str != null) {
+                this.text = str;
+                this._selectedIndex = this._items.indexOf(str);
+            }
+            else if (this._items.length > 0) {
+                this._selectedIndex = 0;
+                this.text = this._items[0];
+            }
+            else
+                this._selectedIndex = -1;
+
+            str = buffer.readS();
+            if (str != null)
+                this.icon = str;
+
+            if (buffer.readBool())
+                this.titleColor = buffer.readColor();
+            iv = buffer.readInt();
+            if (iv > 0)
+                this._visibleItemCount = iv;
+            this._popupDirection = buffer.readByte();
+
+            iv = buffer.readShort();
+            if (iv >= 0)
+                this._selectionController = this.parent.getControllerAt(iv);
         }
 
         protected showDropdown(): void {
-            if (this.$itemsUpdated) {
-                this.$itemsUpdated = false;
+            if (this._itemsUpdated) {
+                this._itemsUpdated = false;
 
-                this.$list.removeChildrenToPool();
-                this.$items.forEach((o, i) => {
-                    let item: GObject = this.$list.addItemFromPool();
-                    item.name = i < this.$values.length ? this.$values[i] : "";
-                    item.text = this.$items[i];
-                    item.icon = (this.$icons != null && i < this.$icons.length) ? this.$icons[i] : null;
+                this._list.removeChildrenToPool();
+                this._items.forEach((o, i) => {
+                    let item: GObject = this._list.addItemFromPool();
+                    item.name = i < this._values.length ? this._values[i] : "";
+                    item.text = this._items[i];
+                    item.icon = (this._icons != null && i < this._icons.length) ? this._icons[i] : null;
                 }, this);
-                this.$list.resizeToFit(this.$visibleItemCount);
+                this._list.resizeToFit(this._visibleItemCount);
             }
-            this.$list.selectedIndex = -1;
-            this.$dropdown.width = this.width;
+            this._list.selectedIndex = -1;
+            this.dropdown.width = this.width;
 
-            this.root.togglePopup(this.$dropdown, this, this.$popupDir);
-            if (this.$dropdown.parent)
+            this.root.togglePopup(this.dropdown, this, this._popupDirection);
+            if (this.dropdown.parent)
                 this.setState(GButton.DOWN);
         }
 
-        private $popupWinClosed(evt: PIXI.interaction.InteractionEvent): void {
-            if (this.$over)
+        private __popupWinClosed(evt: PIXI.interaction.InteractionEvent): void {
+            if (this._over)
                 this.setState(GButton.OVER);
             else
                 this.setState(GButton.UP);
         }
 
-        private $clickItem(evt:PIXI.interaction.InteractionEvent, item: GObject): void {
-            GTimer.inst.add(100, 1, this.delayedClickItem, this, this.$list.getChildIndex(item))
+        private __clickItem(evt:PIXI.interaction.InteractionEvent, item: GObject): void {
+            GTimer.inst.add(100, 1, this.__clickItem2, this, this._list.getChildIndex(item));
         }
 
-        private delayedClickItem(index: number): void {
-            if (this.$dropdown.parent instanceof GRoot)
-                this.$dropdown.parent.hidePopup();
+        private __clickItem2(index: number): void {
+            if (this.dropdown.parent instanceof GRoot)
+                (<GRoot><any>(this.dropdown.parent)).hidePopup();
 
-            this.$selectedIndex = index;
-            if (this.$selectedIndex >= 0)
-                this.text = this.$items[this.$selectedIndex];
+            this._selectedIndex = -1;
+            this.selectedIndex = index;
+            if (this._selectedIndex >= 0)
+                this.text = this._items[this._selectedIndex];
             else
                 this.text = "";
             this.emit(StateChangeEvent.CHANGED, this);
         }
 
-        private $rollover(evt: PIXI.interaction.InteractionEvent): void {
-            this.$over = true;
-            if (this.$down || this.$dropdown && this.$dropdown.parent)
+        private delayedClickItem(index: number): void {
+            if (this.dropdown.parent instanceof GRoot)
+                this.dropdown.parent.hidePopup();
+
+            this._selectedIndex = index;
+            if (this._selectedIndex >= 0)
+                this.text = this._items[this._selectedIndex];
+            else
+                this.text = "";
+            this.emit(StateChangeEvent.CHANGED, this);
+        }
+
+        private __rollover(evt: PIXI.interaction.InteractionEvent): void {
+            this._over = true;
+            if (this._down || this.dropdown && this.dropdown.parent)
                 return;
 
             this.setState(GButton.OVER);
         }
 
-        private $rollout(evt: PIXI.interaction.InteractionEvent): void {
-            this.$over = false;
-            if (this.$down || this.$dropdown && this.$dropdown.parent)
+        private __rollout(evt: PIXI.interaction.InteractionEvent): void {
+            this._over = false;
+            if (this._down || this.dropdown && this.dropdown.parent)
                 return;
 
             this.setState(GButton.UP);
         }
 
-        private $mousedown(evt: PIXI.interaction.InteractionEvent): void {
+        private __mousedown(evt: PIXI.interaction.InteractionEvent): void {
             evt.stopPropagation();
 
             //if(evt.currentTarget instanceof PIXI.TextInput)   //TODO: TextInput
@@ -343,21 +435,21 @@ namespace fgui {
 
             GRoot.inst.checkPopups(evt.target);
 
-            this.$down = true;
-            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this.$mouseup, this);
+            this._down = true;
+            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this._mouseup, this);
             
-            if (this.$dropdown)
+            if (this.dropdown)
                 this.showDropdown();
         }
 
-        private $mouseup(evt: PIXI.interaction.InteractionEvent): void {
-            if (this.$down) {
-                this.$down = false;
+        private _mouseup(evt: PIXI.interaction.InteractionEvent): void {
+            if (this._down) {
+                this._down = false;
 
-                GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$mouseup, this);
+                GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._mouseup, this);
                 
-                if (this.$dropdown && !this.$dropdown.parent) {
-                    if (this.$over)
+                if (this.dropdown && !this.dropdown.parent) {
+                    if (this._over)
                         this.setState(GButton.OVER);
                     else
                         this.setState(GButton.UP);

@@ -1,4 +1,9 @@
-/// <reference types="pixi.js" />
+declare namespace fgui {
+    class Debug {
+        static enableDebug: boolean;
+        static log(...args: any[]): void;
+    }
+}
 declare namespace fgui {
     type IndexedObject = {
         [key: string]: any;
@@ -16,6 +21,8 @@ declare namespace fgui {
         static RightUp: string;
         static RightClick: string;
         static RightUpOutside: string;
+        static TouchBegin: string;
+        static TouchEnd: string;
     }
     const enum GearType {
         Display = 0,
@@ -45,87 +52,6 @@ declare namespace fgui {
         DisableInertia = 256,
         DisableScissorRect = 512
     }
-    const enum PopupDirection {
-        Auto = 0,
-        Down = 1,
-        Up = 2
-    }
-    const enum ScrollBarDisplayType {
-        Default = 0,
-        Visible = 1,
-        Auto = 2,
-        Hidden = 3
-    }
-    const enum OverflowType {
-        Visible = 0,
-        Hidden = 1,
-        Scroll = 2,
-        Scale = 3,
-        ScaleFree = 4
-    }
-    const enum ScrollType {
-        Horizontal = 0,
-        Vertical = 1,
-        Both = 2
-    }
-    const enum ButtonMode {
-        Common = 0,
-        Check = 1,
-        Radio = 2
-    }
-    const enum AutoSizeType {
-        None = 0,
-        Both = 1,
-        Height = 2,
-        Shrink = 3
-    }
-    const enum AlignType {
-        Left = "left",
-        Center = "center",
-        Right = "right"
-    }
-    const enum VertAlignType {
-        Top = 0,
-        Middle = 1,
-        Bottom = 2
-    }
-    const enum LoaderFillType {
-        None = 0,
-        Scale = 1,
-        ScaleMatchHeight = 2,
-        ScaleMatchWidth = 3,
-        ScaleFree = 4,
-        ScaleNoBorder = 5
-    }
-    const enum ListLayoutType {
-        SingleColumn = 0,
-        SingleRow = 1,
-        FlowHorizontal = 2,
-        FlowVertical = 3,
-        Pagination = 4
-    }
-    const enum ListSelectionMode {
-        Single = 0,
-        Multiple = 1,
-        Multiple_SingleClick = 2,
-        None = 3
-    }
-    const enum PackageItemType {
-        Image = 0,
-        Swf = 1,
-        MovieClip = 2,
-        Sound = 3,
-        Component = 4,
-        Misc = 5,
-        Font = 6,
-        Atlas = 7
-    }
-    const enum ProgressTitleType {
-        Percent = 0,
-        ValueAndMax = 1,
-        Value = 2,
-        Max = 3
-    }
     const enum Keys {
         Up = 38,
         Down = 40,
@@ -134,12 +60,6 @@ declare namespace fgui {
         Shift = 16,
         Alt = 18,
         Ctrl = 17
-    }
-    const enum FlipType {
-        None = 0,
-        Horizontal = 1,
-        Vertical = 2,
-        Both = 3
     }
     const enum TextureFillMode {
         NONE = 0,
@@ -163,7 +83,161 @@ declare namespace fgui {
         CW = 0,
         CCW = 1
     }
-    const enum RelationType {
+}
+declare namespace fgui {
+    /**
+     * @description
+     * -en
+     * decompressor for uipackage.fgui, for example use zlib to compress :
+     * let compressor = new Zlib.
+     * -zh
+     * 解压函数，如果在发布fairygui项目的时候选择了二进制压缩，则需要提供解压函数，
+     * 使用 ZLib 解压示例如下：
+     *
+     */
+    type Decompressor = (rawData: ArrayBuffer) => Uint8Array;
+    interface IDecompressObject {
+        decompress(rawData: ArrayBuffer): Uint8Array;
+    }
+    interface IDecompressHandler {
+        (rawData: ArrayBuffer): Uint8Array;
+    }
+    type DecompressAdapter = IDecompressObject | IDecompressHandler;
+    /**
+     * AssetLoader
+     */
+    interface IAssetLoader {
+    }
+    interface IAssetManagerObject {
+        getAsset<T>(key: string): T;
+    }
+    interface IAssetManagerHandler {
+        <T>(key: string): T;
+    }
+    type AssetManagerAdapter = IAssetManagerObject | IAssetManagerHandler;
+}
+import fairygui = fgui;
+declare module fgui {
+    enum ButtonMode {
+        Common = 0,
+        Check = 1,
+        Radio = 2
+    }
+    enum AutoSizeType {
+        None = 0,
+        Both = 1,
+        Height = 2,
+        Shrink = 3
+    }
+    enum AlignType {
+        Left = "left",
+        Center = "center",
+        Right = "right"
+    }
+    const AlignMap: AlignType[];
+    enum VertAlignType {
+        Top = 0,
+        Middle = 1,
+        Bottom = 2
+    }
+    enum LoaderFillType {
+        None = 0,
+        Scale = 1,
+        ScaleMatchHeight = 2,
+        ScaleMatchWidth = 3,
+        ScaleFree = 4,
+        ScaleNoBorder = 5
+    }
+    enum ListLayoutType {
+        SingleColumn = 0,
+        SingleRow = 1,
+        FlowHorizontal = 2,
+        FlowVertical = 3,
+        Pagination = 4
+    }
+    enum ListSelectionMode {
+        Single = 0,
+        Multiple = 1,
+        Multiple_SingleClick = 2,
+        None = 3
+    }
+    enum OverflowType {
+        Visible = 0,
+        Hidden = 1,
+        Scroll = 2,
+        Scale = 3,
+        ScaleFree = 4
+    }
+    enum PackageItemType {
+        Image = 0,
+        MovieClip = 1,
+        Sound = 2,
+        Component = 3,
+        Atlas = 4,
+        Font = 5,
+        Swf = 6,
+        Misc = 7,
+        Unknown = 8
+    }
+    enum ObjectType {
+        Image = 0,
+        MovieClip = 1,
+        Swf = 2,
+        Graph = 3,
+        Loader = 4,
+        Group = 5,
+        Text = 6,
+        RichText = 7,
+        InputText = 8,
+        Component = 9,
+        List = 10,
+        Label = 11,
+        Button = 12,
+        ComboBox = 13,
+        ProgressBar = 14,
+        Slider = 15,
+        ScrollBar = 16,
+        Tree = 17
+    }
+    enum ProgressTitleType {
+        Percent = 0,
+        ValueAndMax = 1,
+        Value = 2,
+        Max = 3
+    }
+    enum ScrollBarDisplayType {
+        Default = 0,
+        Visible = 1,
+        Auto = 2,
+        Hidden = 3
+    }
+    enum ScrollType {
+        Horizontal = 0,
+        Vertical = 1,
+        Both = 2
+    }
+    enum FlipType {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Both = 3
+    }
+    enum ChildrenRenderOrder {
+        Ascent = 0,
+        Descent = 1,
+        Arch = 2
+    }
+    enum GroupLayoutType {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2
+    }
+    enum PopupDirection {
+        Auto = 0,
+        Up = 1,
+        Down = 2
+    }
+    enum RelationType {
         Left_Left = 0,
         Left_Center = 1,
         Left_Right = 2,
@@ -190,94 +264,132 @@ declare namespace fgui {
         BottomExt_Bottom = 23,
         Size = 24
     }
-    const enum ListChildrenRenderOrder {
-        Ascent = 0,
-        Descent = 1,
-        Arch = 2
+    enum FillMethod {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Radial90 = 3,
+        Radial180 = 4,
+        Radial360 = 5
     }
-    function ParseOverflowType(value: string): OverflowType;
-    function ParseScrollType(value: string): ScrollType;
-    function ParseLoaderFillType(value: string): LoaderFillType;
-    function ParseListLayoutType(value: string): ListLayoutType;
-    function ParseListSelectionMode(value: string): ListSelectionMode;
-    function ParsePackageItemType(value: string): PackageItemType;
-    function ParseProgressTitleType(value: string): ProgressTitleType;
-    function ParseScrollBarDisplayType(value: string): ScrollBarDisplayType;
-    function ParseFlipType(value: string): FlipType;
-    function ParseButtonMode(value: string): ButtonMode;
-    function ParseAutoSizeType(value: string): AutoSizeType;
-    function ParseAlignType(value: string): AlignType;
-    function ParseVertAlignType(value: string): VertAlignType;
-    function ParseListChildrenRenderOrder(value: string): ListChildrenRenderOrder;
-    function ParseEaseType(name: string): (t: number) => number;
+    enum FillOrigin {
+        Top = 0,
+        Bottom = 1,
+        Left = 2,
+        Right = 3,
+        TopLeft = 0,
+        TopRight = 1,
+        BottomLeft = 2,
+        BottomRight = 3
+    }
+    enum FillOrigin90 {
+        TopLeft = 0,
+        TopRight = 1,
+        BottomLeft = 2,
+        BottomRight = 3
+    }
+    enum ObjectPropID {
+        Text = 0,
+        Icon = 1,
+        Color = 2,
+        OutlineColor = 3,
+        Playing = 4,
+        Frame = 5,
+        DeltaTime = 6,
+        TimeScale = 7,
+        FontSize = 8,
+        Selected = 9
+    }
 }
 declare namespace fgui {
+    const enum DisplayObjectEvent {
+        XY_CHANGED = "__xyChanged",
+        SIZE_CHANGED = "__sizeChanged",
+        VISIBLE_CHANGED = "__visibleChanged",
+        SIZE_DELAY_CHANGE = "__sizeDelayChange",
+        MOUSE_WHEEL = "__mouseWheel",
+        GEAR_STOP = "gearStop"
+    }
+}
+declare namespace fgui {
+    interface IGObjectInteractionEvent extends PIXI.interaction.InteractionEvent {
+        gObject: GObject;
+    }
     /**
-     * @description
-     * -en
-     * decompressor for uipackage.fgui, for example use zlib to compress :
-     * let compressor = new Zlib.
-     * -zh
-     * 解压函数，如果在发布fairygui项目的时候选择了二进制压缩，则需要提供解压函数，
-     * 使用 ZLib 解压示例如下：
-     *
+     * UI 事件代理
      */
-    type Decompressor = (rawData: ArrayBuffer) => Uint8Array;
+    class UIEventProxy extends PIXI.utils.EventEmitter {
+        protected _displayObject: PIXI.DisplayObject;
+        private _proxys;
+        constructor();
+        on(type: string, listener: Function, thisArg: any): this;
+        once(type: string, listener: Function, thisArg: any): this;
+        off(type: string, listener: Function, thisArg: any): this;
+        addListener(type: string, listener: Function, thisArg: any): this;
+        removeListener(type: string, listener: Function, thisArg: any): this;
+        removeAllListeners(type: string): this;
+    }
 }
-import fairygui = fgui;
 declare namespace fgui {
-    class GObject {
+    class GObject extends UIEventProxy {
         data: any;
-        protected $x: number;
-        protected $y: number;
-        protected $width: number;
-        protected $height: number;
-        protected $alpha: number;
-        protected $rotation: number;
-        protected $visible: boolean;
-        protected $touchable: boolean;
-        protected $grayed: boolean;
-        protected $draggable: boolean;
-        protected $scaleX: number;
-        protected $scaleY: number;
-        protected $skewX: number;
-        protected $skewY: number;
-        protected $pivot: PIXI.Point;
-        protected $pivotAsAnchor: boolean;
-        protected $pivotOffset: PIXI.Point;
-        protected $sortingOrder: number;
-        protected $internalVisible: boolean;
-        protected $focusable: boolean;
-        protected $tooltips: string;
-        protected $pixelSnapping: boolean;
-        protected $relations: Relations;
-        protected $group: GGroup;
-        protected $gears: GearBase<GObject>[];
-        protected $displayObject: PIXI.DisplayObject;
-        protected $dragBounds: PIXI.Rectangle;
-        protected $handlingController: boolean;
-        private static $colorHelper;
-        protected $colorFilter: PIXI.filters.ColorMatrixFilter;
-        protected $lastColorComponents: number[];
-        protected $parent: GComponent;
-        /**@internal */
-        $inProgressBuilding: boolean;
-        /**@internal */
-        $rawWidth: number;
-        /**@internal */
-        $rawHeight: number;
-        /**@internal */
-        $gearLocked: boolean;
-        /**@internal */
-        $initWidth: number;
-        /**@internal */
-        $initHeight: number;
-        protected $sourceWidth: number;
-        protected $sourceHeight: number;
-        protected $id: string;
-        protected $name: string;
         packageItem: PackageItem;
-        private static gInstanceCounter;
+        static draggingObject: GObject;
+        protected _x: number;
+        protected _y: number;
+        protected _alpha: number;
+        protected _rotation: number;
+        protected _visible: boolean;
+        protected _touchable: boolean;
+        protected _grayed: boolean;
+        protected _draggable: boolean;
+        protected _scaleX: number;
+        protected _scaleY: number;
+        protected _skewX: number;
+        protected _skewY: number;
+        protected _pivot: PIXI.Point;
+        protected _pivotAsAnchor: boolean;
+        protected _pivotOffset: PIXI.Point;
+        protected _sortingOrder: number;
+        protected _internalVisible: boolean;
+        protected _handlingController: boolean;
+        protected _focusable: boolean;
+        protected _tooltips: string;
+        protected _pixelSnapping: boolean;
+        protected _disposed: boolean;
+        protected _relations: Relations;
+        protected _group: GGroup;
+        protected _gears: GearBase<GObject>[];
+        protected _dragBounds: PIXI.Rectangle;
+        private _colorFilter;
+        sourceWidth: number;
+        sourceHeight: number;
+        initWidth: number;
+        initHeight: number;
+        minWidth: number;
+        minHeight: number;
+        maxWidth: number;
+        maxHeight: number;
+        _parent: GComponent;
+        _width: number;
+        _height: number;
+        _rawWidth: number;
+        _rawHeight: number;
+        _id: string;
+        _name: string;
+        _underConstruct: boolean;
+        _gearLocked: boolean;
+        _sizePercentInGroup: number;
+        _treeNode: GTreeNode;
+        static _gInstanceCounter: number;
+        static XY_CHANGED: string;
+        static SIZE_CHANGED: string;
+        static SIZE_DELAY_CHANGE: string;
+        static GEAR_STOP: string;
+        private static _colorHelper;
+        protected _lastColorComponents: number[];
+        /**@internal */
+        _inProgressBuilding: boolean;
         constructor();
         get id(): string;
         get name(): string;
@@ -286,6 +398,10 @@ declare namespace fgui {
         set x(value: number);
         get y(): number;
         set y(value: number);
+        get xMin(): number;
+        set xMin(value: number);
+        get yMin(): number;
+        set yMin(value: number);
         setXY(xv: number, yv: number): void;
         get pixelSnapping(): boolean;
         set pixelSnapping(value: boolean);
@@ -295,11 +411,8 @@ declare namespace fgui {
         get height(): number;
         set height(value: number);
         setSize(wv: number, hv: number, ignorePivot?: boolean): void;
+        makeFullScreen(): void;
         ensureSizeCorrect(): void;
-        get sourceHeight(): number;
-        get sourceWidth(): number;
-        get initHeight(): number;
-        get initWidth(): number;
         get actualWidth(): number;
         get actualHeight(): number;
         get scaleX(): number;
@@ -319,11 +432,14 @@ declare namespace fgui {
         set pivotX(value: number);
         set pivotY(value: number);
         setPivot(xv: number, yv: number, asAnchor?: boolean): void;
+        get pivotAsAnchor(): boolean;
         protected internalSetPivot(xv: number, yv: number, asAnchor: boolean): void;
         private updatePivotOffset;
         private applyPivot;
         get touchable(): boolean;
         set touchable(value: boolean);
+        onClick(listener: (evt: IGObjectInteractionEvent) => void, thisArg?: any): void;
+        offClick(listener: Function, thisArg?: any): void;
         get grayed(): boolean;
         set grayed(value: boolean);
         get enabled(): boolean;
@@ -340,6 +456,8 @@ declare namespace fgui {
         set internalVisible(value: boolean);
         /**@internal */
         get internalVisible(): boolean;
+        get internalVisible2(): boolean;
+        get internalVisible3(): boolean;
         get finalVisible(): boolean;
         get sortingOrder(): number;
         set sortingOrder(value: number);
@@ -361,12 +479,14 @@ declare namespace fgui {
         get group(): GGroup;
         getGear(index: number | GearType): GearBase<GObject>;
         protected updateGear(index: GearType): void;
+        checkGearController(index: number, c: Controller): boolean;
         updateGearFromRelations(index: GearType, dx: number, dy: number): void;
-        hasGearController(index: number, c: controller.Controller): boolean;
+        addDisplayLock(): number;
+        releaseDisplayLock(token: number): void;
+        hasGearController(index: number, c: Controller): boolean;
         /**@internal */
-        lockGearDisplay(): number;
         /**@internal */
-        releaseGearDisplay(token: number): void;
+        private checkGearDisplay;
         private checkGearVisible;
         get gearXY(): GearXY;
         get gearSize(): GearSize;
@@ -374,6 +494,9 @@ declare namespace fgui {
         get relations(): Relations;
         addRelation(target: GObject, relationType: number, usePercent?: boolean): void;
         removeRelation(target: GObject, relationType?: number): void;
+        /**
+         * PIXI 显示对象，通过改实例可获取显示对象
+         */
         get displayObject(): PIXI.DisplayObject;
         protected createDisplayObject(): void;
         protected setDisplayObject(value: PIXI.DisplayObject): void;
@@ -381,6 +504,23 @@ declare namespace fgui {
         set parent(val: GComponent);
         removeFromParent(): void;
         get root(): GRoot;
+        get asCom(): GComponent;
+        get asButton(): GButton;
+        get asLabel(): GLabel;
+        get asProgress(): GProgressBar;
+        get asTextField(): GTextField;
+        get asRichTextField(): GRichTextField;
+        get asTextInput(): GTextInput;
+        get asLoader(): GLoader;
+        get asList(): GList;
+        get asTree(): GTree;
+        get asGraph(): GGraph;
+        get asGroup(): GGroup;
+        get asSlider(): GSlider;
+        get asComboBox(): GComboBox;
+        get asImage(): GImage;
+        get asMovieClip(): GMovieClip;
+        static cast(obj: PIXI.DisplayObject): GObject;
         /** @virtual */
         get text(): string;
         /** @virtual */
@@ -389,16 +529,9 @@ declare namespace fgui {
         get icon(): string;
         /** @virtual */
         set icon(value: string);
+        get isDisposed(): boolean;
+        get treeNode(): GTreeNode;
         dispose(): void;
-        click(listener: Function, thisObj?: any): this;
-        removeClick(listener: Function, thisObj?: any): this;
-        hasClick(fn?: Function): boolean;
-        on(type: string, listener: Function, thisObject?: any): this;
-        off(type: string, listener: Function, thisObject?: any): this;
-        once(type: string, listener: Function, thisObject?: any): this;
-        hasListener(event: string, handler?: Function): boolean;
-        emit(event: string, ...args: any[]): boolean;
-        removeAllListeners(type?: string): void;
         get draggable(): boolean;
         set draggable(value: boolean);
         get dragBounds(): PIXI.Rectangle;
@@ -412,7 +545,7 @@ declare namespace fgui {
         rootToLocal(ax?: number, ay?: number, resultPoint?: PIXI.Point): PIXI.Point;
         localToGlobalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: PIXI.Rectangle): PIXI.Rectangle;
         globalToLocalRect(ax?: number, ay?: number, aWidth?: number, aHeight?: number, resultRect?: PIXI.Rectangle): PIXI.Rectangle;
-        handleControllerChanged(c: controller.Controller): void;
+        handleControllerChanged(c: Controller): void;
         protected switchDisplayObject(newObj: PIXI.DisplayObject): void;
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
@@ -427,53 +560,163 @@ declare namespace fgui {
          */
         updateColorComponents(brightness: number, contrast: number, saturate: number, hue: number): void;
         protected handleGrayedChanged(): void;
+        protected handleAlphaChanged(): void;
+        handleVisibleChanged(): void;
+        getProp(index: number): any;
+        setProp(index: number, value: any): void;
         /**@internal */
         constructFromResource(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
-        static castFromNativeObject(disp: PIXI.DisplayObject): GObject;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
         protected static sGlobalDragStart: PIXI.Point;
         protected static sGlobalRect: PIXI.Rectangle;
         protected static sHelperPoint: PIXI.Point;
         protected static sDragHelperRect: PIXI.Rectangle;
         protected static sUpdatingWhileDragging: boolean;
-        private static $dragBeginCancelled;
-        protected $touchDownPoint: PIXI.Point;
-        static draggingObject: GObject;
+        private static _dragBeginCancelled;
+        protected _touchDownPoint: PIXI.Point;
         private initDrag;
         private dragBegin;
         private dragEnd;
         private reset;
-        private $touchBegin;
-        private $end;
-        private $moving;
-        private $moving2;
-        private $end2;
+        private _touchBegin;
+        private _end;
+        private _moving;
+        private _moving2;
+        private _end2;
+    }
+}
+declare namespace fgui {
+    /**
+     * 控制器
+     */
+    class Controller extends PIXI.utils.EventEmitter {
+        private _selectedIndex;
+        private _previousIndex;
+        private _pageIds;
+        private _pageNames;
+        private _actions;
+        /** 控制器名称 */
+        name: string;
+        /** 所属组件  */
+        parent: GComponent;
+        autoRadioGroupDepth: boolean;
+        changing: boolean;
+        private static _nextPageId;
+        constructor();
+        get selectedIndex(): number;
+        set selectedIndex(value: number);
+        setSelectedIndex(value?: number): void;
+        get previsousIndex(): number;
+        get selectedPage(): string;
+        set selectedPage(val: string);
+        setSelectedPage(value: string): void;
+        /** @readonly 上次页面名称 */
+        get previousPage(): string;
+        /** @readonly page数量 */
+        get pageCount(): number;
+        /**
+         * 获取指定下标的夜名称
+         * @param index 下标
+         */
+        getPageName(index?: number): string;
+        /**
+         * 增加页面到尾部
+         * @param name 页面名称
+         */
+        addPage(name?: string): void;
+        /**
+         * 增加页面到指定下标
+         * @param name 页面名称
+         * @param index 下标，默认为0
+         */
+        addPageAt(name: string, index?: number): void;
+        /**
+         * 删除一个页面
+         * @param name 页面名称
+         */
+        removePage(name: string): void;
+        /**
+         * 删除一个页面
+         * @param index 页下标
+         */
+        removePageAt(index?: number): void;
+        /**
+         * 删除所有页面
+         */
+        clearPages(): void;
+        /**
+         * 是否包含某个页面
+         * @param aName 页面名称
+         */
+        hasPage(aName: string): boolean;
+        /**
+         * @hide
+         * 根据页ID获取下标
+         * @param aId
+         */
+        getPageIndexById(aId: string): number;
+        /**
+         * @hide
+         * 根据页名称获取页ID
+         * @param aName
+         */
+        getPageIdByName(aName: string): string;
+        /**
+         * @hide
+         * 根据页ID获取页名称
+         * @param aId
+         */
+        getPageNameById(aId: string): string;
+        /**
+         * @hide
+         * 获取指定页的下标
+         * @param index 下表
+         */
+        getPageId(index?: number): string;
+        /**
+         * 获取选择的页ID
+         */
+        get selectedPageId(): string;
+        /**
+         * 设置选择的页ID
+         */
+        set selectedPageId(val: string);
+        set oppositePageId(val: string);
+        get previousPageId(): string;
+        executeActions(): void;
+        /**
+         * @param buffer
+         */
+        setup(buffer: ByteBuffer): void;
+        setupv1(xml: utils.XmlNode): void;
     }
 }
 declare namespace fgui {
     class GComponent extends GObject {
-        protected $sortingChildCount: number;
-        protected $opaque: boolean;
-        protected $margin: utils.Margin;
-        protected $trackBounds: boolean;
-        protected $boundsChanged: boolean;
-        protected $children: GObject[];
-        protected $applyingController: controller.Controller;
+        protected _sortingChildCount: number;
+        protected _applyingController: Controller;
+        protected _opaque: boolean;
+        protected _margin: utils.Margin;
+        protected _trackBounds: boolean;
+        protected _boundsChanged: boolean;
+        protected _childrenRenderOrder: ChildrenRenderOrder;
+        protected _children: GObject[];
+        protected _apexIndex: number;
         /**@internal */
-        $buildingDisplayList: boolean;
+        _buildingDisplayList: boolean;
         /**@internal */
-        $controllers: controller.Controller[];
+        _controllers: Controller[];
         /**@internal */
-        $transitions: Transition[];
+        _transitions: Transition[];
         /**@internal */
-        $rootContainer: UIContainer;
+        _rootContainer: UIContainer;
         /**@internal */
-        $container: PIXI.Container;
+        _container: PIXI.Container;
         /**@internal */
-        $scrollPane: ScrollPane;
+        _scrollPane: ScrollPane;
         /**@internal */
-        $alignOffset: PIXI.Point;
+        _alignOffset: PIXI.Point;
         constructor();
         protected createDisplayObject(): void;
         dispose(): void;
@@ -486,25 +729,27 @@ declare namespace fgui {
         removeChildren(beginIndex?: number, endIndex?: number, dispose?: boolean): void;
         getChildAt(index?: number): GObject;
         getChild(name: string): GObject;
+        getChildByPath(path: String): GObject;
+        getVisibleChild(name: string): GObject;
         getChildInGroup(name: string, group: GGroup): GObject;
         getChildById(id: string): GObject;
         getChildIndex(child: GObject): number;
         setChildIndex(child: GObject, index?: number): void;
         setChildIndexBefore(child: GObject, index: number): number;
-        protected $setChildIndex(child: GObject, oldIndex: number, index?: number): number;
+        protected _setChildIndex(child: GObject, oldIndex: number, index?: number): number;
         swapChildren(child1: GObject, child2: GObject): void;
         swapChildrenAt(index1: number, index2?: number): void;
         get numChildren(): number;
         isAncestorOf(child: GObject): boolean;
-        addController(controller: controller.Controller): void;
-        getControllerAt(index: number): controller.Controller;
-        getController(name: string): controller.Controller;
-        removeController(c: controller.Controller): void;
-        get controllers(): controller.Controller[];
+        addController(controller: Controller): void;
+        getControllerAt(index: number): Controller;
+        getController(name: string): Controller;
+        removeController(c: Controller): void;
+        get controllers(): Controller[];
         childStateChanged(child: GObject): void;
-        applyController(c: controller.Controller): void;
+        applyController(c: Controller): void;
         applyAllControllers(): void;
-        adjustRadioGroupDepth(obj: GObject, c: controller.Controller): void;
+        adjustRadioGroupDepth(obj: GObject, c: Controller): void;
         getTransitionAt(index: number): Transition;
         getTransition(transName: string): Transition;
         isChildInView(child: GObject): boolean;
@@ -514,16 +759,18 @@ declare namespace fgui {
         set opaque(value: boolean);
         get margin(): utils.Margin;
         set margin(value: utils.Margin);
+        get apexIndex(): number;
+        set apexIndex(value: number);
         get mask(): PIXI.Container | PIXI.MaskData;
         set mask(obj: PIXI.Container | PIXI.MaskData);
         protected updateOpaque(): void;
         protected updateScrollRect(): void;
-        protected setupScroll(scrollBarMargin: utils.Margin, scroll: ScrollType, scrollBarDisplay: ScrollBarDisplayType, flags: number, vtScrollBarRes: string, hzScrollBarRes: string, headerRes: string, footerRes: string): void;
+        protected setupScroll(buffer: ByteBuffer): void;
         protected setupOverflow(overflow: OverflowType): void;
         protected handleSizeChanged(): void;
         protected handleGrayedChanged(): void;
         setBoundsChangedFlag(): void;
-        private $validate;
+        private _validate;
         ensureBoundsCorrect(): void;
         protected updateBounds(): void;
         setBounds(ax: number, ay: number, aw: number, ah?: number): void;
@@ -535,32 +782,38 @@ declare namespace fgui {
         childSortingOrderChanged(child: GObject, oldValue: number, newValue?: number): void;
         /**@internal */
         constructFromResource(): void;
-        private constructInternal;
+        constructFromResource2(objectPool: Array<GObject>, poolIndex: number): void;
+        protected constructExtension(buffer: ByteBuffer): void;
+        protected onConstruct(): void;
+        private buildNativeDisplayList;
         protected appendChildrenList(): void;
         protected constructFromXML(xml: utils.XmlNode): void;
-        private $added;
-        private $removed;
+        private ___added;
+        private ___removed;
     }
 }
 declare namespace fgui {
     class GButton extends GComponent implements IColorableTitle {
-        protected $titleObject: GObject;
-        protected $iconObject: GObject;
-        protected $relatedController: controller.Controller;
-        private $mode;
-        private $selected;
-        private $title;
-        private $selectedTitle;
-        private $icon;
-        private $selectedIcon;
-        private $pageOption;
-        private $buttonController;
-        private $changeStateOnClick;
-        private $linkedPopup;
-        private $downEffect;
-        private $downEffectValue;
-        private $down;
-        private $over;
+        protected _titleObject: GObject;
+        protected _iconObject: GObject;
+        protected _relatedController: Controller;
+        private _relatedPageId;
+        private _mode;
+        private _selected;
+        private _title;
+        private _selectedTitle;
+        private _icon;
+        private _selectedIcon;
+        private _sound;
+        private _soundVolumeScale;
+        private _pageOption;
+        private _buttonController;
+        private _changeStateOnClick;
+        private _linkedPopup;
+        private _downEffect;
+        private _downEffectValue;
+        private _down;
+        private _over;
         static UP: string;
         static DOWN: string;
         static OVER: string;
@@ -579,60 +832,80 @@ declare namespace fgui {
         set text(value: string);
         get selectedTitle(): string;
         set selectedTitle(value: string);
-        get titleColor(): number;
-        set titleColor(value: number);
+        get titleColor(): TextColor;
+        set titleColor(value: TextColor);
+        get titleFontSize(): number;
+        set titleFontSize(value: number);
+        get sound(): string;
+        set sound(val: string);
+        get soundVolumeScale(): number;
+        set soundVolumeScale(value: number);
         get fontSize(): number;
         set fontSize(value: number);
         set selected(val: boolean);
         get selected(): boolean;
         get mode(): ButtonMode;
         set mode(value: ButtonMode);
-        get relatedController(): controller.Controller;
-        set relatedController(val: controller.Controller);
-        get pageOption(): controller.PageOption;
+        get relatedController(): Controller;
+        set relatedController(val: Controller);
+        get pageOption(): PageOption;
         get changeStateOnClick(): boolean;
         set changeStateOnClick(value: boolean);
         get linkedPopup(): GObject;
         set linkedPopup(value: GObject);
+        getTextField(): GTextField;
         addStateListener(listener: Function, thisObj?: any): void;
         removeStateListener(listener: Function, thisObj?: any): void;
         fireClick(downEffect?: boolean): void;
         protected setState(val: string): void;
-        handleControllerChanged(c: controller.Controller): void;
+        handleControllerChanged(c: Controller): void;
         protected handleGrayedChanged(): void;
-        protected constructFromXML(xml: utils.XmlNode): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
-        private $rollover;
-        private $rollout;
-        private $mousedown;
-        private $mouseup;
-        private $click;
+        protected constructExtension(buffer: ByteBuffer): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+        private _rollover;
+        private _rollout;
+        private _mousedown;
+        private _mouseup;
+        private _click;
         dispose(): void;
     }
 }
 declare namespace fgui {
+    /**
+     * 文本颜色，见
+     * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/fillStyle
+     */
+    type TextColor = string | string[] | number | number[] | CanvasGradient | CanvasPattern;
+    interface IColorableTitle {
+        titleColor: TextColor;
+        fontSize: number;
+    }
+    let isColorableTitle: (obj: any) => obj is IColorableTitle;
+}
+declare namespace fgui {
     class GComboBox extends GComponent {
-        protected $dropdown: GComponent;
-        protected $titleObject: GObject;
-        protected $iconObject: GObject;
-        protected $list: GList;
-        private $items;
-        private $values;
-        private $icons;
-        private $visibleItemCount;
-        private $itemsUpdated;
-        private $selectedIndex;
-        private $buttonController;
-        private $popupDir;
-        private $over;
-        private $down;
+        dropdown: GComponent;
+        protected _titleObject: GObject;
+        protected _iconObject: GObject;
+        protected _list: GList;
+        private _items;
+        private _values;
+        private _icons;
+        private _visibleItemCount;
+        private _itemsUpdated;
+        private _selectedIndex;
+        private _buttonController;
+        private _popupDirection;
+        private _selectionController;
+        private _over;
+        private _down;
         constructor();
         get text(): string;
         set text(value: string);
         get icon(): string;
         set icon(value: string);
-        get titleColor(): number;
-        set titleColor(value: number);
+        get titleColor(): TextColor;
+        set titleColor(value: TextColor);
         get visibleItemCount(): number;
         set visibleItemCount(value: number);
         get popupDirection(): PopupDirection;
@@ -647,60 +920,156 @@ declare namespace fgui {
         set selectedIndex(val: number);
         get value(): string;
         set value(val: string);
+        get selectionController(): Controller;
+        set selectionController(value: Controller);
+        getTextField(): GTextField;
         protected setState(val: string): void;
-        protected constructFromXML(xml: utils.XmlNode): void;
+        getProp(index: number): any;
+        setProp(index: number, value: any): void;
+        protected constructExtension(buffer: ByteBuffer): void;
         dispose(): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
         protected showDropdown(): void;
-        private $popupWinClosed;
-        private $clickItem;
+        private __popupWinClosed;
+        private __clickItem;
+        private __clickItem2;
         private delayedClickItem;
-        private $rollover;
-        private $rollout;
-        private $mousedown;
-        private $mouseup;
+        private __rollover;
+        private __rollout;
+        private __mousedown;
+        private _mouseup;
     }
 }
 declare namespace fgui {
+    enum eGraphType {
+        Empty = 0,
+        Rect = 1,
+        Ellipse = 2,
+        Path = 3,
+        Polygon = 4
+    }
     class GGraph extends GObject implements IColorGear {
-        private $type;
-        private $lineSize;
-        private $lineColor;
-        private $lineAlpha;
-        private $fillColor;
-        private $fillAlpha;
-        private $corner;
+        /** @hide  绘制对象 */
+        /** @hide 类型 */
+        private _type;
+        /** @hide 线条大小 */
+        private _lineSize;
+        /** @hide 线条颜色 */
+        private _lineColor;
+        /** @hide 线条透明度  */
+        private _lineAlpha;
+        /** @hide 填充颜色 */
+        private _fillColor;
+        /** @hide 填充透明度 */
+        private _fillAlpha;
+        private _cornerRadius;
+        private _sides;
+        private _startAngle;
+        /** 多边形点 */
+        private _polygonPoints;
+        private _distances;
+        private _corner;
         constructor();
-        drawRect(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, corner?: number[]): void;
-        drawEllipse(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number): void;
+        /**
+         * 获取原始 PIXI.Graphics 对象，通过这个对象可以调用 PIXI 的绘制接口
+         */
+        get graphics(): PIXI.Graphics;
+        /**
+         * 绘制矩形
+         * @param lineSize 线条宽度
+         * @param lineColor 线条颜色
+         * @param lineAlpha 线条透明度
+         * @param fillColor 填充颜色
+         * @param fillAlpha 填充透明度
+         * @param corner
+         * @return this
+         */
+        drawRect(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number, corner?: number[]): this;
+        drawEllipse(lineSize: number, lineColor: number, lineAlpha: number, fillColor: number, fillAlpha: number): this;
         get color(): number;
         set color(value: number);
-        private drawGraph;
+        /** @hide update  */
+        private updateGraph;
         replaceMe(target: GObject): void;
         addBeforeMe(target: GObject): void;
         addAfterMe(target: GObject): void;
         setNativeObject(obj: PIXI.DisplayObject): void;
+        /** @hide */
         protected createDisplayObject(): void;
+        /** 获取属性 */
+        getProp(index: number): any;
+        /** 设置属性 */
+        setProp(index: number, value: any): void;
+        /** 处理尺寸改变 */
         protected handleSizeChanged(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
+        /**
+         * 根据配置流设置属性
+         * @hide
+         * @param buffer 对象属性流
+         * @param beginPos 其实位置
+         */
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
     class GGroup extends GObject {
-        protected $empty: boolean;
+        private _layout;
+        private _lineGap;
+        private _columnGap;
+        private _excludeInvisibles;
+        private _autoSizeDisabled;
+        private _mainGridIndex;
+        private _mainGridMinSize;
+        private _boundsChanged;
+        private _percentReady;
+        private _mainChildIndex;
+        private _totalSize;
+        private _numChildren;
         /**@internal */
-        $updating: boolean;
-        protected createDisplayObject(): void;
-        updateBounds(): void;
-        setXY(xv: number, yv: number): void;
+        _updating: number;
+        constructor();
+        dispose(): void;
+        /**
+         * @see GroupLayout
+         */
+        get layout(): number;
+        /**
+         * @see GroupLayout
+         */
+        set layout(value: number);
+        get lineGap(): number;
+        set lineGap(value: number);
+        get columnGap(): number;
+        set columnGap(value: number);
+        get excludeInvisibles(): boolean;
+        set excludeInvisibles(value: boolean);
+        get autoSizeDisabled(): boolean;
+        set autoSizeDisabled(value: boolean);
+        get mainGridMinSize(): number;
+        set mainGridMinSize(value: number);
+        get mainGridIndex(): number;
+        set mainGridIndex(value: number);
+        setBoundsChangedFlag(positionChangedOnly?: boolean): void;
+        ensureSizeCorrect(): void;
+        ensureBoundsCorrect(): void;
+        private updateBounds;
+        private handleLayout;
         moveChildren(dx: number, dy: number): void;
+        resizeChildren(dw: number, dh: number): void;
+        handleAlphaChanged(): void;
+        handleVisibleChanged(): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+        protected _empty: boolean;
+        protected createDisplayObject(): void;
+        setXY(xv: number, yv: number): void;
         protected updateAlpha(): void;
     }
 }
 declare namespace fgui {
     class GImage extends GObject implements IColorGear {
-        private $content;
-        private $flip;
+        private _content;
+        private _flip;
         constructor();
         get touchable(): boolean;
         set touchable(value: boolean);
@@ -708,6 +1077,10 @@ declare namespace fgui {
         set color(value: number);
         get flip(): FlipType;
         set flip(value: FlipType);
+        get fillMethod(): number;
+        set fillMethod(value: number);
+        get fillAmount(): number;
+        set fillAmount(value: number);
         get texture(): PIXI.Texture;
         set texture(value: PIXI.Texture);
         protected createDisplayObject(): void;
@@ -715,13 +1088,15 @@ declare namespace fgui {
         constructFromResource(): void;
         protected handleXYChanged(): void;
         protected handleSizeChanged(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
+        getProp(index: number): any;
+        setProp(index: number, value: any): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
     class GLabel extends GComponent implements IColorableTitle {
-        protected $titleObject: GObject;
-        protected $iconObject: GObject;
+        protected _titleObject: GObject;
+        protected _iconObject: GObject;
         constructor();
         get icon(): string;
         set icon(value: string);
@@ -729,66 +1104,59 @@ declare namespace fgui {
         set title(value: string);
         get text(): string;
         set text(value: string);
-        get titleColor(): number;
-        set titleColor(value: number);
+        get titleColor(): TextColor;
+        set titleColor(value: TextColor);
         get fontSize(): number;
         set fontSize(value: number);
+        set titleFontSize(value: number);
         set editable(val: boolean);
         get editable(): boolean;
-        protected constructFromXML(xml: utils.XmlNode): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
+        getTextField(): GTextField;
+        getProp(index: number): any;
+        setProp(index: number, value: any): void;
+        protected constructExtension(buffer: ByteBuffer): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
-declare namespace fgui {
-    type GListRenderer = (index: number, item: GObject) => void;
-    type GListItemProvider = (index: number) => string;
+declare module fgui {
     class GList extends GComponent {
-        itemRenderer: GListRenderer;
-        itemProvider: GListItemProvider;
+        /**
+        * itemRenderer(number number, GObject item);
+        */
+        itemRenderer: Function;
+        /**
+         * itemProvider(index:number):string;
+        */
+        itemProvider: Function;
+        callbackThisObj: any;
         scrollItemToViewOnClick: boolean;
         foldInvisibleItems: boolean;
-        private $layout;
-        private $lineCount;
-        private $columnCount;
-        private $lineGap;
-        private $columnGap;
-        private $defaultItem;
-        private $autoResizeItem;
-        private $selectionMode;
-        private $align;
-        private $verticalAlign;
-        private $selectionController;
-        private $lastSelectedIndex;
-        private $pool;
-        private $virtual;
-        private $loop;
-        private $numItems;
-        private $realNumItems;
-        private $firstIndex;
-        private $curLineItemCount;
-        private $curLineItemCount2;
-        private $itemSize;
-        private $virtualListChanged;
-        private $virtualItems;
-        private $eventLocked;
-        protected $apexIndex: number;
-        private $childrenRenderOrder;
-        private $itemInfoVer;
-        private $enterCounter;
-        private static $lastPosHelper;
+        private _layout;
+        private _lineCount;
+        private _columnCount;
+        private _lineGap;
+        private _columnGap;
+        private _defaultItem;
+        private _autoResizeItem;
+        private _selectionMode;
+        private _align;
+        private _verticalAlign;
+        private _selectionController;
+        private _lastSelectedIndex;
+        private _pool;
+        private _virtual;
+        private _loop;
+        private _numItems;
+        private _realNumItems;
+        private _firstIndex;
+        private _curLineItemCount;
+        private _curLineItemCount2;
+        private _itemSize;
+        private _virtualListChanged;
+        private _virtualItems;
+        private _eventLocked;
+        private itemInfoVer;
         constructor();
-        get childrenRenderOrder(): ListChildrenRenderOrder;
-        set childrenRenderOrder(value: ListChildrenRenderOrder);
-        get apexIndex(): number;
-        set apexIndex(value: number);
-        /**@override */
-        protected appendChildrenList(): void;
-        /**@override */
-        setXY(xv: number, yv: number): void;
-        /**@override */
-        protected $setChildIndex(child: GObject, oldIndex: number, index?: number): number;
-        /**@override */
-        childStateChanged(child: GObject): void;
         dispose(): void;
         get layout(): ListLayoutType;
         set layout(value: ListLayoutType);
@@ -812,109 +1180,102 @@ declare namespace fgui {
         set autoResizeItem(value: boolean);
         get selectionMode(): ListSelectionMode;
         set selectionMode(value: ListSelectionMode);
-        get selectionController(): controller.Controller;
-        set selectionController(value: controller.Controller);
-        get itemPool(): utils.GObjectRecycler;
+        get selectionController(): Controller;
+        set selectionController(value: Controller);
+        get itemPool(): GObjectPool;
         getFromPool(url?: string): GObject;
         returnToPool(obj: GObject): void;
         addChildAt(child: GObject, index?: number): GObject;
         addItem(url?: string): GObject;
         addItemFromPool(url?: string): GObject;
         removeChildAt(index: number, dispose?: boolean): GObject;
-        removeChildToPoolAt(index: number): void;
+        removeChildToPoolAt(index?: number): void;
         removeChildToPool(child: GObject): void;
         removeChildrenToPool(beginIndex?: number, endIndex?: number): void;
         get selectedIndex(): number;
         set selectedIndex(value: number);
-        getSelection(): number[];
-        addSelection(index: number, scrollIntoView?: boolean): void;
+        getSelection(result?: number[]): number[];
+        addSelection(index: number, scrollItToView?: boolean): void;
         removeSelection(index: number): void;
         clearSelection(): void;
         private clearSelectionExcept;
         selectAll(): void;
         selectNone(): void;
         selectReverse(): void;
-        handleArrowKey(key: Keys): void;
-        private $clickItem;
+        handleArrowKey(dir?: number): void;
+        private __clickItem;
         private setSelectionOnEvent;
         resizeToFit(itemCount?: number, minSize?: number): void;
         getMaxItemWidth(): number;
         protected handleSizeChanged(): void;
-        handleControllerChanged(c: controller.Controller): void;
+        handleControllerChanged(c: Controller): void;
         private updateSelectionController;
         getSnappingPosition(xValue: number, yValue: number, resultPoint?: PIXI.Point): PIXI.Point;
-        scrollToView(index: number, ani?: boolean, snapToFirst?: boolean): void;
+        scrollToView(index: number, ani?: boolean, setFirst?: boolean): void;
         getFirstChildInView(): number;
         childIndexToItemIndex(index: number): number;
         itemIndexToChildIndex(index: number): number;
         setVirtual(): void;
         setVirtualAndLoop(): void;
-        private $setVirtual;
+        private _setVirtual;
         get numItems(): number;
         set numItems(value: number);
         refreshVirtualList(): void;
         private checkVirtualList;
         private setVirtualListChangedFlag;
-        private $refreshVirtualList;
-        private $scrolled;
+        private _refreshVirtualList;
+        private __scrolled;
         private getIndexOnPos1;
         private getIndexOnPos2;
         private getIndexOnPos3;
         private handleScroll;
+        private static pos_param;
         private handleScroll1;
         private handleScroll2;
         private handleScroll3;
         private handleArchOrder1;
         private handleArchOrder2;
         private handleAlign;
-        /**@override */
         protected updateBounds(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+        protected readItems(buffer: ByteBuffer): void;
+        protected setupItem(buffer: ByteBuffer, obj: GObject): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
-declare namespace fgui.utils {
-    abstract class Recycler<T> {
-        protected $pool: {
-            [name: string]: T[];
-        };
-        protected $count: number;
+declare module fgui {
+    class GObjectPool {
+        private _pool;
+        private _count;
         constructor();
+        clear(): void;
         get count(): number;
-        clear(): void;
-        get(id: string): T;
-        protected abstract createObject(id: string): T;
-        recycle(id: string, obj: T): void;
-    }
-}
-declare namespace fgui.utils {
-    class GObjectRecycler extends Recycler<GObject> {
-        constructor();
-        clear(): void;
-        protected createObject(id: string): GObject;
+        getObject(url: string): GObject;
+        returnObject(obj: GObject): void;
     }
 }
 declare namespace fgui {
     class GLoader extends GObject implements IAnimationGear, IColorGear {
-        protected $url: string;
-        protected $align: AlignType;
-        protected $verticalAlign: VertAlignType;
-        protected $autoSize: boolean;
-        protected $fill: LoaderFillType;
-        protected $showErrorSign: boolean;
-        protected $playing: boolean;
-        protected $frame: number;
-        protected $color: number;
-        private $contentItem;
-        private $contentSourceWidth;
-        private $contentSourceHeight;
-        private $contentWidth;
-        private $contentHeight;
-        protected $container: UIContainer;
-        protected $content: UIImage | MovieClip;
-        protected $errorSign: GObject;
-        private $updatingLayout;
-        private static $errorSignPool;
+        protected _url: string;
+        protected _align: AlignType;
+        protected _verticalAlign: VertAlignType;
+        protected _autoSize: boolean;
+        protected _fill: LoaderFillType;
+        private _shrinkOnly;
+        protected _showErrorSign: boolean;
+        protected _playing: boolean;
+        protected _frame: number;
+        protected _color: number;
+        private _contentItem;
+        private _contentSourceWidth;
+        private _contentSourceHeight;
+        private _contentWidth;
+        private _contentHeight;
+        protected _container: UIContainer;
+        protected _content: UIImage | MovieClip;
+        protected _errorSign: GObject;
+        private _updatingLayout;
+        private static _errorSignPool;
         constructor();
         protected createDisplayObject(): void;
         dispose(): void;
@@ -945,12 +1306,12 @@ declare namespace fgui {
         protected loadContent(): void;
         protected loadFromPackage(itemURL: string): void;
         private switchToMovieMode;
-        private $loadingTexture;
+        private _loadingTexture;
         /**overwrite this method if you need to load resources by your own way*/
         protected loadExternal(): void;
         /**free the resource you loaded */
         protected freeExternal(texture: PIXI.Texture): void;
-        private $loadResCompleted;
+        private _loadResCompleted;
         /**content loaded */
         protected onExternalLoadSuccess(texture: PIXI.Texture): void;
         protected onExternalLoadFailed(): void;
@@ -959,12 +1320,12 @@ declare namespace fgui {
         private updateLayout;
         private clearContent;
         protected handleSizeChanged(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
     class GMovieClip extends GObject implements IAnimationGear, IColorGear {
-        private $movieClip;
+        private _movieClip;
         constructor();
         protected mapPivotWidth(scale: number): number;
         protected mapPivotHeight(scale: number): number;
@@ -992,42 +1353,40 @@ declare namespace fgui {
          */
         setPlaySettings(...args: any[]): void;
         constructFromResource(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
     class GProgressBar extends GComponent {
-        private $max;
-        private $value;
-        private $titleType;
-        private $reverse;
-        private $titleObject;
-        private $aniObject;
-        private $barObjectH;
-        private $barObjectV;
-        private $barMaxWidth;
-        private $barMaxHeight;
-        private $barMaxWidthDelta;
-        private $barMaxHeightDelta;
-        private $barStartX;
-        private $barStartY;
-        private $tweener;
-        private $tweenValue;
-        private static easeLinear;
+        private _min;
+        private _max;
+        private _value;
+        private _titleType;
+        private _reverse;
+        private _titleObject;
+        private _aniObject;
+        private _barObjectH;
+        private _barObjectV;
+        private _barMaxWidth;
+        private _barMaxHeight;
+        private _barMaxWidthDelta;
+        private _barMaxHeightDelta;
+        private _barStartX;
+        private _barStartY;
         constructor();
         get titleType(): ProgressTitleType;
         set titleType(value: ProgressTitleType);
+        get min(): number;
+        set min(value: number);
         get max(): number;
         set max(value: number);
         get value(): number;
         set value(value: number);
         tweenValue(value: number, duration: number): GTweener;
-        private onUpdateTween;
-        update(val: number): void;
-        protected constructFromXML(xml: utils.XmlNode): void;
+        update(newValue: number): void;
+        protected constructExtension(buffer: ByteBuffer): void;
         protected handleSizeChanged(): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
-        dispose(): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
@@ -1042,30 +1401,36 @@ declare namespace fgui {
         static recycle(value: LineInfo): void;
         static recycleMany(value: LineInfo[]): void;
     }
+    /**
+     * 普通文本
+     */
     class GTextField extends GObject implements IColorGear, IColorableTitle {
-        protected $textField: UITextField;
-        protected $btContainer: UIContainer;
-        protected $bitmapFont: BitmapFont;
-        protected $lines: LineInfo[];
-        protected $bitmapPool: PIXI.Sprite[];
-        protected $font: string;
-        protected $style: PIXI.TextStyle;
-        protected $verticalAlign: VertAlignType;
-        protected $offset: PIXI.Point;
-        protected $color: number;
-        protected $singleLine: boolean;
-        protected $text: string;
-        protected $fontProperties: PIXI.IFontMetrics;
-        protected $autoSize: AutoSizeType;
-        protected $widthAutoSize: boolean;
-        protected $heightAutoSize: boolean;
-        protected $requireRender: boolean;
-        protected $updatingSize: boolean;
-        protected $sizeDirty: boolean;
-        protected $textWidth: number;
-        protected $textHeight: number;
+        protected _textField: UITextField;
+        protected _btContainer: UIContainer;
+        protected _bitmapFont: BitmapFont;
+        protected _lines: LineInfo[];
+        protected _bitmapPool: PIXI.Sprite[];
+        protected _font: string;
+        protected _style: PIXI.TextStyle;
+        protected _verticalAlign: VertAlignType;
+        protected _offset: PIXI.Point;
+        protected _color: TextColor;
+        protected _singleLine: boolean;
+        protected _text: string;
+        protected _fontProperties: PIXI.IFontMetrics;
+        protected _autoSize: AutoSizeType;
+        protected _widthAutoSize: boolean;
+        protected _heightAutoSize: boolean;
+        protected _requireRender: boolean;
+        protected _updatingSize: boolean;
+        protected _sizeDirty: boolean;
+        protected _textWidth: number;
+        protected _textHeight: number;
         static GUTTER_X: number;
         static GUTTER_Y: number;
+        multiline: boolean;
+        ubbEnabled: boolean;
+        protected _templateVars: any;
         constructor();
         protected createDisplayObject(): void;
         private switchBitmapMode;
@@ -1075,11 +1440,11 @@ declare namespace fgui {
         get text(): string;
         protected getText(): string;
         get color(): number;
-        protected getColor(): number;
-        protected setColor(value: number): void;
+        getColor(): TextColor;
+        setColor(value: TextColor): void;
         set color(value: number);
-        get titleColor(): number;
-        set titleColor(value: number);
+        get titleColor(): TextColor;
+        set titleColor(value: TextColor);
         get lineHeight(): number;
         set lineHeight(lh: number);
         get font(): string;
@@ -1117,7 +1482,7 @@ declare namespace fgui {
         ensureSizeCorrect(): void;
         protected render(): void;
         private applyStyle;
-        private $render;
+        private __render;
         protected renderNow(updateBounds?: boolean): void;
         private renderWithBitmapFont;
         localToGlobal(ax?: number, ay?: number, resultPoint?: PIXI.Point): PIXI.Point;
@@ -1127,8 +1492,8 @@ declare namespace fgui {
         protected layoutAlign(): void;
         private updatePosition;
         protected handleXYChanged(): void;
-        setupBeforeAdd(xml: utils.XmlNode): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
@@ -1136,17 +1501,20 @@ declare namespace fgui {
         text: string;
         style: PIXI.TextStyle;
     }
+    /**
+     * 富文本
+     */
     class GRichTextField extends GTextField {
-        protected $ubbEnabled: boolean;
-        protected $textFlow: TextBlock[];
+        protected _ubbEnabled: boolean;
+        protected _textFlow: TextBlock[];
         set ubbEnabled(value: boolean);
         get ubbEnabled(): boolean;
-        setupBeforeAdd(xml: utils.XmlNode): void;
         constructor();
         set textFlow(flow: TextBlock[]);
         set text(value: string);
-        private $clickLink;
+        private _clickLink;
         dispose(): void;
+        protected updateTextFieldText(): void;
     }
 }
 declare namespace fgui {
@@ -1156,19 +1524,28 @@ declare namespace fgui {
         mouseY: number;
     }
     class GRoot extends GComponent {
+        static contentScaleLevel: number;
         private static uniqueID;
-        private $uiStage;
-        private $modalLayer;
-        private $popupStack;
-        private $justClosedPopups;
-        private $modalWaitPane;
-        private $focusedObject;
-        private $tooltipWin;
-        private $defaultTooltipWin;
-        private $checkingPopups;
-        private $uid;
-        private static $inst;
-        private static $gmStatus;
+        private _uiStage;
+        private _modalLayer;
+        private _popupStack;
+        private _justClosedPopups;
+        private _modalWaitPane;
+        private _focusedObject;
+        private _tooltipWin;
+        private _defaultTooltipWin;
+        private _volumeScale;
+        private _checkingPopups;
+        private _uid;
+        private static _inst;
+        static touchScreen: boolean;
+        static contentScaleFactor: number;
+        static touchDown: boolean;
+        static ctrlKeyDown: boolean;
+        static shiftKeyDown: boolean;
+        static mouseX: number;
+        static mouseY: number;
+        private static _gmStatus;
         /**
          * the singleton instance of the GRoot object
          */
@@ -1216,63 +1593,64 @@ declare namespace fgui {
         get hasAnyPopup(): boolean;
         private closePopup;
         showTooltips(msg: string): void;
+        playOneShotSound(sound: any, volumeScale?: number): void;
         showTooltipsWin(tooltipWin: GObject, position?: PIXI.Point): void;
         hideTooltips(): void;
         get focus(): GObject;
         set focus(value: GObject);
         private setFocus;
         private adjustModalLayer;
-        private $stageDown;
+        private _stageDown;
         checkPopups(target: PIXI.DisplayObject): void;
-        private $stageMove;
-        private $stageUp;
-        private $winResize;
+        private _stageMove;
+        private _stageUp;
+        private _winResize;
     }
 }
 declare namespace fgui {
     class GScrollBar extends GComponent {
-        private $grip;
-        private $arrowButton1;
-        private $arrowButton2;
-        private $bar;
-        private $target;
-        private $vertical;
-        private $scrollPerc;
-        private $fixedGripSize;
-        private $dragOffset;
+        private _grip;
+        private _arrowButton1;
+        private _arrowButton2;
+        private _bar;
+        private _target;
+        private _vertical;
+        private _scrollPerc;
+        private _fixedGripSize;
+        private _dragOffset;
         constructor();
         setScrollPane(target: ScrollPane, vertical: boolean): void;
         set displayPerc(val: number);
         get scrollPerc(): number;
         set scrollPerc(val: number);
         get minSize(): number;
-        protected constructFromXML(xml: utils.XmlNode): void;
-        private $gripMouseDown;
+        private _gripMouseDown;
         private static sScrollbarHelperPoint;
-        private $gripDragging;
-        private $gripDraggingEnd;
-        private $arrowButton1Click;
-        private $arrowButton2Click;
-        private $barMouseDown;
+        private _gripDragging;
+        private _gripDraggingEnd;
+        private _arrowButton1Click;
+        private _arrowButton2Click;
+        private _barMouseDown;
         dispose(): void;
     }
 }
 declare namespace fgui {
     class GSlider extends GComponent {
-        protected $max: number;
-        protected $value: number;
-        protected $titleType: ProgressTitleType;
-        protected $titleObject: GTextField;
-        protected $aniObject: GObject;
-        protected $barObjectH: GObject;
-        protected $barObjectV: GObject;
-        protected $barMaxWidth: number;
-        protected $barMaxHeight: number;
-        protected $barMaxWidthDelta: number;
-        protected $barMaxHeightDelta: number;
-        protected $gripObject: GObject;
-        private $clickPos;
-        private $clickPercent;
+        private _min;
+        protected _max: number;
+        protected _value: number;
+        protected _titleType: ProgressTitleType;
+        protected _titleObject: GTextField;
+        protected _aniObject: GObject;
+        protected _barObjectH: GObject;
+        protected _barObjectV: GObject;
+        protected _barMaxWidth: number;
+        protected _barMaxHeight: number;
+        protected _barMaxWidthDelta: number;
+        protected _barMaxHeightDelta: number;
+        protected _gripObject: GObject;
+        private _clickPos;
+        private _clickPercent;
         constructor();
         get titleType(): ProgressTitleType;
         set titleType(value: ProgressTitleType);
@@ -1283,29 +1661,37 @@ declare namespace fgui {
         update(): void;
         private updateWidthPercent;
         protected handleSizeChanged(): void;
-        setupAfterAdd(xml: utils.XmlNode): void;
-        protected constructFromXML(xml: utils.XmlNode): void;
-        private $gripMouseDown;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
+        private _gripMouseDown;
         private static sSilderHelperPoint;
-        private $gripMouseMove;
-        private $gripMouseUp;
+        private _gripMouseMove;
+        private _gripMouseUp;
         dispose(): void;
     }
 }
 declare namespace fgui {
+    /**
+     * 输入类型
+     */
     const enum InputType {
+        /** 文本 */
         TEXT = "text",
+        /** 密码 */
         PASSWORD = "password",
+        /** 数字 */
         NUMBER = "number",
+        /** email */
         EMAIL = "email",
+        /** 电话 */
         TEL = "tel",
+        /** URL */
         URL = "url"
     }
     class GTextInput extends GTextField {
-        protected $editable: boolean;
-        protected $util: utils.InputDelegate;
+        protected _editable: boolean;
+        protected _util: utils.InputDelegate;
         /**@internal */
-        $isTyping: boolean;
+        _isTyping: boolean;
         constructor();
         protected createDisplayObject(): void;
         protected handleSizeChanged(): void;
@@ -1317,7 +1703,7 @@ declare namespace fgui {
         private changeToPassText;
         protected getText(): string;
         protected setText(value: string): void;
-        protected setColor(value: number): void;
+        setColor(value: number): void;
         get promptText(): string;
         set promptText(v: string);
         get maxLength(): number;
@@ -1331,17 +1717,25 @@ declare namespace fgui {
         dispose(): void;
         protected renderNow(updateBounds?: boolean): void;
         private decorateInputbox;
-        setupBeforeAdd(xml: utils.XmlNode): void;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+        private updateVertAlign;
+        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {
     class GTimer {
-        private $items;
-        private $itemPool;
-        private $enumIdx;
-        private $enumCount;
-        private $curTime;
-        private $ticker;
+        private _items;
+        private _itemPool;
+        private _enumIdx;
+        private get _enumI();
+        private set _enumI(value);
+        private _enumCount;
+        private _curTime;
+        private _lastTime;
+        private _ticker;
+        private static FPS24;
+        static deltaTime: number;
+        static time: number;
         static inst: GTimer;
         constructor();
         private getItem;
@@ -1350,171 +1744,98 @@ declare namespace fgui {
         addLoop(delayInMs: number, callback: (...args: any[]) => void, thisObj: any, callbackParam?: any): void;
         callLater(callback: (...args: any[]) => void, thisObj: any, callbackParam?: any): void;
         callDelay(delayInMs: number, callback: (...args: any[]) => void, thisObj: any, callbackParam?: any): void;
+        callBy24Fps(callback: (...args: any[]) => void, thisObj: any, callbackParam?: any): void;
         exists(callback: (...args: any[]) => void, thisObj: any): boolean;
         remove(callback: (...args: any[]) => void, thisObj: any): void;
+        private __timer;
         get ticker(): PIXI.Ticker;
         get curTime(): number;
         advance(): void;
-        tickTween(): void;
         setTicker(ticker: PIXI.Ticker): void;
     }
 }
 declare namespace fgui {
-    class GearBase<T> {
-        static disableAllTweenEffect: boolean;
-        protected $tween: boolean;
-        protected $easeType: (t: number) => number;
-        protected $tweenTime: number;
-        protected $tweenDelay: number;
-        protected $lockToken: number;
-        protected $owner: GObject & T;
-        protected $controller: controller.Controller;
-        constructor(owner: GObject & T);
-        get controller(): controller.Controller;
-        set controller(val: controller.Controller);
-        get tween(): boolean;
-        set tween(val: boolean);
-        get tweenDelay(): number;
-        set tweenDelay(val: number);
-        get tweenTime(): number;
-        set tweenTime(value: number);
-        get easeType(): (t: number) => number;
-        set easeType(value: (t: number) => number);
-        setup(xml: utils.XmlNode): void;
-        updateFromRelations(dx: number, dy: number): void;
-        protected addStatus(pageId: string, value: string): void;
-        protected init(): void;
-        apply(): void;
-        updateState(): void;
+    class GTree extends GList {
+        treeNodeRender: (node: GTreeNode, obj: GComponent) => void;
+        treeNodeWillExpand: (node: GTreeNode, expanded: boolean) => void;
+        private _indent;
+        private _clickToExpand;
+        private _rootNode;
+        private _expandedStatusInEvt;
+        private static helperIntList;
+        constructor();
+        get rootNode(): GTreeNode;
+        get indent(): number;
+        set indent(value: number);
+        get clickToExpand(): number;
+        set clickToExpand(value: number);
+        getSelectedNode(): GTreeNode;
+        getSelectedNodes(result?: Array<GTreeNode>): Array<GTreeNode>;
+        selectNode(node: GTreeNode, scrollItToView?: boolean): void;
+        unselectNode(node: GTreeNode): void;
+        expandAll(folderNode?: GTreeNode): void;
+        collapseAll(folderNode?: GTreeNode): void;
+        private createCell;
+        _afterInserted(node: GTreeNode): void;
+        private getInsertIndexForNode;
+        _afterRemoved(node: GTreeNode): void;
+        _afterExpanded(node: GTreeNode): void;
+        _afterCollapsed(node: GTreeNode): void;
+        _afterMoved(node: GTreeNode): void;
+        private getFolderEndIndex;
+        private checkChildren;
+        private hideFolderNode;
+        private removeNode;
+        private __cellMouseDown;
+        private __expandedStateChanged;
+        setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
+        protected readItems(buffer: ByteBuffer): void;
     }
 }
 declare namespace fgui {
-    class GearAnimation extends GearBase<IAnimationGear> {
-        private $storage;
-        private $default;
-        constructor(owner: GObject & IAnimationGear);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
+    class GTreeNode {
+        data: any;
+        private _parent;
+        private _children;
+        private _expanded;
+        private _level;
+        private _tree;
+        _cell: GComponent;
+        _resURL: string;
+        constructor(hasChild: boolean, resURL?: string);
+        set expanded(value: boolean);
+        get expanded(): boolean;
+        get isFolder(): boolean;
+        get parent(): GTreeNode;
+        get text(): string;
+        set text(value: string);
+        get icon(): string;
+        set icon(value: string);
+        get cell(): GComponent;
+        get level(): number;
+        _setLevel(value: number): void;
+        addChild(child: GTreeNode): GTreeNode;
+        addChildAt(child: GTreeNode, index: number): GTreeNode;
+        removeChild(child: GTreeNode): GTreeNode;
+        removeChildAt(index: number): GTreeNode;
+        removeChildren(beginIndex?: number, endIndex?: number): void;
+        getChildAt(index: number): GTreeNode;
+        getChildIndex(child: GTreeNode): number;
+        getPrevSibling(): GTreeNode;
+        getNextSibling(): GTreeNode;
+        setChildIndex(child: GTreeNode, index: number): void;
+        swapChildren(child1: GTreeNode, child2: GTreeNode): void;
+        swapChildrenAt(index1: number, index2: number): void;
+        get numChildren(): number;
+        expandToRoot(): void;
+        get tree(): GTree;
+        _setTree(value: GTree): void;
     }
-}
-declare namespace fgui {
-    class GearColor extends GearBase<IColorGear> {
-        private $storage;
-        private $default;
-        constructor(owner: GObject & IColorGear);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare namespace fgui {
-    class GearDisplay extends GearBase<GObject> {
-        private $vid;
-        pages: string[];
-        constructor(owner: GObject);
-        protected init(): void;
-        lock(): number;
-        release(token: number): void;
-        get connected(): boolean;
-        apply(): void;
-    }
-}
-declare namespace fgui {
-    class GearIcon extends GearBase<GObject> {
-        private $storage;
-        private $default;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare namespace fgui {
-    class GearLook extends GearBase<GObject> {
-        private $tweener;
-        private $storage;
-        private $default;
-        private $tweenValue;
-        private $tweenTarget;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        private tweenComplete;
-        updateState(): void;
-    }
-}
-declare namespace fgui {
-    class GearSize extends GearBase<GObject> {
-        private $tweener;
-        private $storage;
-        private $default;
-        private $tweenValue;
-        private $tweenTarget;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        private tweenComplete;
-        updateState(): void;
-        updateFromRelations(dx: number, dy: number): void;
-    }
-}
-declare namespace fgui {
-    class GearText extends GearBase<GObject> {
-        private $storage;
-        private $default;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        updateState(): void;
-    }
-}
-declare namespace fgui {
-    class GearXY extends GearBase<GObject> {
-        private $tweener;
-        private $storage;
-        private $default;
-        private $tweenValue;
-        private $tweenTarget;
-        constructor(owner: GObject);
-        protected init(): void;
-        protected addStatus(pageId: string, value: string): void;
-        apply(): void;
-        private tweenComplete;
-        updateState(): void;
-        updateFromRelations(dx: number, dy: number): void;
-    }
-}
-declare namespace fgui {
-    interface IAnimationGear {
-        playing: boolean;
-        frame: number;
-    }
-    let isAnimationGear: (obj: any) => obj is IAnimationGear;
-}
-declare namespace fgui {
-    interface IColorGear {
-        color: number;
-    }
-    let isColorGear: (obj: any) => obj is IColorGear;
-}
-declare namespace fgui {
-    interface IColorableTitle {
-        titleColor: number;
-        fontSize: number;
-    }
-    let isColorableTitle: (obj: any) => obj is IColorableTitle;
 }
 declare namespace fgui {
     class PopupMenu {
-        protected $contentPane: GComponent;
-        protected $list: GList;
+        protected _contentPane: GComponent;
+        protected _list: GList;
         constructor(resourceURL?: string);
         dispose(): void;
         addItem(caption: string, handler?: Function): GButton;
@@ -1533,52 +1854,55 @@ declare namespace fgui {
         get contentPane(): GComponent;
         get list(): GList;
         show(target?: GObject, dir?: PopupDirection): void;
-        private $clickItem;
-        private $delayClickItem;
-        private $addedToStage;
+        private _clickItem;
+        private _delayClickItem;
+        private _addedToStage;
     }
 }
-declare namespace fgui {
+declare module fgui {
     class RelationItem {
-        protected $owner: GObject;
-        protected $target: GObject;
-        protected $targetX: number;
-        protected $targetY: number;
-        protected $targetWidth: number;
-        protected $targetHeight: number;
-        protected $defs: RelationDef[];
+        private _owner;
+        private _target;
+        private _defs;
+        private _targetX;
+        private _targetY;
+        private _targetWidth;
+        private _targetHeight;
         constructor(owner: GObject);
         get owner(): GObject;
         set target(value: GObject);
         get target(): GObject;
         add(relationType: number, usePercent: boolean): void;
-        private internalAdd;
+        internalAdd(relationType: number, usePercent: boolean): void;
         remove(relationType?: number): void;
         copyFrom(source: RelationItem): void;
         dispose(): void;
         get isEmpty(): boolean;
-        applyOnSelfResized(dWidth: number, dHeight: number): void;
+        applyOnSelfResized(dWidth: number, dHeight: number, applyPivot: boolean): void;
         private applyOnXYChanged;
         private applyOnSizeChanged;
         private addRefTarget;
         private releaseRefTarget;
-        private $targetXYChanged;
-        private $targetSizeChanged;
-        private $targetSizeWillChange;
+        private __targetXYChanged;
+        private __targetSizeChanged;
+        private __targetSizeWillChange;
     }
     class RelationDef {
         percent: boolean;
         type: number;
+        axis: number;
+        constructor();
         copyFrom(source: RelationDef): void;
     }
 }
 declare namespace fgui {
     class Relations {
-        protected $owner: GObject;
-        protected $items: RelationItem[];
+        protected _owner: GObject;
+        protected _items: RelationItem[];
+        handling: GObject;
         sizeDirty: boolean;
         /**@internal */
-        $dealing: GObject;
+        _dealing: GObject;
         private static RELATION_NAMES;
         constructor(owner: GObject);
         add(target: GObject, relationType: number, usePercent?: boolean): void;
@@ -1589,83 +1913,91 @@ declare namespace fgui {
         clearAll(): void;
         copyFrom(source: Relations): void;
         dispose(): void;
-        onOwnerSizeChanged(dWidth: number, dHeight: number): void;
+        onOwnerSizeChanged(dWidth: number, dHeight: number, applyPivot: boolean): void;
         ensureRelationsSizeCorrect(): void;
         get empty(): boolean;
-        setup(xml: utils.XmlNode): void;
+        setup(buffer: ByteBuffer, parentToChild: boolean): void;
     }
 }
 declare namespace fgui {
     class ScrollPane extends PIXI.utils.EventEmitter {
-        private static $easeTypeFunc;
-        private $owner;
-        private $maskContainer;
-        private $container;
-        private $alignContainer;
-        private $scrollType;
-        private $scrollSpeed;
-        private $mouseWheelSpeed;
-        private $decelerationRate;
-        private $scrollBarMargin;
-        private $bouncebackEffect;
-        private $touchEffect;
-        private $scrollBarDisplayAuto;
-        private $vScrollNone;
-        private $hScrollNone;
-        private $needRefresh;
-        private $refreshBarAxis;
-        private $displayOnLeft;
-        private $snapToItem;
-        private $displayOnDemand;
-        private $mouseWheelEnabled;
-        private $pageMode;
-        private $inertiaDisabled;
-        private $xPos;
-        private $yPos;
-        private $viewSize;
-        private $contentSize;
-        private $overlapSize;
-        private $pageSize;
-        private $containerPos;
-        private $beginTouchPos;
-        private $lastTouchPos;
-        private $lastTouchGlobalPos;
-        private $velocity;
-        private $velocityScale;
-        private $lastMoveTime;
-        private $isHoldAreaDone;
-        private $aniFlag;
-        private $scrollBarVisible;
-        private $headerLockedSize;
-        private $footerLockedSize;
-        private $refreshEventDispatching;
-        private $tweening;
-        private $tweenTime;
-        private $tweenDuration;
-        private $tweenStart;
-        private $tweenChange;
-        private $pageController;
-        private $hzScrollBar;
-        private $vtScrollBar;
-        private $header;
-        private $footer;
-        private $isDragging;
+        private static _easeTypeFunc;
+        private _owner;
+        private _maskContainer;
+        private _container;
+        private _alignContainer;
+        private _scrollType;
+        private _scrollStep;
+        private _mouseWheelSpeed;
+        private _decelerationRate;
+        private _scrollBarMargin;
+        private _bouncebackEffect;
+        private _touchEffect;
+        private _scrollBarDisplayAuto;
+        private _vScrollNone;
+        private _hScrollNone;
+        private _needRefresh;
+        private _refreshBarAxis;
+        private _displayOnLeft;
+        private _snapToItem;
+        _displayInDemand: boolean;
+        private _mouseWheelEnabled;
+        private _pageMode;
+        private _inertiaDisabled;
+        private _xPos;
+        private _yPos;
+        private _viewSize;
+        private _contentSize;
+        private _overlapSize;
+        private _pageSize;
+        private _containerPos;
+        private _beginTouchPos;
+        private _lastTouchPos;
+        private _lastTouchGlobalPos;
+        private _velocity;
+        private _velocityScale;
+        private _lastMoveTime;
+        private _isHoldAreaDone;
+        private _aniFlag;
+        private _scrollBarVisible;
+        private _headerLockedSize;
+        private _footerLockedSize;
+        private _refreshEventDispatching;
+        private _tweening;
+        private _tweenTime;
+        private _tweenDuration;
+        private _tweenStart;
+        private _tweenChange;
+        private _pageController;
+        private _hzScrollBar;
+        private _vtScrollBar;
+        private _header;
+        private _footer;
+        private _isDragging;
         static draggingPane: ScrollPane;
-        private static $gestureFlag;
+        private static _gestureFlag;
         private static sHelperPoint;
         private static sHelperRect;
         private static sEndPos;
         private static sOldChange;
+        static SCROLL: string;
+        static SCROLL_END: string;
+        static PULL_DOWN_RELEASE: string;
+        static PULL_UP_RELEASE: string;
         static TWEEN_DEFAULT_DURATION: number;
         static TWEEN_MANUALLY_SET_DURATION: number;
         static PULL_DIST_RATIO: number;
         /**@internal */
-        $loop: number;
-        constructor(owner: GComponent, scrollType: number, scrollBarMargin: utils.Margin, scrollBarDisplay: number, flags: number, vtScrollBarRes: string, hzScrollBarRes: string, headerRes: string, footerRes: string);
+        _loop: number;
+        _floating: boolean;
+        constructor(owner: GComponent);
+        setup(buffer: ByteBuffer): void;
         dispose(): void;
         get owner(): GComponent;
         get horzScrollBar(): GScrollBar;
+        get hzScrollBar(): GScrollBar;
         get vertScrollBar(): GScrollBar;
+        get vtScrollBar(): GScrollBar;
         get header(): GComponent;
         get footer(): GComponent;
         get bouncebackEffect(): boolean;
@@ -1704,8 +2036,8 @@ declare namespace fgui {
         set currentPageY(value: number);
         get isBottomMost(): boolean;
         get isRightMost(): boolean;
-        get pageController(): controller.Controller;
-        set pageController(value: controller.Controller);
+        get pageController(): Controller;
+        set pageController(value: Controller);
         get scrollingPosX(): number;
         get scrollingPosY(): number;
         scrollTop(ani?: boolean): void;
@@ -1714,6 +2046,8 @@ declare namespace fgui {
         scrollDown(ratio?: number, ani?: boolean): void;
         scrollLeft(ratio?: number, ani?: boolean): void;
         scrollRight(ratio?: number, ani?: boolean): void;
+        get scrollStep(): number;
+        set scrollStep(v: number);
         scrollToView(target: Object, ani?: boolean, snapToFirst?: boolean): void;
         isChildInView(obj: GObject): boolean;
         cancelDragging(): void;
@@ -1727,7 +2061,7 @@ declare namespace fgui {
         /**
          * @internal
          */
-        handleControllerChanged(c: controller.Controller): void;
+        handleControllerChanged(c: Controller): void;
         private updatePageController;
         /**
          * @internal
@@ -1744,13 +2078,13 @@ declare namespace fgui {
         private refresh;
         private refresh2;
         private syncScrollBar;
-        private $mouseDown;
-        private $mouseMove;
-        private $mouseUp;
-        private $click;
-        private $mouseWheel;
-        private $rollOver;
-        private $rollOut;
+        private _mouseDown;
+        private _mouseMove;
+        private _mouseUp;
+        private _click;
+        private _mouseWheel;
+        private _rollOver;
+        private _rollOut;
         private showScrollBar;
         private setScrollBarVisible;
         private getLoopPartSize;
@@ -1769,163 +2103,93 @@ declare namespace fgui {
         private runTween;
     }
 }
-declare namespace fgui {
-    export const enum TransitionActionType {
-        XY = 0,
-        Size = 1,
-        Scale = 2,
-        Pivot = 3,
-        Alpha = 4,
-        Rotation = 5,
-        Color = 6,
-        Animation = 7,
-        Visible = 8,
-        Sound = 9,
-        Transition = 10,
-        Shake = 11,
-        ColorFilter = 12,
-        Skew = 13,
-        Unknown = 14
-    }
-    export interface TransitionPlaySetting {
-        onComplete?: (...args: any[]) => void;
-        onCompleteObj?: any;
-        onCompleteParam?: any;
-        times: number;
-        delay: number;
-    }
-    export class Transition {
+declare module fgui {
+    class Transition {
         name: string;
-        autoPlayRepeat: number;
-        autoPlayDelay: number;
-        private $owner;
-        private $ownerBaseX;
-        private $ownerBaseY;
-        private $items;
-        private $totalTimes;
-        private $totalTasks;
-        private $playing;
-        private $onComplete;
-        private $onCompleteObj;
-        private $onCompleteParam;
-        private $options;
-        private $reversed;
-        private $maxTime;
-        private $autoPlay;
+        private _owner;
+        private _ownerBaseX;
+        private _ownerBaseY;
+        private _items;
+        private _totalTimes;
+        private _totalTasks;
+        private _playing;
+        private _paused;
+        private _onComplete;
+        private _onCompleteCaller;
+        private _onCompleteParam;
+        private _options;
+        private _reversed;
+        private _totalDuration;
+        private _autoPlay;
+        private _autoPlayTimes;
+        private _autoPlayDelay;
+        private _timeScale;
+        private _startTime;
+        private _endTime;
         static OPTION_IGNORE_DISPLAY_CONTROLLER: number;
         static OPTION_AUTO_STOP_DISABLED: number;
         static OPTION_AUTO_STOP_AT_END: number;
-        private static FRAME_RATE;
         constructor(owner: GComponent);
-        private $ownerVisibleChanged;
-        get autoPlay(): boolean;
-        set autoPlay(value: boolean);
-        changeRepeat(value: number): void;
-        /**
-         * Play transition by specified settings:
-         * 1) pass whole parameters:
-                onComplete?: (...args:any[]) => void,
-                onCompleteObj?: any,
-                onCompleteParam?: any,
-                times: number,
-                delay: number
-         * 2) just pass 1 object which implements TransitionPlaySetting (recommended)
-         */
-        play(...args: any[]): void;
-        /**
-         * Play transition by specified settings:
-         * 1) pass whole parameters:
-                onComplete?: (...args:any[]) => void,
-                onCompleteObj?: any,
-                onCompleteParam?: any,
-                times: number,
-                delay: number
-         * 2) just pass 1 object which implements TransitionPlaySetting (recommended)
-         */
-        playReverse(...args: any[]): void;
-        private $play;
+        play(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number, startTime?: number, endTime?: number): void;
+        playReverse(onComplete?: Function, onCompleteObj?: any, onCompleteParam?: any, times?: number, delay?: number): void;
+        changePlayTimes(value: number): void;
+        setAutoPlay(value: boolean, times?: number, delay?: number): void;
+        private _play;
         stop(setToComplete?: boolean, processCallback?: boolean): void;
         private stopItem;
+        setPaused(paused: boolean): void;
         dispose(): void;
         get playing(): boolean;
         setValue(label: string, ...args: any[]): void;
-        setHook(label: string, callback: () => void, thisObj?: any): void;
+        setHook(label: string, callback: Function, caller: any): void;
         clearHooks(): void;
         setTarget(label: string, newTarget: GObject): void;
         setDuration(label: string, value: number): void;
+        getLabelTime(label: string): number;
+        get timeScale(): number;
+        set timeScale(value: number);
         updateFromRelations(targetId: string, dx: number, dy: number): void;
+        onOwnerAddedToStage(): void;
+        onOwnerRemovedFromStage(): void;
+        private onDelayedPlay;
         private internalPlay;
-        private prepareValue;
-        private startTween;
-        private $delayCall;
-        private $delayCall2;
-        private $tweenUpdate;
-        private $tweenComplete;
-        private $tweenRepeatComplete;
-        private disposeTween;
-        private $playTransComplete;
+        private playItem;
+        private skipAnimations;
+        private onDelayedPlayItem;
+        private onTweenStart;
+        private onTweenUpdate;
+        private onTweenComplete;
+        private onPlayTransCompleted;
+        private callHook;
         private checkAllComplete;
         private applyValue;
-        /**@internal */
-        $shakeItem(item: TransitionItem, elapsedMS: number): void;
-        setup(xml: utils.XmlNode): void;
+        setup(buffer: ByteBuffer): void;
         private decodeValue;
     }
-    class TransitionItem {
-        time: number;
-        targetId: string;
-        type: number;
-        duration: number;
-        value: TransitionValue;
-        startValue: TransitionValue;
-        endValue: TransitionValue;
-        easeType: (t: number) => number;
-        repeat: number;
-        yoyo: boolean;
-        tween: boolean;
-        label: string;
-        label2: string;
-        hook: () => void;
-        hookObj: any;
-        hook2: () => void;
-        hook2Obj: any;
-        tweenTimes: number;
-        tweener: GTweener;
-        completed: boolean;
-        target: GObject;
-        filterCreated: boolean;
-        lockToken: number;
-        constructor();
-        /**@internal */
-        $shake(trans: Transition, elapsedMS: number): void;
+}
+declare module fgui {
+    class TranslationHelper {
+        static strings: Object;
+        static loadFromXML(source: string): void;
+        static translateComponent(item: PackageItem): void;
     }
-    class TransitionValue {
-        f1: number;
-        f2: number;
-        f3: number;
-        f4: number;
-        i: number;
-        c: number;
-        b: boolean;
-        s: string;
-        b1: boolean;
-        b2: boolean;
-    }
-    export {};
+}
+declare namespace fgui {
+    const version = "1.0.0";
 }
 declare namespace fgui {
     class Window extends GComponent {
-        private $contentPane;
-        private $modalWaitPane;
-        private $closeButton;
-        private $dragArea;
-        private $contentArea;
-        private $frame;
-        private $modal;
-        private $uiSources;
-        private $inited;
-        private $loading;
-        protected $requestingCmd: number;
+        private _contentPane;
+        private _modalWaitPane;
+        private _closeButton;
+        private _dragArea;
+        private _contentArea;
+        private _frame;
+        private _modal;
+        private _uiSources;
+        private _inited;
+        private _loading;
+        protected _requestingCmd: number;
         bringToFrontOnClick: boolean;
         constructor();
         addUISource(source: IUISource): void;
@@ -1959,17 +2223,17 @@ declare namespace fgui {
         protected onHide(): void;
         protected doShowAnimation(): void;
         protected doHideAnimation(): void;
-        private $uiLoadComplete;
-        private $init;
+        private _uiLoadComplete;
+        private _init;
         dispose(): void;
         protected closeEventHandler(evt: PIXI.interaction.InteractionEvent): void;
-        private $onShown;
-        private $onHidden;
-        private $mouseDown;
-        private $dragStart;
+        private _onShown;
+        private _onHidden;
+        private _mouseDown;
+        private _dragStart;
     }
 }
-declare namespace PIXIExtend {
+declare namespace fgui.pixi_extend {
     class InteractionManager extends PIXI.interaction.InteractionManager {
         stageRotation: number;
         stageScaleX: number;
@@ -1982,7 +2246,7 @@ declare namespace PIXIExtend {
         mapPositionToPoint(point: PIXI.Point, x: number, y: number): void;
     }
 }
-declare namespace PIXIExtend {
+declare namespace fgui.pixi_extend {
     class NineSlicePlane extends PIXI.NineSlicePlane {
         protected $flipX: boolean;
         protected $flipY: boolean;
@@ -1995,12 +2259,12 @@ declare namespace PIXIExtend {
         set flipY(v: boolean);
     }
 }
-declare namespace PIXIExtend {
+declare namespace fgui.pixi_extend {
     class Sprite extends PIXI.Sprite {
-        protected $flipX: boolean;
-        protected $flipY: boolean;
-        protected $frameId: string;
-        protected static $cachedTexturePool: {
+        protected _flipX: boolean;
+        protected _flipY: boolean;
+        protected _frameId: string;
+        protected static _cachedTexturePool: {
             [key: string]: {
                 refCount: number;
                 texture: PIXI.Texture;
@@ -2026,7 +2290,9 @@ declare namespace PIXIExtend {
 declare namespace fgui {
     /**global ui configuration */
     class UIConfig {
-        /**default font name of your project. */
+        /**default font name of your project.
+         * 默认字体
+         */
         static defaultFont: string;
         /** resource used by Window.showModalWait to lock the certain window with modal mode.*/
         static windowModalWaiting: string;
@@ -2035,19 +2301,20 @@ declare namespace fgui {
         /** modal layer background configuration. */
         static modalLayerColor: number;
         static modalLayerAlpha: number;
+        static buttonSound: string;
+        static buttonSoundVolumeScale: number;
         /** global scrollbar name */
         static horizontalScrollBar: string;
         static verticalScrollBar: string;
-        /** scrolling distance per action in pixel*/
-        static defaultScrollSpeed: number;
+        static defaultScrollStep: number;
+        /** Deceleration ratio of scrollpane when its in touch dragging.*/
+        static defaultScrollDecelerationRate: number;
         /** default scrollbar display mode. It's recommended to set ScrollBarDisplayType.Visible for Desktop environment and ScrollBarDisplayType.Auto for mobile environment.*/
         static defaultScrollBarDisplay: number;
         /** allow user to drag the content of a container. Set to true for mobile is recommended.*/
         static defaultScrollTouchEffect: boolean;
         /** enable bounce effect when the scrolling reaches to the edge of a container. Set to true for mobile is recommended.*/
         static defaultScrollBounceEffect: boolean;
-        /** Deceleration ratio of scrollpane when its in touch dragging.*/
-        static defaultScrollDecelerationRate: number;
         /** global PopupMenu name.*/
         static popupMenu: string;
         /** seperator resource name to be created to seperate each items on the global PopupMenu.*/
@@ -2064,79 +2331,69 @@ declare namespace fgui {
         static touchDragSensitivity: number;
         /** auto bring the window you clicked to the topmost level of the GRoot children list.*/
         static bringWindowToFrontOnClick: boolean;
+        static frameTimeForAsyncUIConstruction: number;
     }
 }
-declare namespace fgui.controller {
+declare namespace fgui {
+    /** Action 类型定义 */
+    enum eActionType {
+        /** 播放动效 */
+        PlayTransitionAction = 0,
+        /** 改变页面 */
+        ChangePageAction = 1
+    }
     class Action {
         fromPage: string[];
         toPage: string[];
+        static createAction(type: number): Action;
         static create(type: string): Action;
         execute(controller: Controller, prevPage: string, curPage: string): void;
         protected enter(controller: Controller): void;
         protected leave(controller: Controller): void;
-        setup(xml: utils.XmlNode): void;
+        /**
+         * @hide
+         * @param buffer package 包中对应的Action对象属性字节流
+         */
+        setup(buffer: ByteBuffer): void;
+        /**
+         * v1 版本
+         * @hide
+         * @param xml 属性
+         */
+        setupv1(xml: utils.XmlNode): void;
     }
 }
-declare namespace fgui.controller {
+declare namespace fgui {
+    /**
+     * 改变页面 Action
+     */
     class ChangePageAction extends Action {
         objectId: string;
         controllerName: string;
         targetPage: string;
+        /**
+         * @override Action.enter
+         * @param controller
+         */
         protected enter(controller: Controller): void;
-        setup(xml: utils.XmlNode): void;
+        /**
+         * @hide
+         * @override Action.setup
+         * @param buffer 参数流
+         */
+        setup(buffer: ByteBuffer): void;
+        /**
+         * @hide
+         * @override Action.setupv1
+         * @param xml 参数node
+         */
+        setupv1(xml: utils.XmlNode): void;
     }
 }
-declare namespace fgui.controller {
-    class Controller extends PIXI.utils.EventEmitter {
-        private $name;
-        private $selectedIndex;
-        private $previousIndex;
-        private $pageIds;
-        private $pageNames;
-        private $actions;
-        /**@internal */
-        $parent: GComponent;
-        /**@internal */
-        $autoRadioGroupDepth: boolean;
-        /**@internal */
-        $updating: boolean;
-        private static $nextPageId;
-        constructor();
-        get name(): string;
-        set name(value: string);
-        get parent(): GComponent;
-        get selectedIndex(): number;
-        set selectedIndex(value: number);
-        setSelectedIndex(value?: number): void;
-        get previsousIndex(): number;
-        get selectedPage(): string;
-        set selectedPage(val: string);
-        setSelectedPage(value: string): void;
-        get previousPage(): string;
-        get pageCount(): number;
-        getPageName(index?: number): string;
-        addPage(name?: string): void;
-        addPageAt(name: string, index?: number): void;
-        removePage(name: string): void;
-        removePageAt(index?: number): void;
-        clearPages(): void;
-        hasPage(aName: string): boolean;
-        getPageIndexById(aId: string): number;
-        getPageIdByName(aName: string): string;
-        getPageNameById(aId: string): string;
-        getPageId(index?: number): string;
-        get selectedPageId(): string;
-        set selectedPageId(val: string);
-        set oppositePageId(val: string);
-        get previousPageId(): string;
-        executeActions(): void;
-        setup(xml: utils.XmlNode): void;
-    }
-}
-declare namespace fgui.controller {
+declare namespace fgui {
     class PageOption {
-        private $controller;
-        private $id;
+        private _controller;
+        private _id;
         set controller(val: Controller);
         set name(pageName: string);
         get name(): string;
@@ -2147,17 +2404,18 @@ declare namespace fgui.controller {
         get id(): string;
     }
 }
-declare namespace fgui.controller {
+declare namespace fgui {
     class PlayTransitionAction extends Action {
         transitionName: string;
-        repeat: number;
+        playTimes: number;
         delay: number;
         stopOnExit: boolean;
-        private $currentTransition;
+        private _currentTransition;
         protected enter(controller: Controller): void;
         protected leave(controller: Controller): void;
+        setup(buffer: ByteBuffer): void;
         /**@internal */
-        setup(xml: utils.XmlNode): void;
+        setupv1(xml: utils.XmlNode): void;
     }
 }
 declare namespace fgui {
@@ -2185,6 +2443,7 @@ declare namespace fgui {
         glyphs: GlyphDictionary;
         resizable: boolean;
         colorable: boolean;
+        tint: boolean;
         constructor();
     }
 }
@@ -2214,30 +2473,35 @@ declare namespace fgui {
     }
 }
 declare namespace fgui {
+    /**
+     * 动画帧
+     */
     class Frame {
+        /** 延时 */
         addDelay: number;
+        /** 纹理 */
         texture: PIXI.Texture;
     }
 }
 declare namespace fgui {
     class HTMLInput {
-        private $input;
-        private $singleLine;
-        private $multiLine;
-        private $curEle;
+        private _input;
+        private _singleLine;
+        private _multiLine;
+        private _curEle;
         /**@internal */
-        $wrapper: HTMLDivElement;
-        private $delegateDiv;
-        private $canvas;
+        _wrapper: HTMLDivElement;
+        private _delegateDiv;
+        private _canvas;
         /**@internal */
-        $requestToShow: boolean;
+        _requestToShow: boolean;
         /**@internal */
-        $scaleX: number;
+        _scaleX: number;
         /**@internal */
-        $scaleY: number;
+        _scaleY: number;
         static isTyping: boolean;
         private constructor();
-        private static $instance;
+        private static _instance;
         static get inst(): HTMLInput;
         initialize(container: HTMLElement, view: HTMLCanvasElement): void;
         isInputOn(): boolean;
@@ -2272,66 +2536,83 @@ declare namespace fgui {
 declare namespace fgui {
     class InputElement extends PIXI.utils.EventEmitter {
         private htmlInput;
-        private $requestToShow;
+        private _requestToShow;
         private inputElement;
         private inputDiv;
-        private $scaleX;
-        private $scaleY;
+        private _scaleX;
+        private _scaleY;
         private textValue;
         private colorValue;
-        protected $textfield: GTextInput;
+        protected _textfield: GTextInput;
         constructor(tf: GTextInput);
         /**@internal */
-        $addToStage(): void;
+        _addToStage(): void;
         private initElement;
         get textField(): GTextField;
         /**@internal */
-        $show(): void;
+        _show(): void;
         onBlurHandler(): void;
         /**@internal */
-        $hide(): void;
+        _hide(): void;
         get text(): string;
         set text(value: string);
         setColor(value: number): void;
         /**@internal */
-        $onBlur(): void;
+        _onBlur(): void;
         onInputHandler(): void;
         private setAreaHeight;
         private getVAlignFactor;
         onClickHandler(e: Event): void;
         onDisconnect(): void;
         private setElementStyle;
-        private $attrsCache;
+        private _attrsCache;
         setAttribute(name: string, value: string): void;
         getAttribute(name: string): string;
         /**@internal */
-        $removeFromStage(): void;
+        _removeFromStage(): void;
         resetInput(): void;
     }
 }
 declare namespace fgui {
     class MovieClip extends PIXI.Sprite implements IUIObject {
+        /** @hide 间隔 */
         interval: number;
         swing: boolean;
         repeatDelay: number;
-        private $playing;
-        private $frameCount;
-        private $frames;
-        private $currentFrame;
-        private $status;
-        private $settings;
+        /** @hide 是否在播放 */
+        private _playing;
+        /** @hide 帧数量 */
+        private _frameCount;
+        /** @hide 帧数据 */
+        private _frames;
+        /** @hide 当前帧 */
+        private _currentFrame;
+        /** @hide 状态 */
+        private _status;
+        /** @hide 动画设置 */
+        private _settings;
+        /** @hide 帧数据 */
         private data;
-        private $boundsRect;
+        /** @hide 所属的UI对象 */
         UIOwner: GObject;
+        fillMethod: number;
+        fillOrigin: number;
+        fillClockwise: boolean;
+        fillAmount: number;
+        private _frameElapsed;
         constructor(owner: GObject);
+        /** 获取帧信息 */
         get frames(): Frame[];
+        /** 设置帧信息 */
         set frames(value: Frame[]);
         get frameCount(): number;
-        get boundsRect(): PIXI.Rectangle;
-        set boundsRect(value: PIXI.Rectangle);
+        /** 获取当前帧 */
         get currentFrame(): number;
+        /** 设置当前的帧 */
         set currentFrame(value: number);
+        /** 是否正在播放 */
         get playing(): boolean;
+        /** 是否正在播放 */
         set playing(value: boolean);
         /**
          * Modify the playing settings for the current MovieClip object, there are two ways to call this method:
@@ -2346,7 +2627,7 @@ declare namespace fgui {
          */
         setPlaySettings(...args: any[]): void;
         private update;
-        private $playEnd;
+        private __playEnd;
         private setFrame;
         private added;
         private removed;
@@ -2358,9 +2639,9 @@ declare namespace fgui {
         reachesEnd: boolean;
         reversed: boolean;
         repeatedCount: number;
-        private $curFrame;
-        private $lastTime;
-        private $curFrameDelay;
+        private _curFrame;
+        private _lastTime;
+        private _curFrameDelay;
         constructor();
         update(mc: MovieClip): void;
         get currentFrame(): number;
@@ -2399,8 +2680,8 @@ declare namespace fgui {
 }
 declare namespace fgui {
     class UIContainer extends PIXI.Container implements IUIObject {
-        protected $scrollRect: PIXI.Rectangle;
-        protected $rectMask: PIXI.Graphics;
+        protected _scrollRect: PIXI.Rectangle;
+        protected _rectMask: PIXI.Graphics;
         UIOwner: GObject;
         constructor(owner?: GObject);
         get scrollRect(): PIXI.Rectangle;
@@ -2410,10 +2691,21 @@ declare namespace fgui {
 declare namespace fgui {
     class UIImage extends PIXI.Container implements IUIObject {
         UIOwner: GObject;
-        protected $disp: PIXIExtend.NineSlicePlane | PIXIExtend.Sprite;
+        protected _disp: PIXI.TilingSprite | pixi_extend.NineSlicePlane | pixi_extend.Sprite;
+        playing: boolean;
+        frame: number;
+        protected _fillMethod: FillMethod;
+        protected _fillOrigin: number;
+        protected _fillClockwise: number;
+        protected _fillAmount: number;
+        fillMethod: number;
+        fillOrigin: number;
+        fillClockwise: boolean;
+        fillAmount: number;
+        smoothing: boolean;
         constructor(owner?: GObject);
         /**@internal */
-        $initDisp(item?: PackageItem): void;
+        initDisp(item?: PackageItem): void;
         get tint(): number;
         set tint(v: number);
         get height(): number;
@@ -2518,17 +2810,17 @@ declare namespace fgui {
         [key: string]: string | number;
     }
     class UIStage extends PIXI.utils.EventEmitter {
-        protected $appContext: PIXI.Application;
-        protected $appStage: PIXI.Container;
-        protected $options: UIStageOptions;
-        protected $width: number;
-        protected $height: number;
-        protected $scaleX: number;
-        protected $scaleY: number;
-        protected $canvasMatrix: PIXI.Matrix;
+        protected _appContext: PIXI.Application;
+        protected _appStage: PIXI.Container;
+        protected _options: UIStageOptions;
+        protected _width: number;
+        protected _height: number;
+        protected _scaleX: number;
+        protected _scaleY: number;
+        protected _canvasMatrix: PIXI.Matrix;
         offsetX: number;
         offsetY: number;
-        private $sizeCalcer;
+        private _sizeCalcer;
         constructor(app: PIXI.Application, stageOptions?: UIStageOptions);
         get orientation(): StageOrientation;
         get stageWidth(): number;
@@ -2557,32 +2849,20 @@ declare namespace fgui {
 declare namespace fgui {
     class UITextField extends PIXI.Text implements IUIObject {
         UIOwner: GObject;
-        protected $minHeight: number;
-        protected $minHeightID: number;
+        protected _minHeight: number;
+        protected _minHeightID: number;
         constructor(owner?: GObject);
+        init(): void;
         get minHeight(): number;
         /**@internal */
-        $updateMinHeight(): void;
+        updateMinHeight(): void;
         protected updateFrame(): void;
         private internalUpdateFrame;
         protected _onTextureUpdate(): void;
-        get width(): number;
-        set width(v: number);
-        get height(): number;
-        set height(v: number);
         get textHeight(): number;
         set textHeight(v: number);
         get textWidth(): number;
         set textWidth(v: number);
-    }
-}
-declare namespace fgui {
-    const enum DisplayObjectEvent {
-        XY_CHANGED = "__xyChanged",
-        SIZE_CHANGED = "__sizeChanged",
-        VISIBLE_CHANGED = "__visibleChanged",
-        SIZE_DELAY_CHANGE = "__sizeDelayChange",
-        MOUSE_WHEEL = "__mouseWheel"
     }
 }
 declare namespace fgui {
@@ -2630,6 +2910,179 @@ declare namespace fgui {
     }
 }
 declare namespace fgui {
+    class GearBase<T = GObject> {
+        static disableAllTweenEffect: boolean;
+        protected _owner: GObject & T;
+        protected _controller: Controller;
+        protected _tweenConfig: GearTweenConfig;
+        private static Classes;
+        static create(owner: GObject, index: number): GearBase;
+        constructor(owner: GObject & T);
+        dispose(): void;
+        get controller(): Controller;
+        set controller(val: Controller);
+        get tweenConfig(): GearTweenConfig;
+        setup(buffer: ByteBuffer): void;
+        updateFromRelations(dx: number, dy: number): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        protected init(): void;
+        apply(): void;
+        updateState(): void;
+    }
+    class GearTweenConfig {
+        tween: boolean;
+        easeType: number;
+        duration: number;
+        delay: number;
+        _displayLockToken: number;
+        _tweener: GTweener;
+        constructor();
+    }
+}
+declare namespace fgui {
+    class GearAnimation extends GearBase<IAnimationGear> {
+        private _storage;
+        private _default;
+        constructor(owner: GObject & IAnimationGear);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare namespace fgui {
+    class GearColor extends GearBase<IColorGear> {
+        private _storage;
+        private _default;
+        constructor(owner: GObject & IColorGear);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare namespace fgui {
+    class GearDisplay extends GearBase<GObject> {
+        private _visible;
+        private _displayLockToken;
+        pages: string[];
+        constructor(owner: GObject);
+        protected init(): void;
+        apply(): void;
+        addLock(): number;
+        releaseLock(token: number): void;
+        get connected(): boolean;
+    }
+}
+declare namespace fgui {
+    class GearDisplay2 extends GearBase<GObject> {
+        pages: string[];
+        condition: number;
+        private _visible;
+        constructor(owner: GObject);
+        protected init(): void;
+        apply(): void;
+        evaluate(connected: boolean): boolean;
+    }
+}
+declare namespace fgui {
+    class GearFontSize extends GearBase {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare namespace fgui {
+    class GearIcon extends GearBase<GObject> {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare namespace fgui {
+    class GearLook extends GearBase<GObject> {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        private __tweenUpdate;
+        private __tweenComplete;
+        updateState(): void;
+    }
+}
+declare namespace fgui {
+    class GearSize extends GearBase<GObject> {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        private __tweenUpdate;
+        private __tweenComplete;
+        updateState(): void;
+        updateFromRelations(dx: number, dy: number): void;
+    }
+}
+declare namespace fgui {
+    class GearText extends GearBase<GObject> {
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        updateState(): void;
+    }
+}
+declare namespace fgui {
+    class GearXY extends GearBase<GObject> {
+        positionsInPercent: boolean;
+        private _storage;
+        private _default;
+        constructor(owner: GObject);
+        protected init(): void;
+        protected addStatus(pageId: string, buffer: ByteBuffer): void;
+        addExtStatus(pageId: string, buffer: ByteBuffer): void;
+        apply(): void;
+        private __tweenUpdate;
+        private __tweenComplete;
+        updateState(): void;
+        updateFromRelations(dx: number, dy: number): void;
+    }
+}
+declare namespace fgui {
+    interface IAnimationGear {
+        playing: boolean;
+        frame: number;
+    }
+    let isAnimationGear: (obj: any) => obj is IAnimationGear;
+}
+declare namespace fgui {
+    interface IColorGear {
+        color: number;
+    }
+    let isColorGear: (obj: any) => obj is IColorGear;
+}
+declare namespace fgui.provider {
+    /**
+     * 资源提供者
+     */
+    interface IResourceProvider {
+        getResource<T>(key: string): T;
+    }
+}
+declare namespace fgui {
     class DisplayListItem {
         packageItem: PackageItem;
         type: string;
@@ -2642,69 +3095,112 @@ declare namespace fgui {
     class PackageItem {
         owner: UIPackage;
         type: PackageItemType;
+        objectType: ObjectType;
         id: string;
         name: string;
         width: number;
         height: number;
         file: string;
         decoded: boolean;
+        rawData: ByteBuffer;
+        highResolution: Array<string>;
+        branches: Array<string>;
         scale9Grid: PIXI.Rectangle;
         scaleByTile: boolean;
+        tileGridIndice: number;
         tiledSlices: number;
+        smoothing: boolean;
         texture: PIXI.Texture;
+        pixelHitTestData: PixelHitTestData;
         interval: number;
         repeatDelay: number;
         swing: boolean;
         frames: Frame[];
         componentData: utils.XmlNode;
         displayList: DisplayListItem[];
+        extensionType: {
+            new (): GComponent;
+        };
         bitmapFont: BitmapFont;
         load(): AssetTypes;
+        getBranch(): PackageItem;
+        getHighResolution(): PackageItem;
         toString(): string;
     }
 }
 declare namespace fgui {
-    class UIObjectFactory {
+    type ExtensionClassDictionary = {
+        [key: string]: new () => GComponent;
+    };
+    export class UIObjectFactory {
         private static packageItemExtensions;
+        static extensions: ExtensionClassDictionary;
+        private static loaderType;
         private static loaderExtension;
+        static setExtension(url: string, type: {
+            new (): GComponent;
+        }): void;
         static setPackageItemExtension(url: string, type: {
             new (): GComponent;
         }): void;
         static setLoaderExtension(type: {
             new (): GLoader;
         }): void;
-        static newObject(pi: PackageItem): GObject;
+        static resolvePackageItemExtension(pi: PackageItem): void;
+        static newObject(pi: PackageItem, userClass?: {
+            new (): GObject;
+        }): GObject;
+        static newObject2(type: ObjectType): GObject;
         /**@internal */
         static newObjectDirectly(type: string): GObject;
+        static newObjectv1(pi: PackageItem): GObject;
     }
+    export {};
 }
 declare namespace fgui {
     type AssetTypes = PIXI.Texture | BitmapFont | Frame[] | utils.XmlNode | PIXI.LoaderResource;
     class UIPackage {
-        private $id;
-        private $name;
-        private $resKey;
-        private $items;
-        private $itemsById;
-        private $itemsByName;
-        private $resData;
-        private $customId;
-        private $atlasConfigs;
+        private _id;
+        private _name;
+        private _items;
+        private _itemsById;
+        private _itemsByName;
+        private _resKey;
+        private _customId;
+        private _atlasConfigs;
+        /** @hide 资源组名称 */
+        private _assetGroupName;
+        private _dependencies;
+        private _branches;
+        _branchIndex: number;
         /**@internal */
-        static $constructingObjects: number;
-        private static $packageInstById;
-        private static $packageInstByName;
-        private static $bitmapFonts;
-        private static $stringsSource;
-        private static sep0;
-        private static sep1;
-        private static sep2;
-        private static sep3;
+        static _constructing: number;
+        private static _bitmapFonts;
+        private static _stringsSource;
+        private static _instById;
+        private static _instByName;
+        private static _branch;
+        private static _vars;
         constructor();
+        get id(): string;
+        get name(): string;
+        get customId(): string;
+        set customId(value: string);
         static getById(id: string): UIPackage;
         static getByName(name: string): UIPackage;
-        static addPackage(resKey: string, decompressor?: Decompressor): UIPackage;
-        static removePackage(packageId: string): void;
+        static get branch(): string;
+        static set branch(value: string);
+        static getVar(key: string): any;
+        static setVar(key: string, value: any): void;
+        /**
+         * 添加资源包，添加之前，资源包必须已经下载完成，目标不支持内部加载。
+         * @param resKey 包名称
+         * @param assetGroupName 所在资源组，默认为 utils.AssetManager.DEFAULT_GROUP
+         * @param decompressor 解压函数，如果使用压缩功能，需要提供
+         */
+        static addPackage(resKey: string, assetGroupName?: string, decompressor?: Decompressor): UIPackage;
+        private loadPackage;
+        static removePackage(packageIdOrName: string): void;
         static createObject(pkgName: string, resName: string, userClass?: {
             new (): GObject;
         }): GObject;
@@ -2720,13 +3216,7 @@ declare namespace fgui {
          * @param url url with old version format
          */
         static normalizeURL(url: string): string;
-        private create;
-        private decompressPackage;
         dispose(): void;
-        get id(): string;
-        get name(): string;
-        get customId(): string;
-        set customId(value: string);
         createObject(resName: string, userClass?: {
             new (): GObject;
         }): GObject;
@@ -2736,14 +3226,17 @@ declare namespace fgui {
         getItemById(itemId: string): PackageItem;
         getItemByName(resName: string): PackageItem;
         getItemAssetByName(resName: string): AssetTypes;
+        getItemAsset(item: PackageItem): any;
         private createSpriteTexture;
-        getItemAsset(item: PackageItem): AssetTypes;
         private loadComponentChildren;
-        private getResDescriptor;
         private loadComponentTranslation;
         private loadMovieClip;
         private loadFont;
     }
+}
+declare namespace fgui.the3rd.ieee754 {
+    function read(buffer: Uint8Array | ArrayBuffer, offset: number, isLE: boolean, mLen: number, nBytes: number): number;
+    function write(buffer: Uint8Array | ArrayBuffer, value: number, offset: number, isLE: boolean, mLen: number, nBytes: number): void;
 }
 declare module fgui {
     class EaseManager {
@@ -2936,6 +3429,7 @@ declare module fgui {
         private static _totalActiveTweens;
         private static _lastTime;
         private static _inited;
+        static _ticker: PIXI.Ticker;
         static createTween(): GTweener;
         static isTweening(target: any, propType: any): boolean;
         static killTweens(target: any, completed: boolean, propType: any): boolean;
@@ -2958,18 +3452,260 @@ declare module fgui {
     }
 }
 declare namespace fgui.utils {
+    /**
+     * https://github.com/englercj/resource-loader
+     * PIXI 目前的部分接口没有提示功能，封装
+     */
+    type OnProgressSignal = (loader: AssetLoader, resource: PIXI.LoaderResource) => void;
+    type OnErrorSignal = (errMessage: string, loader: AssetLoader, resource: PIXI.LoaderResource) => void;
+    type OnLoadSignal = (loader: AssetLoader, resource: PIXI.LoaderResource) => void;
+    type OnStartSignal = (loader: AssetLoader) => void;
+    type OnCompleteSignal = (loader: AssetLoader, resources: PIXI.IResourceDictionary) => void;
+    type MiddlewareFn = (resource: PIXI.LoaderResource, next: () => void) => void;
+    type ArgumentTypes<T> = T extends (...args: infer U) => infer R ? U : never;
+    type ReplaceReturnType<T, TNewReturn> = (...a: ArgumentTypes<T>) => TNewReturn;
+    type SignalFilterFn<T> = ReplaceReturnType<T, boolean>;
+    type SignalCallbackFn<T> = ReplaceReturnType<T, void>;
+    interface SignalBinding<T extends Function> {
+        readonly fn: SignalCallbackFn<T>;
+        readonly once: boolean;
+        readonly thisArg: any;
+        next: SignalBinding<T> | null;
+        prev: SignalBinding<T> | null;
+        owner: Signal<any> | null;
+        constructor(fn: SignalCallbackFn<T>, once: boolean | undefined, thisArg: any): any;
+        detach(): boolean;
+        dispose(): void;
+    }
+    interface Signal<T extends Function> {
+        handlers(): SignalBinding<T>[];
+        hasAny(): boolean;
+        has(node: SignalBinding<T>): boolean;
+        dispatch(...args: ArgumentTypes<T>): boolean;
+        add(fn: SignalCallbackFn<T>, thisArg?: any): SignalBinding<T>;
+        once(fn: SignalCallbackFn<T>, thisArg?: any): SignalBinding<T>;
+        detach(node: SignalBinding<T>): this;
+        detachAll(): this;
+        filter(filter: SignalFilterFn<T>): void;
+        proxy(...signals: Signal<T>[]): this;
+    }
+    /** 资源组 */
+    type AssetGroup = {
+        [key: string]: PIXI.IResourceDictionary;
+    };
+    /** 一个资源条目 */
+    interface IAssetInfoItem {
+        /**
+         * 名称，如 Bag.fui 对应的资源名应该为 Bag
+         */
+        name: string;
+        /**
+         * 资源路径，如 assets/UI/Bag.fui
+         */
+        path: string;
+    }
+    /** 资源组 */
+    interface IAssetItemInfoGroup {
+        /**
+         * 资源组名称，如 Group1
+         */
+        name: string;
+        /**
+         * 资源条目信息
+         */
+        items: Array<IAssetInfoItem>;
+    }
+    /**
+     * 资源管理。
+     * 目前的资源条目命名规则：文件名无后缀
+     *
+     */
+    class AssetManager {
+        /** @hide 默认资源组名称 */
+        static readonly DEFAULT_GROUP: string;
+        private static _inst;
+        /**
+         * 单例
+         */
+        static get inst(): AssetManager;
+        /** @hide 资源组 */
+        private _assetGroup;
+        /** 获取资源管理 */
+        get assetGroup(): AssetGroup;
+        /**
+         * 获取资源组
+         * @param groupName 组名称，默认为 "default"
+         * @return 返回组对应的资源
+         */
+        get(groupName?: string): PIXI.IResourceDictionary;
+        /**
+         * 设置资源组
+         * @param groupName 资源组名称
+         * @param assetDic 资源组
+         * @return this
+         */
+        set(groupName: string, assetDic: PIXI.IResourceDictionary): this;
+        /**
+         * 添加资源
+         * @param groupName 组名，如果已经存在组名，已经存在的将会被覆盖
+         * @param assets 资源组
+         * @return this
+         */
+        add(groupName: string, assetDic: PIXI.IResourceDictionary): this;
+        /**
+         * 将资源组从资源管理对象中移除，改操作不释放资源
+         * @param groupName 资源组名，默认为 "default"
+         * @return this
+         */
+        remove(groupName?: string): this;
+        /**
+         * 销毁资源组中的资源
+         * @param groupName 资源组，默认为 "default"
+         * @return this
+         */
+        destroyAsset(groupName?: string): this;
+        /**
+         * 销毁一个资源
+         * @param assetDic 资源所在资源组
+         * @param key 资源名称
+         */
+        destroyResource(assetDic: PIXI.IResourceDictionary, key?: string): void;
+    }
+    /**
+     * PIXI 资源加载封装
+     * 5.x PIXI版本使用加载器 ：https://github.com/englercj/resource-loader
+     */
     class AssetLoader extends PIXI.Loader {
-        protected static $resources: PIXI.IResourceDictionary;
-        constructor(baseUrl?: string, concurrency?: number);
-        protected _onComplete(): void;
-        static get resourcesPool(): PIXI.IResourceDictionary;
-        static destroyResource(key: string): void;
-        static addResources(res: PIXI.IResourceDictionary): void;
+        /** @hide 资源组名 */
+        protected _groupName: string;
+        /** 获取资源组名称 */
+        get groupName(): string;
+        /** 设置资源组名称，如果设置为null,将会重新设置为 AssetManager.DEFAULT_GROUP */
+        set groupName(val: string);
+        protected _autoAddToAssetManager: boolean;
+        get autoAddToAssetManager(): boolean;
+        set autoAddToAssetManager(val: boolean);
+        /**
+         * 构造函数
+         * @param gourpName 资源组名，默认为 utils.AssetManager.DEFAULT_GROUP
+         * @param addToAssetManager 是否自动加载到 AssetManager 资源管理器中, 默认为 true
+         * @param baseUrl baseUrl
+         * @param concurrency 并行数量
+         */
+        constructor(gourpName?: string, addToAssetManager?: boolean, baseUrl?: string, concurrency?: number);
+        private __listenOnceLoadComplete;
+        /** this.onComplete 封装 */
+        get completeSignal(): Signal<OnCompleteSignal>;
+        /** this.onError 封装 */
+        get errorSignal(): Signal<OnErrorSignal>;
+        /** this.onLoad 封装 */
+        get loadSignal(): Signal<OnLoadSignal>;
+        /** this.onStart 封装 */
+        get startSignal(): Signal<OnStartSignal>;
+        /** this.onProgress 封装 */
+        get progressSignal(): Signal<OnProgressSignal>;
+        /** 在开发环境中(非 CommonJs/ES6 )，发现 add 接口 typescript 无提示功能*/
+        easyAdd(url: string): this;
+        easyAdd(name: string, url: string): this;
+        easyAdd(name: string, url: string, options?: PIXI.ILoaderOptions, cb?: Function): this;
+        easyAdd(obj: string | any | any[], options?: PIXI.ILoaderOptions, cb?: Function): this;
+        /**
+         * 批量添加，等同于 this.add(name: string, url: string)
+         * @param list 资源信息条目列表
+         * @return this
+         */
+        addGroup(list: Array<IAssetInfoItem>): this;
+        /**
+         * 异步加载
+         * @return {PIXI.IResourceDictionary} 成功
+         * @return {Error} 失败
+         */
+        loadAsync(): Promise<PIXI.IResourceDictionary | Error>;
+    }
+}
+declare module fgui {
+    class AsyncOperation {
+        /**
+         * callback(obj:GObject)
+         */
+        callback: Function;
+        callbackObj: any;
+        private _itemList;
+        private _objectPool;
+        private _index;
+        constructor();
+        createObject(pkgName: string, resName: string): void;
+        createObjectFromURL(url: string): void;
+        cancel(): void;
+        private internalCreateObject;
+        private collectComponentChildren;
+        private collectListChildren;
+        private run;
     }
 }
 declare namespace fgui.utils {
     class Binder {
         static create<T extends Function>(func: Function, context: any, ...args: any[]): T;
+    }
+}
+declare module fgui {
+    /**
+     * ByteBuffer,目前只实现了读的部分
+     * @todo
+     * 写部分
+     */
+    class ByteBuffer {
+        static BIG_ENDIAN: string;
+        static LITTLE_ENDIAN: string;
+        endian: string;
+        stringTable: Array<string>;
+        version: number;
+        private _buffer;
+        get buffer(): ArrayBuffer;
+        private _uint8Array;
+        private _position;
+        get position(): number;
+        set position(pos: number);
+        get length(): number;
+        constructor(buffer?: ArrayBuffer | Uint8Array);
+        private __checkEOF;
+        skip(count: number): void;
+        readUInt8(): number;
+        readUInt16LE(): number;
+        readUInt16BE(): number;
+        readUInt32LE(): number;
+        readUInt32BE(): number;
+        readInt8(): number;
+        readInt16LE(): number;
+        readInt16BE(): number;
+        readInt32LE(): number;
+        readInt32BE(): number;
+        readFloatLE(): number;
+        readFloatBE(): number;
+        readDoubleLE(): number;
+        readDoubleBE(): number;
+        readBool(): boolean;
+        readUnsignedShort(): number;
+        readByte(): number;
+        readUnsignedByte(): number;
+        readUnsignedInt(): number;
+        readInt(): number;
+        readShort(): number;
+        readFloat(): number;
+        protected static MAX_ARGUMENTS_LENGTH: number;
+        protected decodeCodePointsArray(codePoints: number[]): any;
+        /**
+         * 读取 UTF8 字符串. 假定字符串的前缀是无符号的短整型(Uint16)（以字节表示长度）
+         * @note 非通用接口， 字符串格式必须在 255 个字符之内，并且以0结尾.
+         */
+        readUTF(): any;
+        readS(): string;
+        readSArray(cnt: number): Array<string>;
+        writeS(value: string): void;
+        readColor(hasAlpha?: boolean): number;
+        readChar(): string;
+        readBuffer(): ByteBuffer;
+        seek(indexTablePos: number, blockIndex: number): boolean;
     }
 }
 declare namespace fgui.utils {
@@ -3026,6 +3762,8 @@ declare namespace fgui.utils {
         get brightness(): number;
         get contrast(): number;
         get saturation(): number;
+        private static helper;
+        static getMatrix(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number, result?: number[]): number[];
         /**
          * Resets the instance with the specified values.
          * @method setColor
@@ -3159,13 +3897,13 @@ declare namespace fgui.utils {
 }
 declare namespace fgui.utils {
     class InputDelegate {
-        protected $inited: boolean;
-        protected $textField: GTextInput;
-        protected $input: InputElement;
-        protected $restrictString: string;
-        protected $restrictRegex: RegExp;
-        protected $type: InputType;
-        private $focused;
+        protected _inited: boolean;
+        protected _textField: GTextInput;
+        protected _input: InputElement;
+        protected _restrictString: string;
+        protected _restrictRegex: RegExp;
+        protected _type: InputType;
+        private _focused;
         constructor(tf: GTextInput);
         initialize(): void;
         private textFieldDownHandler;
@@ -3178,18 +3916,18 @@ declare namespace fgui.utils {
         private focusHandler;
         get isFocused(): boolean;
         /**@internal */
-        $getProperty(name: string): string;
+        _getProperty(name: string): string;
         /**@internal */
-        $setProperty(name: string, value: string): void;
-        get $restrict(): string;
-        set $restrict(v: string);
+        _setProperty(name: string, value: string): void;
+        get _restrict(): string;
+        set _restrict(v: string);
         get type(): InputType;
         set type(v: InputType);
         private tryHideInput;
         /**@internal */
-        $updateProperties(): void;
+        _updateProperties(): void;
         /**@internal */
-        $onFocus(): void;
+        _onFocus(): void;
     }
 }
 declare namespace fgui.utils {
@@ -3213,10 +3951,22 @@ declare namespace fgui.utils {
         static lerp(s: number, e: number, p: number): number;
     }
 }
-declare namespace fgui.utils {
-    class RawByte {
-        private static inRange;
-        static decodeUTF8(data: Uint8Array): string;
+declare namespace fgui {
+    class PixelHitTest {
+        private _data;
+        offsetX: number;
+        offsetY: number;
+        scaleX: number;
+        scaleY: number;
+        constructor(data: PixelHitTestData, offsetX?: number, offsetY?: number);
+        contains(x: number, y: number): boolean;
+    }
+    class PixelHitTestData {
+        pixelWidth: number;
+        scale: number;
+        pixels: number[];
+        constructor();
+        load(ba: ByteBuffer): void;
     }
 }
 declare namespace fgui.utils {
@@ -3257,6 +4007,12 @@ declare module fgui {
 declare module fgui {
     class ToolSet {
         constructor();
+        /**
+         * 获取内部使用的文件名，不包含文件后缀
+         * @hide
+         * @param source 源文件名
+         * @return 内部使用的文件名
+         */
         static getFileName(source: string): string;
         static startsWith(source: string, str: string, ignoreCase?: boolean): boolean;
         static endsWith(source: string, str: string, ignoreCase?: boolean): boolean;

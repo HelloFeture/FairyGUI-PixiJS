@@ -3,7 +3,9 @@ namespace fgui {
     /**global ui configuration */
     export class UIConfig {
 
-        /**default font name of your project. */
+        /**default font name of your project. 
+         * 默认字体 
+         */
         public static defaultFont: string = "Arial";
 
         /** resource used by Window.showModalWait to lock the certain window with modal mode.*/
@@ -15,19 +17,24 @@ namespace fgui {
         public static modalLayerColor: number = 0x333333;
         public static modalLayerAlpha: number = 0.2;
 
+        //Default button click sound
+        public static buttonSound: string;
+        public static buttonSoundVolumeScale: number = 1;
+
         /** global scrollbar name */
         public static horizontalScrollBar: string;
         public static verticalScrollBar: string;
-        /** scrolling distance per action in pixel*/
-        public static defaultScrollSpeed: number = 25;
+        //Scrolling step in pixels
+        public static defaultScrollStep: number = 25;
+         /** Deceleration ratio of scrollpane when its in touch dragging.*/
+         public static defaultScrollDecelerationRate:number = .967;
         /** default scrollbar display mode. It's recommended to set ScrollBarDisplayType.Visible for Desktop environment and ScrollBarDisplayType.Auto for mobile environment.*/
         public static defaultScrollBarDisplay: number = ScrollBarDisplayType.Visible;
         /** allow user to drag the content of a container. Set to true for mobile is recommended.*/
         public static defaultScrollTouchEffect: boolean = true;
         /** enable bounce effect when the scrolling reaches to the edge of a container. Set to true for mobile is recommended.*/
         public static defaultScrollBounceEffect: boolean = true;
-        /** Deceleration ratio of scrollpane when its in touch dragging.*/
-        public static defaultScrollDecelerationRate:number = .967;
+       
 
         /** global PopupMenu name.*/
         public static popupMenu: string;
@@ -49,5 +56,7 @@ namespace fgui {
         
         /** auto bring the window you clicked to the topmost level of the GRoot children list.*/
         public static bringWindowToFrontOnClick: boolean = true;
+
+        public static frameTimeForAsyncUIConstruction: number = 2;
     }
 }

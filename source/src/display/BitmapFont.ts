@@ -10,6 +10,7 @@ namespace fgui {
         public glyphs: GlyphDictionary;
         public resizable: boolean;
         public colorable: boolean;
+        public tint: boolean;
 
         public constructor() {
             this.glyphs = {};

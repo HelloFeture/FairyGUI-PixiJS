@@ -1,5 +1,5 @@
 
-namespace PIXIExtend {
+namespace fgui.pixi_extend {
     
     export class NineSlicePlane extends PIXI.NineSlicePlane {
        
@@ -7,25 +7,25 @@ namespace PIXIExtend {
         protected $flipY:boolean = false;
 
         public updateHorizontalVertices():void {
-            // const vertices = this.vertices;
+            const vertices = this.verticesBuffer;
+            
+            const h = this.topHeight + this.bottomHeight;
+            const scale = this._height > h ? 1.0 : this._height / h;
     
-            // const h = this.topHeight + this.bottomHeight;
-            // const scale = this._height > h ? 1.0 : this._height / h;
-    
-            // vertices[9] = vertices[11] = vertices[13] = vertices[15] = (this.$flipY ? this.bottomHeight : this.topHeight) * scale;
-            // vertices[17] = vertices[19] = vertices[21] = vertices[23] = this._height - (this.$flipY ? this.topHeight : this.bottomHeight) * scale;
-            // vertices[25] = vertices[27] = vertices[29] = vertices[31] = this._height;
+            vertices[9] = vertices[11] = vertices[13] = vertices[15] = (this.$flipY ? this.bottomHeight : this.topHeight) * scale;
+            vertices[17] = vertices[19] = vertices[21] = vertices[23] = this._height - (this.$flipY ? this.topHeight : this.bottomHeight) * scale;
+            vertices[25] = vertices[27] = vertices[29] = vertices[31] = this._height;
         };
     
         public updateVerticalVertices():void {
-            // const vertices = this.vertices;
+            const vertices = this.verticesBuffer;
     
-            // const w = this.leftWidth + this.rightWidth;
-            // const scale = this._width > w ? 1.0 : this._width / w;
+            const w = this.leftWidth + this.rightWidth;
+            const scale = this._width > w ? 1.0 : this._width / w;
     
-            // vertices[2] = vertices[10] = vertices[18] = vertices[26] = (this.$flipX ? this.rightWidth : this.leftWidth) * scale;
-            // vertices[4] = vertices[12] = vertices[20] = vertices[28] = this._width - (this.$flipX ? this.leftWidth : this.rightWidth) * scale;
-            // vertices[6] = vertices[14] = vertices[22] = vertices[30] = this._width;
+            vertices[2] = vertices[10] = vertices[18] = vertices[26] = (this.$flipX ? this.rightWidth : this.leftWidth) * scale;
+            vertices[4] = vertices[12] = vertices[20] = vertices[28] = this._width - (this.$flipX ? this.leftWidth : this.rightWidth) * scale;
+            vertices[6] = vertices[14] = vertices[22] = vertices[30] = this._width;
         };
 
         public _refresh():void {

@@ -1,97 +1,117 @@
+/// <reference path="../PIXI/extras/Sprite.ts" />
+
 namespace fgui {
     export class UIImage extends PIXI.Container implements IUIObject {
         public UIOwner:GObject;
-        //protected $disp: PIXI.TilingSprite | PIXI.extras.NineSlicePlane | PIXI.extras.Sprite;
-        // !FIXME 
-        protected $disp:  PIXIExtend.NineSlicePlane | PIXIExtend.Sprite;
-        
+        protected _disp: PIXI.TilingSprite | pixi_extend.NineSlicePlane | pixi_extend.Sprite;
+       
+        public playing : boolean;
+        public frame : number;
+        // FIXIME
+        protected _fillMethod : FillMethod;
+        protected _fillOrigin : number;
+        protected _fillClockwise : number;
+        protected _fillAmount : number;
+        public fillMethod : number;
+        public fillOrigin : number;
+        public fillClockwise : boolean;
+        public fillAmount : number;
+        public smoothing : boolean;
+
         public constructor(owner?:GObject) {
             super();
             this.UIOwner = owner;
             this.interactive = this.interactiveChildren = false; 
+            let a : PIXI.TilingSprite;
         }
         
         /**@internal */
-        $initDisp(item?: PackageItem): void {
-            if (this.$disp) return;
-
+        initDisp(item?: PackageItem): void {
+            if (this._disp) {
+                return;
+            } 
+            Debug.log("initDisp");
             if(item) {
                 item.load();
 
-                // if (item.scaleByTile) {
-                //     let ts = new PIXI.TilingSprite(item.texture);
-                //     this.$disp = ts;
-                // }
-                // else 
-                if (item.scale9Grid) {
-                    this.$disp = new PIXIExtend.NineSlicePlane(
-                        item.texture,
-                        item.scale9Grid.left,
-                        item.scale9Grid.top,
-                        Math.max(0, item.texture.width - item.scale9Grid.width - item.scale9Grid.x),
-                        Math.max(0, item.texture.height - item.scale9Grid.height - item.scale9Grid.y)
-                    );
-                    this.tiledSlices = item.tiledSlices;
+                if (item.scaleByTile) {
+                    this._disp = new PIXI.TilingSprite(item.texture);
+                    Debug.log("initDisp scaleByTile....",)
+                } else if (item.scale9Grid) {
+                    this._disp = new pixi_extend.Sprite(item.id, item.texture);
+                    // TODO
+                    // this._disp = new pixi_extend.NineSlicePlane(
+                    //     item.texture,
+                    //     item.scale9Grid.left,
+                    //     item.scale9Grid.top,
+                    //     Math.max(0, item.texture.width - item.scale9Grid.width - item.scale9Grid.x),
+                    //     Math.max(0, item.texture.height - item.scale9Grid.height - item.scale9Grid.y)
+                    // );
+                    // this.tiledSlices = item.tiledSlices;
+                    // Debug.log("initDisp scale9Grid....",)
+                } else {
+                    Debug.log("initDisp normal....",)
+                    this._disp = new pixi_extend.Sprite(item.id, item.texture);
                 }
-                else
-                    this.$disp = new PIXIExtend.Sprite(item.id, item.texture);
+            } else {
+                this._disp = new pixi_extend.Sprite();
+                Debug.log("initDisp", "item is null");
             }
-            else
-                this.$disp = new PIXIExtend.Sprite();
             
-            this.addChild(this.$disp);
+            this.addChild(this._disp);
         }
 
         public get tint():number {
-            return this.$disp.tint;
+            return this._disp.tint;
         }
 
         public set tint(v:number) {
-            this.$disp.tint = v;
+            this._disp.tint = v;
         }
 
         public get height():number {
-            return this.$disp.height;
+            return this._disp.height;
         }
 
         public set height(v:number) {
-            this.$disp.height = v;
+            this._disp.height = v;
         }
 
         public get width():number {
-            return this.$disp.width;
+            return this._disp.width;
         }
 
         public set width(v:number) {
-            this.$disp.width = v;
+            this._disp.width = v;
         }
         
         public get texture(): PIXI.Texture {
-            return this.$disp.texture;
+            return this._disp.texture;
         }
 
         public set texture(v: PIXI.Texture) {
             //need to reset first?
-            /*if (this.$disp instanceof PIXI.extras.TilingSprite) {
-                this.$disp.tileScale.set(1, 1);
-                this.$disp.tilePosition.set(0, 0);
+            /*if (this._disp instanceof PIXI.extras.TilingSprite) {
+                this._disp.tileScale.set(1, 1);
+                this._disp.tilePosition.set(0, 0);
             }
-            else if (this.$disp instanceof PIXI.mesh.NineSlicePlane)
-                this.$disp.leftWidth = this.$disp.topHeight = this.$disp.rightWidth = this.$disp.bottomHeight = 0;
+            else if (this._disp instanceof PIXI.mesh.NineSlicePlane)
+                this._disp.leftWidth = this._disp.topHeight = this._disp.rightWidth = this._disp.bottomHeight = 0;
             */
-            this.$disp.texture = v;
+            this._disp.texture = v;
+            Debug.log("uiimage texture", v.width, v.height);
         }
 
         /**
          * rect = x,y,w,h = l,t,r,b
          */
         public get scale9Grid(): PIXI.Rectangle {
-            if (this.$disp instanceof PIXI.NineSlicePlane) {
+            if (this._disp instanceof PIXI.NineSlicePlane) {
                 return new PIXI.Rectangle(
-                    this.$disp.leftWidth,
-                    this.$disp.topHeight,
-                    this.$disp.rightWidth,
-                    this.$disp.bottomHeight
+                    this._disp.leftWidth,
+                    this._disp.topHeight,
+                    this._disp.rightWidth,
+                    this._disp.bottomHeight
                 );
             }
             return null;
@@ -101,15 +121,15 @@ namespace fgui {
          * rect = x,y,w,h = l,t,r,b
          */
         public set scale9Grid(rect: PIXI.Rectangle) {
-            if (this.$disp instanceof PIXI.NineSlicePlane) {
-                if(rect.left != this.$disp.leftWidth)
-                    this.$disp.leftWidth = rect.left;
-                if(rect.top != this.$disp.topHeight)
-                    this.$disp.topHeight = rect.top;
-                if(rect.right != this.$disp.rightWidth)
-                    this.$disp.rightWidth = rect.right;
-                if(rect.bottom != this.$disp.bottomHeight)
-                    this.$disp.bottomHeight = rect.bottom;
+            if (this._disp instanceof PIXI.NineSlicePlane) {
+                if(rect.left != this._disp.leftWidth)
+                    this._disp.leftWidth = rect.left;
+                if(rect.top != this._disp.topHeight)
+                    this._disp.topHeight = rect.top;
+                if(rect.right != this._disp.rightWidth)
+                    this._disp.rightWidth = rect.right;
+                if(rect.bottom != this._disp.bottomHeight)
+                    this._disp.bottomHeight = rect.bottom;
             }
         }
         
@@ -122,23 +142,35 @@ namespace fgui {
         }
 
         public get flipX():boolean {
-            return this.$disp.flipX;
+            if (this._disp instanceof pixi_extend.NineSlicePlane || this._disp instanceof pixi_extend.Sprite) {
+                return this._disp.flipX;
+            }
+            return false;
         }
 
         public get flipY():boolean {
-            return this.$disp.flipY;
+            if (this._disp instanceof pixi_extend.NineSlicePlane || this._disp instanceof pixi_extend.Sprite) {
+                return this._disp.flipY;
+            }
+            return false;
         }
 
         public set flipX(v:boolean) {
             if(GRoot.inst.applicationContext.renderer.type != PIXI.RENDERER_TYPE.WEBGL)
                 return;
-            this.$disp.flipX = v;
+            if (this._disp instanceof pixi_extend.NineSlicePlane || this._disp instanceof pixi_extend.Sprite) {
+                this._disp.flipX = v;
+            }
+            
         }
 
         public set flipY(v:boolean) {
             if(GRoot.inst.applicationContext.renderer.type != PIXI.RENDERER_TYPE.WEBGL)
                 return;
-            this.$disp.flipY = v;
+            
+            if (this._disp instanceof pixi_extend.NineSlicePlane || this._disp instanceof pixi_extend.Sprite) {
+                this._disp.flipY = v;
+            }
         }
 
         public destroy(options?:  {
@@ -146,9 +178,9 @@ namespace fgui {
             texture?: boolean;
             baseTexture?: boolean;
         }): void {
-            if(this.$disp) {
-                this.$disp.destroy(options);
-                this.$disp = null;
+            if(this._disp) {
+                this._disp.destroy(options);
+                this._disp = null;
             }
             super.destroy(options);
         }

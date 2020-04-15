@@ -2,8 +2,8 @@ namespace fgui {
 
     export class UIContainer extends PIXI.Container implements IUIObject {
 
-        protected $scrollRect: PIXI.Rectangle;
-        protected $rectMask: PIXI.Graphics;
+        protected _scrollRect: PIXI.Rectangle;
+        protected _rectMask: PIXI.Graphics;
 
         public UIOwner:GObject;
 
@@ -15,23 +15,23 @@ namespace fgui {
         }
 
         public get scrollRect(): PIXI.Rectangle {
-            return this.$scrollRect;
+            return this._scrollRect;
         }
 
         public set scrollRect(rect: PIXI.Rectangle) {
-            this.$scrollRect = rect;
+            this._scrollRect = rect;
             if (rect != null) {
-                if (!this.$rectMask) {
-                    this.$rectMask = new PIXI.Graphics();
-                    this.$rectMask.isMask = true;
-                    this.addChild(this.$rectMask);
-                    this.mask = this.$rectMask;
+                if (!this._rectMask) {
+                    this._rectMask = new PIXI.Graphics();
+                    this._rectMask.isMask = true;
+                    this.addChild(this._rectMask);
+                    this.mask = this._rectMask;
                 }
-                this.$rectMask.clear();
+                this._rectMask.clear();
                 if(rect.width > 0 && rect.height > 0) {
-                    this.$rectMask.beginFill(0x0, 1);
-                    this.$rectMask.drawRect(this.$scrollRect.x, this.$scrollRect.y, this.$scrollRect.width, this.$scrollRect.height);
-                    this.$rectMask.endFill();
+                    this._rectMask.beginFill(0x0, 1);
+                    this._rectMask.drawRect(this._scrollRect.x, this._scrollRect.y, this._scrollRect.width, this._scrollRect.height);
+                    this._rectMask.endFill();
                 }
             }
             else

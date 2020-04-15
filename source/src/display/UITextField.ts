@@ -66,8 +66,8 @@ namespace fgui {
 
         public UIOwner:GObject;
 
-        protected $minHeight:number;
-        protected $minHeightID:number = -1;
+        protected _minHeight:number;
+        protected _minHeightID:number = -1;
         
         public constructor(owner?:GObject) {
             super(null);
@@ -76,30 +76,36 @@ namespace fgui {
             this.texture.noFrame = false;
             this.width = this.texture.frame.width;
             this.height = this.texture.frame.height;
-            this.$minHeight = -1;
+            this._minHeight = -1;
+        }
+
+        public init() : void {
+            this.updateFrame();
             this.texture.on("update", this.updateFrame, this);
         }
 
         public get minHeight():number {
-            return this.$minHeight;
+            return this._minHeight;
         }
 
         /**@internal */
-        $updateMinHeight():void {
-            if(this.style.styleID != this.$minHeightID || this.$minHeight <= 0) {
-                this.$minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
-                this.$minHeightID = this.style.styleID;
+        updateMinHeight():void {
+            if(this.style.styleID != this._minHeightID || this._minHeight <= 0) {
+                this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
+                this._minHeightID = this.style.styleID;
             }
         }
         
         protected updateFrame():void {
+            Debug.log("GTextFiled updateFrame ",  this.x, this.y, this.texture.width, this.texture.height);
+            
             GTimer.inst.callLater(this.internalUpdateFrame, this);
         }
 
         private internalUpdateFrame():void {
             if(this.texture) {
                 let frm = this.texture.frame;
-                this.height = Math.max(this.height, this.$minHeight);
+                this.height = Math.max(this.height, this._minHeight);
                 let w = frm.x + this.width, h = frm.y + this.height;
                 if(w > this.texture.baseTexture.width)
                     w = this.texture.baseTexture.width - frm.x;
@@ -125,33 +131,34 @@ namespace fgui {
             // @FIXME
             //this._textureID = -1;
             //this._textureTrimmedID = -1;
-
-            this["_textureID"] = -1;
-            this["_textureTrimmedID"] = -1;
+       
+            // this["_textureID"] = -1;
+            // this["_textureTrimmedID"] = -1;
+        
         }
 
-        public get width():number {
-            return this.width;
-        }
+  
 
-        public set width(v:number) {
-            this.width = v;
-            this.updateFrame();
-        }
+        // public set width(v:number) {
+        //     super["width"] = v;
+        //     this.updateFrame();
+        // }
 
-        public get height():number {
-            return this.height;
-        }
+        // public get height():number {
+        //     return 100;
+        //     // return super["height"];
+        // }
 
-        public set height(v:number) {
-            this.height = v;
-            this.updateFrame();
-        }
+        // public set height(v:number) {
+        //     super["height"] = v;
+        //     this.updateFrame();
+        // }
 
         public get textHeight():number {
             //this.updateText(true);
             // @FIXME
-            this["updateText"](true);
+            
+            this.calculateBounds();
             return this.texture.orig.height;
         }
 
@@ -161,13 +168,14 @@ namespace fgui {
         public get textWidth():number {
             //this.updateText(true);
             // @FIXME
-            this["updateText"](true);
+            this.calculateBounds();
             return this.texture.orig.width;
         }
 
         public set textWidth(v:number) {
-            if(v != this.style.wordWrapWidth)
+            if(v != this.style.wordWrapWidth) {
                 this.style.wordWrapWidth = v;
+            }
         }
     }
 }

@@ -104,32 +104,32 @@ namespace fgui {
 
     export class UIStage extends PIXI.utils.EventEmitter {
 
-        protected $appContext: PIXI.Application;
-        protected $appStage: PIXI.Container;
+        protected _appContext: PIXI.Application;
+        protected _appStage: PIXI.Container;
 
-        protected $options: UIStageOptions;
+        protected _options: UIStageOptions;
 
-        protected $width: number = 0;
-        protected $height: number = 0;
-        protected $scaleX:number = 1;
-        protected $scaleY:number = 1;
+        protected _width: number = 0;
+        protected _height: number = 0;
+        protected _scaleX:number = 1;
+        protected _scaleY:number = 1;
 
-        protected $canvasMatrix: PIXI.Matrix = new PIXI.Matrix();
+        protected _canvasMatrix: PIXI.Matrix = new PIXI.Matrix();
 
         public offsetX: number = 0;
         public offsetY: number = 0;
 
-        private $sizeCalcer:DefaultBoudingRectCalculator = new DefaultBoudingRectCalculator();
+        private _sizeCalcer:DefaultBoudingRectCalculator = new DefaultBoudingRectCalculator();
 
         public constructor(app: PIXI.Application, stageOptions?: UIStageOptions) {
             super();
 
             UIStageInst.push(this);
 
-            this.$appContext = app;
-            //this.$appContext.renderer.autoResize = false;
-            this.$appStage = app.stage;
-            this.$appStage.interactive = true;
+            this._appContext = app;
+            //this._appContext.renderer.autoResize = false;
+            this._appStage = app.stage;
+            this._appStage.interactive = true;
             
             let opt: UIStageOptions;
             if (stageOptions instanceof DefaultUIStageOptions)
@@ -146,10 +146,10 @@ namespace fgui {
             if (!opt.designWidth || !opt.designHeight)
                 throw new Error("Invalid designWidth / designHeight in the parameter 'stageOptions'.");
 
-            this.$options = opt;
+            this._options = opt;
             
-            this.$appContext.view.style.position = "absolute";
-            let container = this.$appContext.view.parentElement;
+            this._appContext.view.style.position = "absolute";
+            let container = this._appContext.view.parentElement;
             let style = container.style;
             //if parent is not a DIV box, make one
             if(container.tagName != "DIV") {
@@ -158,8 +158,8 @@ namespace fgui {
                 style.left = style.top = "0px";
                 style.width = style.height = "100%";  //and set default full-screen
                 style.overflow = "hidden";
-                this.$appContext.view.parentElement.appendChild(container);
-                container.appendChild(this.$appContext.view);
+                this._appContext.view.parentElement.appendChild(container);
+                container.appendChild(this._appContext.view);
             }
             let containerPosition:string;
             if(document.defaultView && document.defaultView.getComputedStyle)
@@ -171,57 +171,57 @@ namespace fgui {
                 container.style.position = containerPosition;
             }
             
-            HTMLInput.inst.initialize(container, this.$appContext.view);
+            HTMLInput.inst.initialize(container, this._appContext.view);
             this.updateScreenSize();
         }
 
         public get orientation(): StageOrientation {
-            return this.$options.orientation;
+            return this._options.orientation;
         }
 
         public get stageWidth(): number {
-            return this.$width;
+            return this._width;
         }
 
         public get stageHeight(): number {
-            return this.$height;
+            return this._height;
         }
 
         public get applicationContext(): PIXI.Application {
-            return this.$appContext;
+            return this._appContext;
         }
 
         public get nativeStage(): PIXI.Container {
-            return this.$appStage;
+            return this._appStage;
         }
 
         public get resolution(): number {
-            return this.$options.resolution;
+            return this._options.resolution;
         }
 
         public set resolution(v: number) {
-            this.$options.resolution = v;
+            this._options.resolution = v;
             this.updateScreenSize();
         }
 
         public get scaleX():number{
-            return this.$scaleX;
+            return this._scaleX;
         }
 
         public get scaleY():number {
-            return this.$scaleY;
+            return this._scaleY;
         }
 
         public get designWidth():number {
-            return this.$options.designWidth;
+            return this._options.designWidth;
         }
 
         public get designHeight():number {
-            return this.$options.designHeight;
+            return this._options.designHeight;
         }
 
         public setDesignSize(width: number, height: number): void {
-            let option = this.$options;
+            let option = this._options;
             option.designWidth = width;
             option.designHeight = height;
             this.updateScreenSize();
@@ -282,13 +282,13 @@ namespace fgui {
 
             if(HTMLInput.isTyping) return;
 
-            let canvas = this.$appContext.view;
+            let canvas = this._appContext.view;
             let canvasStyle: any = canvas.style;
 
-            let rect = this.$sizeCalcer.getRect(canvas, this.$options.fallbackWidth, this.$options.fallbackHeight);
+            let rect = this._sizeCalcer.getRect(canvas, this._options.fallbackWidth, this._options.fallbackHeight);
             
             let shouldRotate = false;
-            let orientation: string = this.$options.orientation;
+            let orientation: string = this._options.orientation;
             if (orientation != StageOrientation.AUTO) {
                 shouldRotate = orientation != StageOrientation.PORTRAIT && rect.height > rect.width
                     || orientation == StageOrientation.PORTRAIT && rect.width > rect.height;
@@ -296,7 +296,7 @@ namespace fgui {
             let screenWidth = shouldRotate ? rect.height : rect.width;
             let screenHeight = shouldRotate ? rect.width : rect.height;
 
-            let stageSize = this.calculateStageSize(this.$options.scaleMode, screenWidth, screenHeight, this.$options.designWidth, this.$options.designHeight);
+            let stageSize = this.calculateStageSize(this._options.scaleMode, screenWidth, screenHeight, this._options.designWidth, this._options.designHeight);
             let stageWidth = stageSize.stageWidth;
             let stageHeight = stageSize.stageHeight;
             let displayWidth = stageSize.displayWidth;
@@ -309,23 +309,23 @@ namespace fgui {
             canvasStyle.width = displayWidth + "px";
             canvasStyle.height = displayHeight + "px";
 
-            let mat = this.$canvasMatrix.identity();
+            let mat = this._canvasMatrix.identity();
 
             let dispWidth = shouldRotate ? displayHeight : displayWidth;
             let dispHeight = shouldRotate ? displayWidth : displayHeight;
 
             let offx: number, offy: number;
-            if (this.$options.alignH == StageAlign.LEFT) offx = 0;
-            else if (this.$options.alignH == StageAlign.RIGHT) offx = rect.width - dispWidth;
+            if (this._options.alignH == StageAlign.LEFT) offx = 0;
+            else if (this._options.alignH == StageAlign.RIGHT) offx = rect.width - dispWidth;
             else offx = (rect.width - dispWidth) * 0.5;
 
-            if (this.$options.alignV == StageAlign.TOP) offy = 0;
-            else if (this.$options.alignV == StageAlign.BOTTOM) offy = rect.height - dispHeight;
+            if (this._options.alignV == StageAlign.TOP) offy = 0;
+            else if (this._options.alignV == StageAlign.BOTTOM) offy = rect.height - dispHeight;
             else offy = (rect.height - dispHeight) * 0.5;
 
             let rotDeg = 0;
             if (shouldRotate) {
-                if (this.$options.orientation == StageOrientation.LANDSCAPE) {
+                if (this._options.orientation == StageOrientation.LANDSCAPE) {
                     mat.rotate(Math.PI / 2);
                     mat.translate(screenHeight - offx, offy);
                     rotDeg = 90;
@@ -354,17 +354,17 @@ namespace fgui {
             canvasStyle.transformOrigin = canvasStyle.webkitTransformOrigin = canvasStyle.msTransformOrigin = canvasStyle.mozTransformOrigin = canvasStyle.oTransformOrigin = "0px 0px 0px";
             canvasStyle.transform = canvasStyle.webkitTransform = canvasStyle.msTransform = canvasStyle.mozTransform = canvasStyle.oTransform = `matrix(${mat.a},${mat.b},${mat.c},${mat.d},${mat.tx},${mat.ty})`;
 
-            this.$width = stageWidth;
-            this.$height = stageHeight;
+            this._width = stageWidth;
+            this._height = stageHeight;
 
-            this.$scaleX = stageWidth / displayWidth
-            this.$scaleY = stageHeight / displayHeight;
+            this._scaleX = stageWidth / displayWidth
+            this._scaleY = stageHeight / displayHeight;
             
-            let im = this.$appContext.renderer.plugins.interaction as PIXIExtend.InteractionManager;
+            let im = this._appContext.renderer.plugins.interaction as pixi_extend.InteractionManager;
             im.stageRotation = rotDeg;
-            im.stageScaleX = this.$scaleX;
-            im.stageScaleY = this.$scaleY;
-            this.$appContext.renderer.resize(stageWidth, stageHeight);
+            im.stageScaleX = this._scaleX;
+            im.stageScaleY = this._scaleY;
+            this._appContext.renderer.resize(stageWidth, stageHeight);
             HTMLInput.inst.updateSize(displayWidth / stageWidth, displayHeight / stageHeight);
             
             this.emit(DisplayObjectEvent.SIZE_CHANGED, this);

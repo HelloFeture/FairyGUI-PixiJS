@@ -8,89 +8,114 @@ namespace fgui {
     };
 
     export class MovieClip extends PIXI.Sprite implements IUIObject {
-
+        /** @hide 间隔 */
         public interval: number = 0;
         public swing: boolean;
         public repeatDelay: number = 0;
-
-        private $playing: boolean;
-        private $frameCount: number = 0;
-        private $frames: Frame[];
-        private $currentFrame: number = 0;
-        private $status: number = MovieClipStatus.NORMAL;
-        private $settings: DefaultMovieClipSettings;
+        /** @hide 是否在播放 */
+        private _playing: boolean;
+        /** @hide 帧数量 */
+        private _frameCount: number = 0;
+        /** @hide 帧数据 */
+        private _frames: Frame[];
+        /** @hide 当前帧 */
+        private _currentFrame: number = 0;
+        /** @hide 状态 */
+        private _status: number = MovieClipStatus.NORMAL;
+        /** @hide 动画设置 */
+        private _settings: DefaultMovieClipSettings;
+        /** @hide 帧数据 */
         private data: MovieClipData;
-        private $boundsRect : PIXI.Rectangle;
+        /** @hide 所属的UI对象 */
         public UIOwner:GObject;
+
+        // TODO
+        public fillMethod : number;
+        public fillOrigin : number;
+        public fillClockwise : boolean;
+        public fillAmount : number;
+        private _frameElapsed: number = 0; //当前帧延迟
 
         public constructor(owner:GObject) {
             super();
             this.UIOwner = owner;
             this.data = new MovieClipData();
-            this.$playing = true;
+            this._playing = true;
             this.interactive = this.interactiveChildren = false;
-            this.$settings = new DefaultMovieClipSettings();
+            this._settings = new DefaultMovieClipSettings();
 
+            // 监听增加到舞台事件
             this.on("added", this.added, this);
             this.on("removed", this.removed, this);
         }
 
+        /** 获取帧信息 */
         public get frames(): Frame[] {
-            return this.$frames;
+            return this._frames;
         }
 
+        /** 设置帧信息 */
         public set frames(value: Frame[]) {
-            this.$frames = value;
-            if (this.$frames != null)
-                this.$frameCount = this.$frames.length;
+            this._frames = value;
+            if (this._frames != null)
+                this._frameCount = this._frames.length;
             else
-                this.$frameCount = 0;
+                this._frameCount = 0;
 
-            if (this.$settings.endFrame == -1 || this.$settings.endFrame > this.$frameCount - 1)
-                this.$settings.endFrame = this.$frameCount - 1;
-            if (this.$settings.loopEndAt == -1 || this.$settings.loopEndAt > this.$frameCount - 1)
-                this.$settings.loopEndAt = this.$frameCount - 1;
+            if (this._settings.endFrame == -1 || this._settings.endFrame > this._frameCount - 1)
+                this._settings.endFrame = this._frameCount - 1;
+            if (this._settings.loopEndAt == -1 || this._settings.loopEndAt > this._frameCount - 1)
+                this._settings.loopEndAt = this._frameCount - 1;
 
-            if (this.$currentFrame < 0 || this.$currentFrame > this.$frameCount - 1)
-                this.$currentFrame = this.$frameCount - 1;
+            if (this._currentFrame < 0 || this._currentFrame > this._frameCount - 1)
+                this._currentFrame = this._frameCount - 1;
 
-            if (this.$frameCount > 0)
-                this.setFrame(this.$frames[this.$currentFrame]);
+            if (this._frameCount > 0)
+                this.setFrame(this._frames[this._currentFrame]);
             else
                 this.setFrame(null);
             this.data.rewind();
         }
 
         public get frameCount(): number {
-            return this.$frameCount;
+            return this._frameCount;
         }
 
-        public get boundsRect(): PIXI.Rectangle {
-            return this.$boundsRect;
-        }
+      
 
-        public set boundsRect(value: PIXI.Rectangle) {
-            this.$boundsRect = value;
-        }
+        // public set frame(value: number) {
+        //     if (this._frame != value) {
+        //         if (this._frames != null && value >= this._frameCount)
+        //             value = this._frameCount - 1;
 
+        //         this._frame = value;
+        //         this._frameElapsed = 0;
+        //         this.drawFrame();
+        //     }
+        // }
+
+        /** 获取当前帧 */
         public get currentFrame(): number {
-            return this.$currentFrame;
+            return this._currentFrame;
         }
 
+        /** 设置当前的帧 */
         public set currentFrame(value: number) {
-            if (this.$currentFrame != value) {
-                this.$currentFrame = value;
+            if (this._currentFrame != value) {
+                this._currentFrame = value;
                 this.data.currentFrame = value;
-                this.setFrame(this.$currentFrame < this.$frameCount ? this.$frames[this.$currentFrame] : null);
+                this.setFrame(this._currentFrame < this._frameCount ? this._frames[this._currentFrame] : null);
             }
         }
 
+        /** 是否正在播放 */
         public get playing(): boolean {
-            return this.$playing;
+            return this._playing;
         }
 
+        /** 是否正在播放 */
         public set playing(value: boolean) {
-            this.$playing = value;
+            this._playing = value;
 
             if (value && GObject.isDisplayObjectOnStage(this))
                 GTimer.inst.add(0, 0, this.update, this);
@@ -111,7 +136,7 @@ namespace fgui {
          */
         public setPlaySettings(...args:any[]): void {
             if (args.length == 1 && typeof args[0] == "object")
-                this.$settings.mix(args[0]);
+                this._settings.mix(args[0]);
             else {
                 let s: any = args[0],
                     e: any = args[1],
@@ -134,83 +159,95 @@ namespace fgui {
                 if (ecc)
                     o.endCallbackContext = ecc;
 
-                this.$settings.mix(o);
+                this._settings.mix(o);
             }
 
-            if (this.$settings.endFrame == -1 || this.$settings.endFrame > this.$frameCount - 1)
-                this.$settings.endFrame = this.$frameCount - 1;
-            if (this.$settings.loopEndAt == -1)
-                this.$settings.loopEndAt = this.$settings.endFrame;
+            if (this._settings.endFrame == -1 || this._settings.endFrame > this._frameCount - 1)
+                this._settings.endFrame = this._frameCount - 1;
+            if (this._settings.loopEndAt == -1)
+                this._settings.loopEndAt = this._settings.endFrame;
 
-            this.$status = MovieClipStatus.NORMAL;
+            this._status = MovieClipStatus.NORMAL;
 
-            this.currentFrame = this.$settings.startFrame;
+            this.currentFrame = this._settings.startFrame;
         }
 
         private update(): void {
-            if(this.UIOwner.$inProgressBuilding) return;
-            if (this.$playing && this.$frameCount != 0 && this.$status != MovieClipStatus.ENDED) {
+            if(this.UIOwner._inProgressBuilding) return;
+            if (this._playing && this._frameCount != 0 && this._status != MovieClipStatus.ENDED) {
                 this.data.update(this);
-                if (this.$currentFrame != this.data.currentFrame) {
-                    if (this.$status == MovieClipStatus.LOOPING) {
-                        this.$currentFrame = this.$settings.startFrame;
-                        this.data.currentFrame = this.$currentFrame;
-                        this.$status = MovieClipStatus.NORMAL;
+                if (this._currentFrame != this.data.currentFrame) {
+                    if (this._status == MovieClipStatus.LOOPING) {
+                        this._currentFrame = this._settings.startFrame;
+                        this.data.currentFrame = this._currentFrame;
+                        this._status = MovieClipStatus.NORMAL;
                     }
-                    else if (this.$status == MovieClipStatus.STOPPING) {
-                        this.$currentFrame = this.$settings.loopEndAt;
-                        this.data.currentFrame = this.$currentFrame;
-                        this.$status = MovieClipStatus.ENDED;
+                    else if (this._status == MovieClipStatus.STOPPING) {
+                        this._currentFrame = this._settings.loopEndAt;
+                        this.data.currentFrame = this._currentFrame;
+                        this._status = MovieClipStatus.ENDED;
 
                         //play end
-                        if (this.$settings.endCallback != null)
-                            GTimer.inst.callLater(this.$playEnd, this);
+                        if (this._settings.endCallback != null)
+                            GTimer.inst.callLater(this.__playEnd, this);
                     }
                     else {
-                        this.$currentFrame = this.data.currentFrame;
-                        if (this.$currentFrame == this.$settings.endFrame) {
-                            if (this.$settings.repeatCount > 0) {
-                                this.$settings.repeatCount--;
-                                if (this.$settings.repeatCount == 0)
-                                    this.$status = MovieClipStatus.STOPPING;
+                        this._currentFrame = this.data.currentFrame;
+                        if (this._currentFrame == this._settings.endFrame) {
+                            if (this._settings.repeatCount > 0) {
+                                this._settings.repeatCount--;
+                                if (this._settings.repeatCount == 0)
+                                    this._status = MovieClipStatus.STOPPING;
                                 else
-                                    this.$status = MovieClipStatus.LOOPING;
+                                    this._status = MovieClipStatus.LOOPING;
                             }
                         }
                     }
 
-                    this.setFrame(this.$frames[this.$currentFrame]);
+                    this.setFrame(this._frames[this._currentFrame]);
                 }
             }
         }
 
-        private $playEnd(): void {
-            if (this.$settings.endCallback != null) {
-                let f: (mc:MovieClip) => void = this.$settings.endCallback;
-                let fObj: any = this.$settings.endCallbackContext;
+        // private drawFrame(): void {
+        //     if (this._frameCount > 0 && this._frame < this._frames.length) {
+        //         var frame: Frame = this._frames[this._frame];
+        //         this.texture = frame.texture;
+        //     }
+        //     else
+        //         this.texture = null;
+        // }
 
-                this.$settings.endCallback = this.$settings.endCallbackContext = null;
-                this.$settings.endCallbackContext = null;
+        private __playEnd(): void {
+            if (this._settings.endCallback != null) {
+                let f: (mc:MovieClip) => void = this._settings.endCallback;
+                let fObj: any = this._settings.endCallbackContext;
 
-                if(f)
+                this._settings.endCallback = this._settings.endCallbackContext = null;
+                this._settings.endCallbackContext = null;
+
+                if(f){
                     f.call(fObj, this);
+                }
             }
         }
 
         private setFrame(frame: Frame): void {
             this.texture = frame == null ? null : frame.texture;
             // @FIXME 
-            this["_textureID"] = -1;
+            //this_textureID = -1;
+            // Debug.log("MovieClip", frame.texture.width, frame.texture.height);
         }
 
         private added(disp: PIXI.DisplayObject): void {
-            if (this.$playing)
+            if (this._playing)
                 GTimer.inst.add(0, 0, this.update, this);
         }
 
         private removed(disp: PIXI.DisplayObject): void {
-            if (this.$playing)
+            if (this._playing) {
                 GTimer.inst.remove(this.update, this);
+            }
         }
 
         public destroy(): void {

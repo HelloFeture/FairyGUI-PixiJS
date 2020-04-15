@@ -108,6 +108,24 @@ namespace fgui.utils {
         public get contrast():number { return this.c; }
         public get saturation():number { return this.s; }
 
+        private static helper: ColorMatrix = new ColorMatrix();
+        public static getMatrix(p_brightness: number, p_contrast: number, p_saturation: number, p_hue: number, result?: number[]): number[] {
+            if (!result)
+                result = new Array<number>(ColorMatrix.length);
+            let mat = new ColorMatrix(p_brightness, p_contrast, p_saturation, p_hue);
+
+            var l: number = ColorMatrix.LENGTH;
+            if (result && result.length >= l) {
+                for (var i: number = 0; i < l; i++) {
+                    result[i] = mat._raw[i];
+                }
+            } else {
+                result = mat._raw;
+            }
+        
+            return result;
+        }
+
         /**
          * Resets the instance with the specified values.
          * @method setColor

@@ -1,37 +1,43 @@
-namespace fgui.controller {
+namespace fgui {
     export class PlayTransitionAction extends Action {
 
         public transitionName: string;
-        public repeat: number = 1;
+        public playTimes: number;
         public delay: number = 0;
         public stopOnExit: boolean = false;
 
-        private $currentTransition: Transition;
+        private _currentTransition: Transition;
 
         protected enter(controller: Controller): void {
             let trans: Transition = controller.parent.getTransition(this.transitionName);
             if (trans) {
-                if (this.$currentTransition && this.$currentTransition.playing)
-                    trans.changeRepeat(this.repeat);
-                else
-                    trans.play({
-                        times: this.repeat,
-                        delay: this.delay
-                    });
-                this.$currentTransition = trans;
+                if (this._currentTransition && this._currentTransition.playing){
+                    trans.changePlayTimes(this.playTimes);
+                } else {
+                    trans.play(null, null, null, this.playTimes, this.delay);
+                }
+                this._currentTransition = trans;
             }
         }
 
         protected leave(controller: Controller): void {
-            if (this.stopOnExit && this.$currentTransition) {
-                this.$currentTransition.stop();
-                this.$currentTransition = null;
+            if (this.stopOnExit && this._currentTransition) {
+                this._currentTransition.stop();
+                this._currentTransition = null;
             }
         }
 
+        public setup(buffer:ByteBuffer): void {
+            super.setup(buffer);
+
+			this.transitionName = buffer.readS();
+			this.playTimes = buffer.readInt();
+			this.delay = buffer.readFloat();
+			this.stopOnExit = buffer.readBool();
+        }
         /**@internal */
-        public setup(xml: utils.XmlNode): void {
-            super.setup(xml);
+        public setupv1(xml: utils.XmlNode): void {
+            super.setupv1(xml);
 
             this.transitionName = xml.attributes.transition;
 
@@ -39,7 +45,7 @@ namespace fgui.controller {
 
             str = xml.attributes.repeat;
             if (str)
-                this.repeat = parseInt(str);
+                this.playTimes = parseInt(str);
 
             str = xml.attributes.delay;
             if (str)

@@ -4,44 +4,44 @@ namespace fgui {
 
         private htmlInput:HTMLInput;
 
-        private $requestToShow:boolean = false;
-        //private $requestToHide:boolean = false;
+        private _requestToShow:boolean = false;
+        //private _requestToHide:boolean = false;
 
         private inputElement:HTMLInputElement | HTMLTextAreaElement = null;
         private inputDiv:HTMLDivElement = null;
 
-        private $scaleX:number = 0;
-        private $scaleY:number = 0;
+        private _scaleX:number = 0;
+        private _scaleY:number = 0;
 
         private textValue:string = "";
         private colorValue:number = 0xffffff;
 
-        protected $textfield:GTextInput;
+        protected _textfield:GTextInput;
 
         public constructor(tf:GTextInput) {
             super();
-            this.$textfield = tf;
+            this._textfield = tf;
         }
         
         /**@internal */
-        $addToStage():void {
+        _addToStage():void {
             this.htmlInput = HTMLInput.inst;   //take multiple canvas on webpage into account?
         }
 
         private initElement():void {
-            let point = this.$textfield.localToGlobal(0, 0);
+            let point = this._textfield.localToGlobal(0, 0);
             let x = point.x;
             let y = point.y;
-            let scaleX = this.htmlInput.$scaleX;
-            let scaleY = this.htmlInput.$scaleY;
+            let scaleX = this.htmlInput._scaleX;
+            let scaleY = this.htmlInput._scaleY;
 
-            if(!this.$textfield.multipleLine)
-                this.inputElement.style.top = (-this.$textfield.leading * scaleY) + "px";
+            if(!this._textfield.multipleLine)
+                this.inputElement.style.top = (-this._textfield.leading * scaleY) + "px";
                 
             this.inputDiv.style.top = (y + 1) * scaleY + "px";
             this.inputDiv.style.left = x * scaleX + "px";
             
-            let node:GObject = this.$textfield;
+            let node:GObject = this._textfield;
             let cX = 1;
             let cY = 1;
             let rotation = 0;
@@ -55,42 +55,42 @@ namespace fgui {
             let style:any = this.inputDiv.style;
             style.transform = style.webkitTransform = style.msTransform = style.mozTransform = style.oTransform = "rotate(" + rotation + "deg)";
             
-            this.$scaleX = scaleX * cX;
-            this.$scaleY = scaleY * cY;
+            this._scaleX = scaleX * cX;
+            this._scaleY = scaleY * cY;
         }
 
         public get textField():GTextField {
-            return this.$textfield;
+            return this._textfield;
         }
 
         /**@internal */
-        $show():void {
+        _show():void {
             if (!this.htmlInput.isCurrentInput(this)) {
                 this.inputElement = this.htmlInput.requestInput(this);
-                if(!this.$textfield.multipleLine)
-                    (this.inputElement as HTMLInputElement).type = this.$textfield.type;
-                for(let key in this.$attrsCache)
-                    this.inputElement.setAttribute(key, this.$attrsCache[key]);
-                this.inputDiv = this.htmlInput.$wrapper;
+                if(!this._textfield.multipleLine)
+                    (this.inputElement as HTMLInputElement).type = this._textfield.type;
+                for(let key in this._attrsCache)
+                    this.inputElement.setAttribute(key, this._attrsCache[key]);
+                this.inputDiv = this.htmlInput._wrapper;
             }
             else
                 this.inputElement.onblur = null;
 
-            this.htmlInput.$requestToShow = true;
-            this.$requestToShow = true;
+            this.htmlInput._requestToShow = true;
+            this._requestToShow = true;
 
             this.initElement();
         }
         
         public onBlurHandler():void {
             this.htmlInput.clearInputElement();
-            this.htmlInput.clearAttributes(this.$attrsCache);
+            this.htmlInput.clearAttributes(this._attrsCache);
             window.scrollTo(0, 0);
         }
         
         /**@internal */
-        $hide():void {
-            /*this.$requestToHide = true;
+        _hide():void {
+            /*this._requestToHide = true;
             if (this.htmlInput && PIXI.utils.isMobile && iOS) {  //if os is ios need to clearInput once
                 this.htmlInput.disconnect(this);
             }*/
@@ -115,42 +115,46 @@ namespace fgui {
         }
         
         /**@internal */
-        $onBlur():void {
+        _onBlur():void {
             //this.emit("updateText");
         }
 
         public onInputHandler():void {
             window.setTimeout(() => {
-                if (this.inputElement && this.inputElement.selectionStart == this.inputElement.selectionEnd) {
-                    this.textValue = this.inputElement.value;
-                    this.emit("updateText");
-                }
+                this.textValue = this.inputElement.value;
+                Debug.log(this.textValue);
+                this.emit("updateText");
+                // if (this.inputElement && this.inputElement.selectionStart == this.inputElement.selectionEnd) {
+                //     this.textValue = this.inputElement.value;
+                //     Debug.log("onInputHandler", this.textValue, this.inputElement.value);
+                //     this.emit("updateText");
+                // }
             }, 0);
         }
 
         private setAreaHeight():void {
-            let tf = this.$textfield;
+            let tf = this._textfield;
             if (tf.multipleLine) {
                 let textheight = tf.textHeight;
                 if (tf.height <= tf.fontSize) {
-                    this.setElementStyle("height", tf.fontSize * this.$scaleY + "px");
+                    this.setElementStyle("height", tf.fontSize * this._scaleY + "px");
                     this.setElementStyle("padding", "0px");
-                    this.setElementStyle("lineHeight", tf.lineHeight * this.$scaleY + "px");
+                    this.setElementStyle("lineHeight", tf.lineHeight * this._scaleY + "px");
                 }
                 else if(tf.height < textheight) {
-                    this.setElementStyle("height", (tf.height) * this.$scaleY + "px");
+                    this.setElementStyle("height", (tf.height) * this._scaleY + "px");
                     this.setElementStyle("padding", "0px");
-                    this.setElementStyle("lineHeight", tf.lineHeight * this.$scaleY + "px");
+                    this.setElementStyle("lineHeight", tf.lineHeight * this._scaleY + "px");
                 }
                 else {
-                    this.setElementStyle("height", (textheight + tf.leading) * this.$scaleY + "px");
+                    this.setElementStyle("height", (textheight + tf.leading) * this._scaleY + "px");
 
-                    let rap = (tf.height - textheight) * this.$scaleY;
+                    let rap = (tf.height - textheight) * this._scaleY;
                     let valign:number = this.getVAlignFactor(tf);
                     let top = rap * valign;
                     let bottom = rap - top;
                     this.setElementStyle("padding", top + "px 0px " + bottom + "px 0px");
-                    this.setElementStyle("lineHeight", tf.lineHeight * this.$scaleY + "px");
+                    this.setElementStyle("lineHeight", tf.lineHeight * this._scaleY + "px");
                 }
             }
         }
@@ -171,17 +175,18 @@ namespace fgui {
         }
         
         public onClickHandler(e:Event):void {
-            if (this.$requestToShow) {
+            Debug.log("onClickHandler", e);
+            if (this._requestToShow) {
                 //e.stopImmediatePropagation();
-                this.$requestToShow = false;
+                this._requestToShow = false;
                 
                 this.inputElement.value = this.text;
                 if (this.inputElement.onblur == null)
                     this.inputElement.onblur = utils.Binder.create(this.onBlurHandler, this);
 
                 this.resetInput();
-                if (this.$textfield.maxLength > 0)
-                    this.inputElement.setAttribute("maxlength", String(this.$textfield.maxLength));
+                if (this._textfield.maxLength > 0)
+                    this.inputElement.setAttribute("maxlength", String(this._textfield.maxLength));
                 else
                     this.inputElement.removeAttribute("maxlength");
     
@@ -206,33 +211,33 @@ namespace fgui {
             }
         }
 
-        private $attrsCache:{ [name:string] : string } = {};
+        private _attrsCache:{ [name:string] : string } = {};
 
         public setAttribute(name:string, value:string):void {
             if(name == null || value == null) return;
-            this.$attrsCache[name] = value;
+            this._attrsCache[name] = value;
         }
 
         public getAttribute(name:string):string {
-            return this.$attrsCache[name];
+            return this._attrsCache[name];
         }
         
         /**@internal */
-        $removeFromStage():void {
+        _removeFromStage():void {
             if (this.inputElement)
                 this.htmlInput.disconnect(this);
         }
         
         public resetInput():void {
             if (this.inputElement) {
-                let textfield:GTextInput = this.$textfield;
+                let textfield:GTextInput = this._textfield;
                 this.setElementStyle("fontFamily", textfield.font);
                 this.setElementStyle("fontStyle", textfield.italic ? "italic" : "normal");
                 this.setElementStyle("fontWeight", textfield.bold ? "bold" : "normal");
                 this.setElementStyle("textAlign", textfield.align);
-                this.setElementStyle("fontSize", textfield.fontSize * this.$scaleY + "px");
+                this.setElementStyle("fontSize", textfield.fontSize * this._scaleY + "px");
                 this.setElementStyle("color", utils.StringUtil.convertToHtmlColor(textfield.color));
-                this.setElementStyle("width", textfield.width * this.$scaleX + "px");  //take 'maxWidth' into account
+                this.setElementStyle("width", textfield.width * this._scaleX + "px");  //take 'maxWidth' into account
                 let va = "middle", vao = 0;
                 switch(textfield.verticalAlign) {
                     case VertAlignType.Top:
@@ -251,25 +256,25 @@ namespace fgui {
                 if (textfield.multipleLine)
                     this.setAreaHeight();
                 else {
-                    this.setElementStyle("lineHeight", textfield.lineHeight * this.$scaleY + "px");
+                    this.setElementStyle("lineHeight", textfield.lineHeight * this._scaleY + "px");
                     if (textfield.height < textfield.fontSize) {
-                        this.setElementStyle("height", textfield.fontSize * this.$scaleY + "px");
-                        this.setElementStyle("padding", "0px 0px " + (textfield.fontSize * .5 * this.$scaleX) + "px 0px");
+                        this.setElementStyle("height", textfield.fontSize * this._scaleY + "px");
+                        this.setElementStyle("padding", "0px 0px " + (textfield.fontSize * .5 * this._scaleX) + "px 0px");
                     }
                     else {
-                        this.setElementStyle("height", textfield.fontSize * this.$scaleY + "px");
-                        let rap = (textfield.height - textfield.fontSize) * this.$scaleY;
+                        this.setElementStyle("height", textfield.fontSize * this._scaleY + "px");
+                        let rap = (textfield.height - textfield.fontSize) * this._scaleY;
                         let top = rap * vao;
-                        let bottom = rap - top, fsy = textfield.fontSize * .5 * this.$scaleY;
+                        let bottom = rap - top, fsy = textfield.fontSize * .5 * this._scaleY;
                         if (bottom < fsy)
                             bottom = fsy;
                         this.setElementStyle("padding", top + "px 0px " + bottom + "px 0px");
                     }
                 }
 
-                this.inputDiv.style.clip = "rect(0px "+ (textfield.width * this.$scaleX)+"px " +(textfield.height * this.$scaleY)+"px 0px)";
-                this.inputDiv.style.height = textfield.height * this.$scaleY + "px";
-                this.inputDiv.style.width = textfield.width * this.$scaleX + "px";  //take 'maxWidth' into account
+                this.inputDiv.style.clip = "rect(0px "+ (textfield.width * this._scaleX)+"px " +(textfield.height * this._scaleY)+"px 0px)";
+                this.inputDiv.style.height = textfield.height * this._scaleY + "px";
+                this.inputDiv.style.width = textfield.width * this._scaleX + "px";  //take 'maxWidth' into account
             }
         }
     }

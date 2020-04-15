@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<packageDescription id="9leh0eyf">
+<packageDescription id="9leh0eyf" jpegQuality="80" compressPNG="true">
   <resources>
     <image id="rpmb1" name="VIP_png.png" path="/images/"/>
     <image id="rpmb2" name="a1_png.png" path="/images/"/>

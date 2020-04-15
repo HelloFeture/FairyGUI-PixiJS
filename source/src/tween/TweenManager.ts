@@ -5,16 +5,13 @@ module fgui {
         private static _totalActiveTweens: number = 0;
         private static _lastTime: number = 0;
         private static _inited: boolean = false;
-
+        public static _ticker : PIXI.Ticker;
         public static createTween(): GTweener {
             if (!TweenManager._inited) {
-                let tick = new PIXI.Ticker();
-                tick.add(TweenManager.update)
-                //egret.startTick(TweenManager.update, null);
+                TweenManager._ticker.add(TweenManager.update, this, PIXI.UPDATE_PRIORITY.NORMAL);
+                TweenManager._ticker.autoStart = true;
                 TweenManager._inited = true;
-                //TweenManager._lastTime =  egret.getTimer();
-                //! @FIXME
-                TweenManager._lastTime = tick.lastTime;
+                TweenManager._lastTime = Date.now();
             }
 
             var tweener: GTweener;
@@ -84,11 +81,12 @@ module fgui {
             return null;
         }
 
-        private static update(timestamp: number): boolean {
-            var dt: number = timestamp - TweenManager._lastTime;
-            TweenManager._lastTime = timestamp;
+        private static update(): boolean {
+            //var dt: number = timestamp - TweenManager._lastTime;
+            let dt = TweenManager._ticker.deltaTime / PIXI.settings.TARGET_FPMS;
+            TweenManager._lastTime += dt;
 
-            dt /= 1000;
+            //dt /= 1000;
 
             var cnt: number = TweenManager._totalActiveTweens;
             var freePosStart: number = -1;
@@ -110,8 +108,7 @@ module fgui {
                     freePosCount++;
                 }
                 else {
-                    //if ((tweener._target instanceof GObject) && (<GObject>(tweener._target)).isDisposed)
-                    if ((tweener._target instanceof GObject) )
+                    if ((tweener._target instanceof GObject) && (<GObject>(tweener._target)).isDisposed)
                         tweener._killed = true;
                     else if (!tweener._paused)
                         tweener._update(dt);

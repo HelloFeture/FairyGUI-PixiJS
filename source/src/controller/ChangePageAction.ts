@@ -1,28 +1,71 @@
-namespace fgui.controller {
+namespace fgui {
+    /**
+     * 改变页面 Action
+     */
 	export class ChangePageAction extends Action {
 
 		public objectId: string;
 		public controllerName: string;
 		public targetPage: string;
 
+        /**
+         * @override Action.enter
+         * @param controller 
+         */
 		protected enter(controller: Controller): void {
-			if (!this.controllerName)
-				return;
+            if (!this.controllerName) {
+                return;
+            }
 
-			let gcom: GComponent;
-			if (this.objectId)
-				gcom = controller.parent.getChildById(this.objectId) as GComponent;
-			else
-				gcom = controller.parent;
-			if (gcom) {
-				let cc: Controller = gcom.getController(this.controllerName);
-				if (cc && cc != controller && !cc.$updating)
-					cc.selectedPageId = this.targetPage;
-			}
-		}
+            var gcom: GComponent;
+            if (this.objectId) {
+                var obj: GObject = controller.parent.getChildById(this.objectId);
+                if (obj instanceof GComponent) {
+                    gcom = <GComponent><any>obj;
+                } else {
+                    return;
+                }
+            }
+            else {
+                gcom = controller.parent;
+            }
 
-		public setup(xml: utils.XmlNode): void {
-			super.setup(xml);
+            if (gcom) {
+                var cc: Controller = gcom.getController(this.controllerName);
+                if (cc && cc != controller && !cc.changing) {
+                    if (this.targetPage == "~1") {
+                        if (controller.selectedIndex < cc.pageCount) {
+                            cc.selectedIndex = controller.selectedIndex;
+                        }
+                    } else if (this.targetPage == "~2") {
+                        cc.selectedPage = controller.selectedPage;
+                    } else {
+                        cc.selectedPageId = this.targetPage;
+                    }
+                }
+            }
+        }
+
+        /**
+         * @hide 
+         * @override Action.setup
+         * @param buffer 参数流
+         */
+		public setup(buffer: ByteBuffer): void {
+            super.setup(buffer);
+
+            this.objectId = buffer.readS();
+            this.controllerName = buffer.readS();
+            this.targetPage = buffer.readS();
+        }
+
+        /**
+         * @hide
+         * @override Action.setupv1
+         * @param xml 参数node
+         */
+        public setupv1(xml: utils.XmlNode): void {
+			super.setupv1(xml);
 
 			this.objectId = xml.attributes.objectId;
 			this.controllerName = xml.attributes.controller;

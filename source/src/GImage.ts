@@ -2,11 +2,12 @@ namespace fgui {
 
     export class GImage extends GObject implements IColorGear {
         
-        private $content: UIImage;
-        private $flip: FlipType;
-
+        private _content: UIImage;
+        private _flip: FlipType;
+   
         public constructor() {
             super();
+            this._flip = FlipType.None;
         }
 
         public get touchable(): boolean {
@@ -14,98 +15,163 @@ namespace fgui {
         }
 
         public set touchable(value: boolean) {
-            this.$touchable = false;  //GImage has no interaction
+            this._touchable = false;  //GImage has no interaction
         }
 
         public get color(): number {
-            return this.$content.tint;
+            return this._content.tint;
         }
 
         public set color(value: number) {
             if (this.color != value) {
                 this.updateGear(GearType.Color);
-                this.$content.tint = value;
+                this._content.tint = value;
             }
         }
 
         public get flip(): FlipType {
-            return this.$flip;
+            return this._flip;
         }
 
         public set flip(value: FlipType) {
-            if (this.$flip != value) {
-                this.$flip = value;
-                let sx: boolean = false, sy: boolean = false;
-                if (this.$flip == FlipType.Horizontal || this.$flip == FlipType.Both)
+            if (this._flip != value) {
+                this._flip = value;
+
+                let sx: boolean = false;
+                let  sy: boolean = false;
+                if (this._flip == FlipType.Horizontal || this._flip == FlipType.Both) {
                     sx = true;
-                if (this.$flip == FlipType.Vertical || this.$flip == FlipType.Both)
+                }
+                if (this._flip == FlipType.Vertical || this._flip == FlipType.Both) {
                     sy = true;
-                this.$content.flipX = sx;
-                this.$content.flipY = sy;
+                }
+
+                this._content.flipX = sx;
+                this._content.flipX = sy;
+                //this.handleXYChanged();
             }
+        }
+
+        public get fillMethod(): number {
+            return this._content.fillMethod;
+        }
+
+        public set fillMethod(value: number) {
+            this._content.fillMethod = value;
+        }
+
+        
+
+        public get fillAmount(): number {
+            return this._content.fillAmount;
+        }
+
+        public set fillAmount(value: number) {
+            this._content.fillAmount = value;
         }
 
         public get texture(): PIXI.Texture {
-            return this.$content.texture;
+            return this._content.texture;
         }
 
         public set texture(value: PIXI.Texture) {
+            Debug.log("set gimage texture", value.width, value.height);
             if (value != null) {
-                this.$sourceWidth = value.orig.width;
-                this.$sourceHeight = value.orig.height;
+                this.sourceWidth = value.orig.width;
+                this.sourceHeight = value.orig.height;
+            } else {
+                this.sourceWidth = 0;
+                this.sourceHeight = 0;
             }
-            else
-                this.$sourceWidth = this.$sourceHeight = 0;
-            this.$initWidth = this.$sourceWidth;
-            this.$initHeight = this.$sourceHeight;
-            this.$content.texture = value;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
+            this._content.scale9Grid = null;
+            // FIXME
+            this._content.fillMethod = 0;//egret.BitmapFillMode.SCALE;
+            this._content.texture = value;
         }
 
         protected createDisplayObject(): void {
-            this.$content = new UIImage(this);
-            this.setDisplayObject(this.$content);
+            this._content = new UIImage(this);
+            this.setDisplayObject(this._content);
         }
 
         public dispose(): void {
-            this.$content.destroy();
+            this._content.destroy();
             super.dispose();
         }
 
         public constructFromResource(): void {
-            this.$sourceWidth = this.packageItem.width;
-            this.$sourceHeight = this.packageItem.height;
-            this.$initWidth = this.$sourceWidth;
-            this.$initHeight = this.$sourceHeight;
-            this.$content.$initDisp(this.packageItem);
-            this.setSize(this.$sourceWidth, this.$sourceHeight);
+            var contentItem: PackageItem = this.packageItem.getBranch();
+            this.sourceWidth = contentItem.width;
+            this.sourceHeight = contentItem.height;
+            this.initWidth = this.sourceWidth;
+            this.initHeight = this.sourceHeight;
+            this._content.initDisp(contentItem);
+            this.setSize(this.sourceWidth, this.sourceHeight);
+
+            // contentItem = contentItem.getHighResolution();
+            // contentItem.load();
+
+            // this._content.scale9Grid = contentItem.scale9Grid;
+            // this._content.smoothing = contentItem.smoothing;
+            // if (contentItem.scaleByTile) {
+            //     // FIXME
+            //     this._content.fillMethod = 0;
+            // }
+
+            // this.setSize(this.sourceWidth, this.sourceHeight);
+            // this._content.texture = contentItem.texture;
+            Debug.log("constructFromResource GImage", this._flip);
         }
 
         protected handleXYChanged(): void {
             super.handleXYChanged();
-            if (this.$flip != FlipType.None) {
-                if (this.$content.scale.x == -1)
-                    this.$content.x += this.width;
-                if (this.$content.scale.y == -1)
-                    this.$content.y += this.height;
+            if (this._flip != FlipType.None) {
+                if (this._content.scale.x == -1)
+                    this._content.x += this.width;
+                if (this._content.scale.y == -1)
+                    this._content.y += this.height;
             }
+            //Debug.log("handleXYChanged GImage", this.x, this.y, this.width, this.height, this._flip);
         }
         
         protected handleSizeChanged(): void {
-            this.$content.width = this.width;
-            this.$content.height = this.height;
+            this._content.width = this.width;
+            this._content.height = this.height;
+            //Debug.log("handleSizeChanged GImage", this.x, this.y, this.width, this.height, this._flip);
         }
 
-        public setupBeforeAdd(xml: utils.XmlNode): void {
-            super.setupBeforeAdd(xml);
+        public getProp(index: number): any {
+            if (index == ObjectPropID.Color)
+                return this.color;
+            else
+                return super.getProp(index);
+        }
 
-            let str: string;
-            str = xml.attributes.color;
-            if (str)
-                this.color = utils.StringUtil.convertFromHtmlColor(str);
+        public setProp(index: number, value: any): void {
+            if (index == ObjectPropID.Color)
+                this.color = value;
+            else
+                super.setProp(index, value);
+        }
 
-            str = xml.attributes.flip;
-            if (str)
-                this.flip = ParseFlipType(str);
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            super.setup_beforeAdd(buffer, beginPos);
+
+            buffer.seek(beginPos, 5);
+
+            if (buffer.readBool()) {
+                this.color = buffer.readColor();
+            }
+            this.flip = buffer.readByte();
+            this._content.fillMethod = buffer.readByte();
+            if (this._content.fillMethod != FillMethod.None) {
+                this._content.fillOrigin = buffer.readByte();
+                this._content.fillClockwise = buffer.readBool();
+                this._content.fillAmount = buffer.readFloat();
+            }
+            Debug.log("GImage", this._content.fillMethod, this._content.fillOrigin, this._content.fillClockwise, this._content.fillAmount);
         }
     }
 }

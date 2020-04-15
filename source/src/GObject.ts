@@ -1,139 +1,175 @@
+/// <reference path="./events/DisplayObjectEvent.ts" />
+/// <reference path="./UIEventProxy.ts" />
+
 namespace fgui {
 
-    export class GObject {
+    export class GObject extends UIEventProxy {
 
         public data: any;
+        public packageItem: PackageItem;
+        public static draggingObject: GObject;
 
-        protected $x: number = 0;
-        protected $y: number = 0;
-        protected $width: number = 0;
-        protected $height: number = 0;
-        protected $alpha: number = 1;
-        protected $rotation: number = 0;
-        protected $visible: boolean = true;
-        protected $touchable: boolean = true;
-        protected $grayed: boolean = false;
-        protected $draggable: boolean = false;
-        protected $scaleX: number = 1;
-        protected $scaleY: number = 1;
-        protected $skewX: number = 0;
-        protected $skewY: number = 0;
-        protected $pivot: PIXI.Point = new PIXI.Point();
-        protected $pivotAsAnchor: boolean = false;
-        protected $pivotOffset: PIXI.Point = new PIXI.Point();
-        protected $sortingOrder: number = 0;
-        protected $internalVisible: boolean = true;
-        protected $focusable: boolean = false;
-        protected $tooltips: string;
-        protected $pixelSnapping: boolean = false;
+        protected _x: number = 0;
+        protected _y: number = 0;
+        protected _alpha: number = 1;
+        protected _rotation: number = 0;
+        protected _visible: boolean = true;
+        protected _touchable: boolean = true;
+        protected _grayed: boolean = false;
+        protected _draggable: boolean = false;
+        protected _scaleX: number = 1;
+        protected _scaleY: number = 1;
+        protected _skewX: number = 0;
+        protected _skewY: number = 0;
+        protected _pivot: PIXI.Point = new PIXI.Point();
+        protected _pivotAsAnchor: boolean = false;
+        protected _pivotOffset: PIXI.Point = new PIXI.Point();
+        protected _sortingOrder: number = 0;
+        protected _internalVisible: boolean = true;
+        protected _handlingController: boolean = false;
+        protected _focusable: boolean = false;
+        protected _tooltips: string;
+        protected _pixelSnapping: boolean = false;
+        protected _disposed: boolean = false;
 
-        protected $relations: Relations;
-        protected $group: GGroup;
-        protected $gears: GearBase<GObject>[];
-        protected $displayObject: PIXI.DisplayObject;
-        protected $dragBounds: PIXI.Rectangle;
-        protected $handlingController:boolean = false;
+        protected _relations: Relations;
+        protected _group: GGroup;
+        protected _gears: GearBase<GObject>[];
+        //protected _displayObject: PIXI.DisplayObject;
+        protected _dragBounds: PIXI.Rectangle;
+        private _colorFilter: PIXI.filters.ColorMatrixFilter;
 
-        private static $colorHelper: utils.ColorMatrix;
-        protected $colorFilter: PIXI.filters.ColorMatrixFilter;
-        protected $lastColorComponents: number[] = null;
+        public sourceWidth: number = 0;
+        public sourceHeight: number = 0;
+        public initWidth: number = 0;
+        public initHeight: number = 0;
+        public minWidth: number = 0;
+        public minHeight: number = 0;
+        public maxWidth: number = 0;
+        public maxHeight: number = 0;
+        
+        public _parent: GComponent;
+        public _width: number = 0;
+        public _height: number = 0;
+        public _rawWidth: number = 0;
+        public _rawHeight: number = 0;
+        public _id: string;
+        public _name: string;
+        public _underConstruct: boolean;
+        public _gearLocked: boolean;
+        public _sizePercentInGroup: number = 0;
+        public _treeNode: GTreeNode;
 
-        protected $parent: GComponent;
+        public static _gInstanceCounter: number = 0;
+        
+        public static XY_CHANGED: string = DisplayObjectEvent.XY_CHANGED;
+        public static SIZE_CHANGED: string = DisplayObjectEvent.SIZE_CHANGED;
+        public static SIZE_DELAY_CHANGE: string = DisplayObjectEvent.SIZE_DELAY_CHANGE;
+        public static GEAR_STOP: string = DisplayObjectEvent.GEAR_STOP;
+        
+        private static _colorHelper: utils.ColorMatrix;
+        protected _lastColorComponents: number[] = null;
+
 
         /**@internal */
-        $inProgressBuilding: boolean;   //parsing xml & building
-        /**@internal */
-        $rawWidth: number = 0;
-        /**@internal */
-        $rawHeight: number = 0;
-        /**@internal */
-        $gearLocked: boolean;
-        /**@internal */
-        $initWidth: number = 0;
-        /**@internal */
-        $initHeight: number = 0;
+        _inProgressBuilding: boolean;   //parsing xml & building
 
-        protected $sourceWidth: number = 0;
-        protected $sourceHeight: number = 0;
-
-        protected $id: string;
-        protected $name: string;
-
-        public packageItem: PackageItem;  //construction data
-
-        private static gInstanceCounter: number = 0;
-
+        
         public constructor() {
-            this.$id = `${GObject.gInstanceCounter++}`;
-            this.$name = "";
+            super();
+            this._id = `${GObject._gInstanceCounter++}`;
+            this._name = "";
 
             this.createDisplayObject();
 
-            this.$relations = new Relations(this);
-            this.$gears = [];
+            this._relations = new Relations(this);
+            this._gears = [];
         }
 
         public get id(): string {
-            return this.$id;
+            return this._id;
         }
 
         public get name(): string {
-            return this.$name;
+            return this._name;
         }
 
         public set name(value: string) {
-            this.$name = value;
+            this._name = value;
         }
 
         public get x(): number {
-            return this.$x;
+            return this._x;
         }
 
         public set x(value: number) {
-            this.setXY(value, this.$y);
+            this.setXY(value, this._y);
         }
 
         public get y(): number {
-            return this.$y;
+            return this._y;
         }
 
         public set y(value: number) {
-            this.setXY(this.$x, value);
+            this.setXY(this._x, value);
+        }
+
+        public get xMin(): number {
+            return this._pivotAsAnchor ? (this._x - this._width * this._pivot.x) : this._x;
+        }
+
+        public set xMin(value: number) {
+            if (this._pivotAsAnchor)
+                this.setXY(value + this._width * this._pivot.x, this._y);
+            else
+                this.setXY(value, this._y);
+        }
+
+        public get yMin(): number {
+            return this._pivotAsAnchor ? (this._y - this._height * this._pivot.y) : this._y;
+        }
+
+        public set yMin(value: number) {
+            if (this._pivotAsAnchor)
+                this.setXY(this._x, value + this._height * this._pivot.y);
+            else
+                this.setXY(this._x, value);
         }
 
         public setXY(xv: number, yv: number): void {
-            if (this.$x != xv || this.$y != yv) {
+            if (this._x != xv || this._y != yv) {
 
-                this.$x = xv;
-                this.$y = yv;
+                this._x = xv;
+                this._y = yv;
 
                 this.handleXYChanged();
                 this.updateGear(GearType.XY);
 
-                if (this.$parent) {
-                    this.$parent.setBoundsChangedFlag();
-                    this.$displayObject.emit(DisplayObjectEvent.XY_CHANGED, this);
+                if (this._parent) {
+                    this._parent.setBoundsChangedFlag();
+                    this._displayObject.emit(DisplayObjectEvent.XY_CHANGED, this);
                 }
 
-                if (GObject.draggingObject == this && !GObject.sUpdatingWhileDragging)
+                if (GObject.draggingObject == this && !GObject.sUpdatingWhileDragging) {
                     this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
+                }
             }
         }
 
         public get pixelSnapping(): boolean {
-            return this.$pixelSnapping;
+            return this._pixelSnapping;
         }
 
         public set pixelSnapping(value: boolean) {
-            if (this.$pixelSnapping != value) {
-                this.$pixelSnapping = value;
+            if (this._pixelSnapping != value) {
+                this._pixelSnapping = value;
                 this.handleXYChanged();
             }
         }
 
         public center(restraint: boolean = false): void {
             let r: GComponent;
-            if (this.$parent != null)
+            if (this._parent != null)
                 r = this.parent;
             else
                 r = this.root;
@@ -147,106 +183,95 @@ namespace fgui {
 
         public get width(): number {
             this.ensureSizeCorrect();
-            if (this.$relations.sizeDirty)
-                this.$relations.ensureRelationsSizeCorrect();
-            return this.$width;
+            if (this._relations.sizeDirty)
+                this._relations.ensureRelationsSizeCorrect();
+            return this._width;
         }
 
         public set width(value: number) {
-            this.setSize(value, this.$rawHeight);
+            this.setSize(value, this._rawHeight);
         }
 
         public get height(): number {
             this.ensureSizeCorrect();
-            if (this.$relations.sizeDirty)
-                this.$relations.ensureRelationsSizeCorrect();
-            return this.$height;
+            if (this._relations.sizeDirty)
+                this._relations.ensureRelationsSizeCorrect();
+            return this._height;
         }
 
         public set height(value: number) {
-            this.setSize(this.$rawWidth, value);
+            this.setSize(this._rawWidth, value);
         }
 
         public setSize(wv: number, hv: number, ignorePivot: boolean = false): void {
-            if (this.$rawWidth != wv || this.$rawHeight != hv) {
-                this.$rawWidth = wv;
-                this.$rawHeight = hv;
+            if (this._rawWidth != wv || this._rawHeight != hv) {
+                this._rawWidth = wv;
+                this._rawHeight = hv;
                 wv = Math.max(0, wv);
                 hv = Math.max(0, hv);
                 let diffw: number = wv - this.mapPivotWidth(1);
                 let diffh: number = hv - this.mapPivotHeight(1);
-                this.$width = wv;
-                this.$height = hv;
+                this._width = wv;
+                this._height = hv;
 
                 this.handleSizeChanged();
-                if (this.$pivot.x != 0 || this.$pivot.y != 0) {
-                    if (!this.$pivotAsAnchor) {
-                        if (!ignorePivot)
-                            this.setXY(this.x - this.$pivot.x * diffw, this.y - this.$pivot.y * diffh);
+                if (this._pivot.x != 0 || this._pivot.y != 0) {
+                    if (!this._pivotAsAnchor) {
+                        if (!ignorePivot){
+                            this.setXY(this.x - this._pivot.x * diffw, this.y - this._pivot.y * diffh);
+                        }
                         this.updatePivotOffset();
-                    }
-                    else
+                    } else {
                         this.applyPivot();
+                    }
                 }
 
                 this.updateGear(GearType.Size);
 
-                if (this.$parent) {
-                    this.$relations.onOwnerSizeChanged(diffw, diffh);
-                    this.$parent.setBoundsChangedFlag();
+                if (this._parent) {
+                    this._relations.onOwnerSizeChanged(diffw, diffh, this._pivotAsAnchor || !ignorePivot);
+                    this._parent.setBoundsChangedFlag();
                 }
 
-                this.$displayObject.emit(DisplayObjectEvent.SIZE_CHANGED, this);
+                this._displayObject.emit(DisplayObjectEvent.SIZE_CHANGED, this);
             }
+        }
+
+        public makeFullScreen(): void {
+            this.setSize(GRoot.inst.width, GRoot.inst.height);
         }
 
         public ensureSizeCorrect(): void {
         }
 
-        public get sourceHeight(): number {
-            return this.$sourceHeight;
-        }
-
-        public get sourceWidth(): number {
-            return this.$sourceWidth;
-        }
-
-        public get initHeight(): number {
-            return this.$initHeight;
-        }
-
-        public get initWidth(): number {
-            return this.$initWidth;
-        }
-
         public get actualWidth(): number {
-            return this.width * Math.abs(this.$scaleX);
+            return this.width * Math.abs(this._scaleX);
         }
 
         public get actualHeight(): number {
-            return this.height * Math.abs(this.$scaleY);
+            return this.height * Math.abs(this._scaleY);
         }
 
         public get scaleX(): number {
-            return this.$scaleX;
+            return this._scaleX;
         }
 
         public set scaleX(value: number) {
-            this.setScale(value, this.$scaleY);
+            this.setScale(value, this._scaleY);
         }
 
         public get scaleY(): number {
-            return this.$scaleY;
+            return this._scaleY;
         }
 
         public set scaleY(value: number) {
-            this.setScale(this.$scaleX, value);
+            this.setScale(this._scaleX, value);
         }
 
         public setScale(sx: number, sy: number) {
-            if (this.$scaleX != sx || this.$scaleY != sy) {
-                this.$scaleX = sx;
-                this.$scaleY = sy;
+            if (this._scaleX != sx || this._scaleY != sy) {
+                this._scaleX = sx;
+                this._scaleY = sy;
                 this.handleScaleChanged();
                 this.applyPivot();
                 this.updateGear(GearType.Size);
@@ -254,44 +279,44 @@ namespace fgui {
         }
 
         public get skewX(): number {
-            return this.$skewX;
+            return this._skewX;
         }
 
         public set skewX(value: number) {
-            this.setSkew(value, this.$skewY);
+            this.setSkew(value, this._skewY);
         }
 
         public get skewY(): number {
-            return this.$skewY;
+            return this._skewY;
         }
 
         public set skewY(value: number) {
-            this.setSkew(this.$skewX, value);
+            this.setSkew(this._skewX, value);
         }
 
         public setSkew(xv: number, yv: number) {
-            if (this.$skewX != xv || this.$skewY != yv) {
-                this.$skewX = xv;
-                this.$skewY = yv;
-                this.$displayObject.skew.set(xv * -utils.NumberUtil.RADIAN, yv * utils.NumberUtil.RADIAN);
+            if (this._skewX != xv || this._skewY != yv) {
+                this._skewX = xv;
+                this._skewY = yv;
+                this._displayObject.skew.set(xv * -utils.NumberUtil.RADIAN, yv * utils.NumberUtil.RADIAN);
                 this.applyPivot();
             }
         }
 
         protected mapPivotWidth(scale: number): number {
-            return scale * this.$width;
+            return scale * this._width;
         }
 
         protected mapPivotHeight(scale: number): number {
-            return scale * this.$height;
+            return scale * this._height;
         }
 
         public get pivotX(): number {
-            return this.$pivot.x;
+            return this._pivot.x;
         }
 
         public get pivotY(): number {
-            return this.$pivot.y;
+            return this._pivot.y;
         }
 
         public set pivotX(value: number) {
@@ -303,68 +328,100 @@ namespace fgui {
         }
 
         public setPivot(xv: number, yv: number, asAnchor: boolean = false): void {
-            if (this.$pivot.x != xv || this.$pivot.y != yv || this.$pivotAsAnchor != asAnchor) {
-                this.$pivot.set(xv, yv);
-                this.$pivotAsAnchor = asAnchor;
+            if (this._pivot.x != xv || this._pivot.y != yv || this._pivotAsAnchor != asAnchor) {
+                this._pivot.set(xv, yv);
+                this._pivotAsAnchor = asAnchor;
                 this.updatePivotOffset();
                 this.handleXYChanged();
             }
         }
 
+        public get pivotAsAnchor(): boolean {
+            return this._pivotAsAnchor;
+        }
+
         protected internalSetPivot(xv: number, yv: number, asAnchor: boolean): void {
-            this.$pivot.set(xv, yv);
-            this.$pivotAsAnchor = asAnchor;
-            if (asAnchor)
+            this._pivot.set(xv, yv);
+            this._pivotAsAnchor = asAnchor;
+            if (asAnchor){
                 this.handleXYChanged();
+            }
         }
 
         private updatePivotOffset(): void {
-            if (this.$pivot.x != 0 || this.$pivot.y != 0 && this.$displayObject.transform) {
-                let vx: number = this.mapPivotWidth(this.$pivot.x), vy: number = this.mapPivotHeight(this.$pivot.y);
+            if (this._pivot.x != 0 || this._pivot.y != 0 && this._displayObject.transform) {
+                let vx: number = this.mapPivotWidth(this._pivot.x), vy: number = this.mapPivotHeight(this._pivot.y);
                 GObject.sHelperPoint.set(vx, vy);
-                this.$displayObject.transform.updateLocalTransform();     //TODO: sync with PIXI instead of update actively
-                let trans = this.$displayObject.localTransform;
+                this._displayObject.transform.updateLocalTransform();     //TODO: sync with PIXI instead of update actively
+                let trans = this._displayObject.localTransform;
                 let p = trans.apply(GObject.sHelperPoint, GObject.sHelperPoint);
                 p.x -= trans.tx, p.y -= trans.ty;
-                this.$pivotOffset.set(
-                    this.$pivot.x * this.$width - p.x,
-                    this.$pivot.y * this.$height - p.y
+                this._pivotOffset.set(
+                    this._pivot.x * this._width - p.x,
+                    this._pivot.y * this._height - p.y
                 );
+            } else {
+                this._pivotOffset.set(0, 0);
             }
-            else
-                this.$pivotOffset.set(0, 0);
         }
 
         private applyPivot(): void {
-            if (this.$pivot.x != 0 || this.$pivot.y != 0) {
+            if (this._pivot.x != 0 || this._pivot.y != 0) {
                 this.updatePivotOffset();
                 this.handleXYChanged();
             }
         }
 
         public get touchable(): boolean {
-            return this.$touchable;
+            return this._touchable;
         }
 
         public set touchable(value: boolean) {
-            this.$touchable = value;
-            this.$displayObject.interactive = this.$touchable;
+            if (this._touchable == value) {
+                return ;
+            }
+
+            this._touchable = value;
+            this._displayObject.interactive = this._touchable;
+            this.updateGear(GearType.Look);
+            if ((this instanceof GImage) || (this instanceof GMovieClip) 
+                    || (this instanceof GTextField) && !(this instanceof GTextInput) && !(this instanceof GRichTextField))
+                //Touch is not supported by GImage/GMovieClip/GTextField
+                return;
+            
+            // change children interactive mode
+            // 改变子对象 `是否可触摸` 状态
+            if (this._displayObject instanceof PIXI.Container) {
+                this._displayObject.interactiveChildren = value;
+            }
         }
 
+        
+        public onClick(listener : (evt : IGObjectInteractionEvent )=> void, thisArg ?: any) : void {
+            this.on(InteractiveEvents.Click, listener, thisArg);
+        }
+       
+        public offClick(listener : Function, thisArg ?: any) : void {
+            this.off(InteractiveEvents.Click, listener, thisArg);
+        }
+        
+
+        /////////////////////////////////////////////////////////
+
         public get grayed(): boolean {
-            return this.$grayed;
+            return this._grayed;
         }
 
         public set grayed(value: boolean) {
-            if (this.$grayed != value) {
-                this.$grayed = value;
+            if (this._grayed != value) {
+                this._grayed = value;
                 this.handleGrayedChanged();
                 this.updateGear(GearType.Look);
             }
         }
 
         public get enabled(): boolean {
-            return !this.$grayed && this.$touchable;
+            return !this._grayed && this._touchable;
         }
 
         public set enabled(value: boolean) {
@@ -373,100 +430,116 @@ namespace fgui {
         }
 
         public get rotation(): number {
-            return this.$rotation;
+            return this._rotation;
         }
 
         public set rotation(value: number) {
-            if (this.$rotation != value) {
-                this.$rotation = value;
-                if (this.$displayObject)
-                    this.$displayObject.rotation = utils.NumberUtil.angleToRadian(this.normalizeRotation);
+            if (this._rotation != value) {
+                this._rotation = value;
+                if (this._displayObject){
+                    this._displayObject.rotation = utils.NumberUtil.angleToRadian(this.normalizeRotation);
+                }
                 this.applyPivot();
                 this.updateGear(GearType.Look);
             }
         }
 
         public get normalizeRotation(): number {
-            let rot: number = this.$rotation % 360;
-            if (rot > 180) rot -= 360;
-            else if (rot < -180) rot += 360;
+            let rot: number = this._rotation % 360;
+            if (rot > 180) {
+                rot -= 360;
+            } else if (rot < -180) {
+                rot += 360;
+            }
             return rot;
         }
 
         public get alpha(): number {
-            return this.$alpha;
+            return this._alpha;
         }
 
         public set alpha(value: number) {
-            if (this.$alpha != value) {
-                this.$alpha = value;
+            if (this._alpha != value) {
+                this._alpha = value;
                 this.updateAlpha();
             }
         }
 
         protected updateAlpha(): void {
-            if (this.$displayObject)
-                this.$displayObject.alpha = this.$alpha;
+            if (this._displayObject) {
+                this._displayObject.alpha = this._alpha;
+            }
 
             this.updateGear(GearType.Look);
         }
 
         public get visible(): boolean {
-            return this.$visible;
+            return this._visible;
         }
 
         public set visible(value: boolean) {
-            if (this.$visible != value) {
-                this.$visible = value;
-                if (this.$displayObject)
-                    this.$displayObject.visible = this.$visible;
-                if (this.$parent) {
-                    this.$parent.childStateChanged(this);
-                    this.$parent.setBoundsChangedFlag();
+            if (this._visible != value) {
+                this._visible = value;
+                if (this._displayObject){
+                    this._displayObject.visible = this._visible;
                 }
-                this.emit(DisplayObjectEvent.VISIBLE_CHANGED, this.$visible, this);
+                if (this._parent) {
+                    this._parent.childStateChanged(this);
+                    this._parent.setBoundsChangedFlag();
+                }
+                this.emit(DisplayObjectEvent.VISIBLE_CHANGED, this._visible, this);
             }
         }
 
         /**@internal */
         set internalVisible(value: boolean) {
-            if (value != this.$internalVisible) {
-                this.$internalVisible = value;
-                if (this.$parent)
-                    this.$parent.childStateChanged(this);
+            if (value != this._internalVisible) {
+                this._internalVisible = value;
+                if (this._parent) {
+                    this._parent.childStateChanged(this);
+                }
             }
         }
 
         /**@internal */
         get internalVisible(): boolean {
-            return this.$internalVisible;
+            return this._internalVisible;
+        }
+
+        public get internalVisible2(): boolean {
+            return this._visible && (!this._group || this._group.internalVisible2);
+        }
+
+        public get internalVisible3(): boolean {
+            return this._visible && this._internalVisible;
         }
 
         public get finalVisible(): boolean {
-            return this.$visible && this.$internalVisible && (!this.$group || this.$group.finalVisible);
+            return this._visible && this._internalVisible && (!this._group || this._group.finalVisible);
         }
 
         public get sortingOrder(): number {
-            return this.$sortingOrder;
+            return this._sortingOrder;
         }
 
         public set sortingOrder(value: number) {
             if (value < 0)
                 value = 0;
-            if (this.$sortingOrder != value) {
-                let old: number = this.$sortingOrder;
-                this.$sortingOrder = value;
-                if (this.$parent != null)
-                    this.$parent.childSortingOrderChanged(this, old, this.$sortingOrder);
+            if (this._sortingOrder != value) {
+                let old: number = this._sortingOrder;
+                this._sortingOrder = value;
+                if (this._parent != null) {
+                    this._parent.childSortingOrderChanged(this, old, this._sortingOrder);
+                }
             }
         }
 
         public get focusable(): boolean {
-            return this.$focusable;
+            return this._focusable;
         }
 
         public set focusable(value: boolean) {
-            this.$focusable = value;
+            this._focusable = value;
         }
 
         public get focused(): boolean {
@@ -475,62 +548,67 @@ namespace fgui {
 
         public requestFocus(): void {
             let p: GObject = this;
-            while (p && !p.$focusable)
+            while (p && !p._focusable)
                 p = p.parent;
-            if (p != null)
+            if (p != null) {
                 this.root.focus = p;
+            }
         }
 
         public get tooltips(): string {
-            return this.$tooltips;
+            return this._tooltips;
         }
 
         public set tooltips(value: string) {
-            this.$tooltips = value;
+            this._tooltips = value;
         }
 
         public get blendMode(): string {
-            if (this.$displayObject && this.$displayObject instanceof PIXI.Sprite)
-                return BlendModeMap[this.$displayObject.blendMode] || "None";
+            if (this._displayObject && this._displayObject instanceof PIXI.Sprite) {
+                return BlendModeMap[this._displayObject.blendMode] || "None";
+            }
             return BlendModeMap[0];  //Normal
         }
 
         public set blendMode(value: string) {
-            if (!value || !value.length || !this.$displayObject || !(this.$displayObject instanceof PIXI.Sprite))
+            if (!value || !value.length || !this._displayObject || !(this._displayObject instanceof PIXI.Sprite))
                 return;
             for (let i: number = 0; i < BlendModeMap.length; i++) {
                 if (BlendModeMap[i].toLowerCase() === value.toLowerCase()) {
-                    this.$displayObject.blendMode = i;
+                    this._displayObject.blendMode = i;
                     return;
                 }
             }
         }
 
         public get filters(): PIXI.Filter[] {
-            return this.$displayObject.filters;
+            return this._displayObject.filters;
         }
 
         public set filters(value: PIXI.Filter[]) {
-            this.$displayObject.filters = value;
+            this._displayObject.filters = value;
         }
 
         public get inContainer(): boolean {
-            return this.$displayObject.parent != null;
+            return this._displayObject != null && this._displayObject.parent != null;
         }
 
         public static isDisplayObjectOnStage(display: PIXI.DisplayObject): boolean {
-            if (!display || !display.parent) return false;
+            if (!display || !display.parent) {
+                return false;
+            }
             let p: PIXI.DisplayObject = display;
             while (p != null) {
-                if (p == GRoot.inst.nativeStage)
+                if (p == GRoot.inst.nativeStage) {
                     return true;
+                }
                 p = p.parent;
             }
             return false;
         }
 
         public get onStage(): boolean {
-            return GObject.isDisplayObjectOnStage(this.$displayObject);
+            return GObject.isDisplayObjectOnStage(this._displayObject);
         }
 
         public get resourceURL(): string {
@@ -541,107 +619,127 @@ namespace fgui {
         }
 
         public set group(value: GGroup) {
-            this.$group = value;
+            if (this._group != value) {
+                if (this._group != null) {
+                    this._group.setBoundsChangedFlag();
+                }
+                this._group = value;
+                if (this._group != null) {
+                    this._group.setBoundsChangedFlag();
+                }
+            }
         }
 
         public get group(): GGroup {
-            return this.$group;
+            return this._group;
         }
 
         public getGear(index: number | GearType): GearBase<GObject> {
-            let gear: GearBase<GObject> = this.$gears[index];
+            let gear: GearBase<GObject> = this._gears[index];
             if (gear == null) {
-                switch (index) {
-                    case GearType.Display:
-                        gear = new GearDisplay(this);
-                        break;
-                    case GearType.XY:
-                        gear = new GearXY(this);
-                        break;
-                    case GearType.Size:
-                        gear = new GearSize(this);
-                        break;
-                    case GearType.Look:
-                        gear = new GearLook(this);
-                        break;
-                    case GearType.Color:
-                        if (fgui.isColorGear(this))
-                            gear = new GearColor(this);
-                        else
-                            throw new Error(`Invalid component type to add GearColor feature, please check the component named ${this.$name} in the Editor.`);
-                        break;
-                    case GearType.Animation:
-                        if (fgui.isAnimationGear(this))
-                            gear = new GearAnimation(this);
-                        else
-                            throw new Error(`Invalid component type to add GearAnimation feature, please check the component named ${this.$name} in the Editor.`);
-                        break;
-                    case GearType.Text:
-                        gear = new GearText(this);
-                        break;
-                    case GearType.Icon:
-                        gear = new GearIcon(this);
-                        break;
-                    default:
-                        throw new Error("FGUI: invalid gear type");
-                }
-                this.$gears[index] = gear;
+                this._gears[index] = gear = GearBase.create(this, index);
+                this._gears[index] = gear;
             }
             return gear;
         }
 
         protected updateGear(index: GearType): void {
-            if (this.$gears[index] != null)
-                this.$gears[index].updateState();
+            if (this._underConstruct || this._gearLocked){
+                return;
+            }
+
+            var gear: GearBase = this._gears[index];
+            if (gear != null && gear.controller != null){
+                gear.updateState();
+            }
+        }
+
+        public checkGearController(index: number, c: Controller): boolean {
+            return this._gears[index] != null && this._gears[index].controller == c;
         }
 
         public updateGearFromRelations(index: GearType, dx: number, dy: number): void {
-            if (this.$gears[index] != null)
-                this.$gears[index].updateFromRelations(dx, dy);
+            if (this._gears[index] != null) {
+                this._gears[index].updateFromRelations(dx, dy);
+            }
         }
 
-        public hasGearController(index:number, c:controller.Controller):boolean
+        public addDisplayLock(): number {
+            var gearDisplay: GearDisplay = <GearDisplay>this._gears[0];
+            if (gearDisplay && gearDisplay.controller) {
+                var ret: number = gearDisplay.addLock();
+                this.checkGearDisplay();
+                return ret;
+            } else {
+                return 0;
+            }
+        }
+
+        public releaseDisplayLock(token: number): void {
+            var gearDisplay: GearDisplay = <GearDisplay>this._gears[0];
+            if (gearDisplay && gearDisplay.controller) {
+                gearDisplay.releaseLock(token);
+                this.checkGearDisplay();
+            }
+        }
+
+        public hasGearController(index:number, c:Controller):boolean
 		{
-			return this.$gears[index] && this.$gears[index].controller == c;
+			return this._gears[index] && this._gears[index].controller == c;
 		}
 
         /**@internal */
-        lockGearDisplay():number
-		{
-			let g = this.$gears[0] as GearDisplay;
-			if(g && g.controller)
-			{
-				let ret = g.lock();
-				this.checkGearVisible();
-				return ret;
-			}
-			else
-				return 0;
-        }
+        // lockGearDisplay():number
+		// {
+		// 	let g = this._gears[0] as GearDisplay;
+		// 	if(g && g.controller)
+		// 	{
+		// 		let ret = g.lock();
+		// 		this.checkGearVisible();
+		// 		return ret;
+		// 	}
+		// 	else
+		// 		return 0;
+        // }
         
 		/**@internal */
-		releaseGearDisplay(token:number):void
-		{
-			let g = this.$gears[0] as GearDisplay;
-			if(g && g.controller)
-			{
-				g.release(token);
-				this.checkGearVisible();
-			}
+		// releaseGearDisplay(token:number):void{
+		// 	let g = this._gears[0] as GearDisplay;
+		// 	if(g && g.controller)
+		// 	{
+		// 		g.release(token);
+		// 		this.checkGearVisible();
+		// 	}
+        // }
+
+        private checkGearDisplay(): void {
+            if (this._handlingController)
+                return;
+
+            var connected: boolean = this._gears[0] == null || (<GearDisplay>this._gears[0]).connected;
+            if (this._gears[8])
+                connected = (<GearDisplay2>this._gears[8]).evaluate(connected);
+            if (connected != this._internalVisible) {
+                this._internalVisible = connected;
+                if (this._parent)
+                    this._parent.childStateChanged(this);
+                if (this._group && this._group.excludeInvisibles)
+                    this._group.setBoundsChangedFlag();
+            }
         }
         
         private checkGearVisible():void
 		{
-			if(this.$handlingController)
+			if(this._handlingController)
                 return;
             
-            let g = this.$gears[0] as GearDisplay;
+            let g = this._gears[0] as GearDisplay;
 			let v = !g || g.connected;
-			if(v != this.$internalVisible)
+			if(v != this._internalVisible)
 			{
-				this.$internalVisible = v;
-				if(this.$parent)
-                    this.$parent.childStateChanged(this);
+				this._internalVisible = v;
+				if(this._parent)
+                    this._parent.childStateChanged(this);
 			}
 		}
 
@@ -658,52 +756,133 @@ namespace fgui {
         }
         
         public get relations(): Relations {
-            return this.$relations;
+            return this._relations;
         }
 
         public addRelation(target: GObject, relationType: number, usePercent: boolean = false): void {
-            this.$relations.add(target, relationType, usePercent);
+            this._relations.add(target, relationType, usePercent);
         }
 
         public removeRelation(target: GObject, relationType: number = 0): void {
-            this.$relations.remove(target, relationType);
+            this._relations.remove(target, relationType);
         }
 
+        /**
+         * PIXI 显示对象，通过改实例可获取显示对象
+         */
         public get displayObject(): PIXI.DisplayObject {
-            return this.$displayObject;
+            return this._displayObject;
         }
         
         protected createDisplayObject(): void {
         }
 
         protected setDisplayObject(value: PIXI.DisplayObject): void {
-            this.$displayObject = value;
+            if (this._displayObject != value) {
+                if (this._displayObject) {
+                    delete this._displayObject["$owner"];
+                }
+                this._displayObject = value;
+                this._displayObject["$owner"] = this;
+            }
         }
 
         public get parent(): GComponent {
-            return this.$parent;
+            return this._parent;
         }
 
         public set parent(val: GComponent) {
-            this.$parent = val;
+            this._parent = val;
         }
 
         public removeFromParent(): void {
-            if (this.$parent)
-                this.$parent.removeChild(this);
+            if (this._parent) {
+                this._parent.removeChild(this);
+            }
         }
 
         public get root(): GRoot {
-            if (this instanceof GRoot)
+            if (this instanceof GRoot) {
                 return this as GRoot;
+            }
 
-            let p: GObject = this.$parent;
+            let p: GObject = this._parent;
             while (p) {
-                if (p instanceof GRoot)
+                if (p instanceof GRoot) {
                     return p as GRoot;
+                }
                 p = p.parent;
             }
             return GRoot.inst;
+        }
+
+        public get asCom(): GComponent {
+            return <GComponent><any>this;
+        }
+
+        public get asButton(): GButton {
+            return <GButton><any>this;
+        }
+
+        public get asLabel(): GLabel {
+            return <GLabel><any>this;
+        }
+
+        public get asProgress(): GProgressBar {
+            return <GProgressBar><any>this;
+        }
+
+        public get asTextField(): GTextField {
+            return <GTextField><any>this;
+        }
+
+        public get asRichTextField(): GRichTextField {
+            return <GRichTextField><any>this;
+        }
+
+        public get asTextInput(): GTextInput {
+            return <GTextInput><any>this;
+        }
+
+        public get asLoader(): GLoader {
+            return <GLoader><any>this;
+        }
+
+        public get asList(): GList {
+            return <GList><any>this;
+        }
+
+
+        public get asTree(): GTree {
+            return <GTree><any>this;
+        }
+
+        public get asGraph(): GGraph {
+            return <GGraph><any>this;
+        }
+
+        public get asGroup(): GGroup {
+            return <GGroup><any>this;
+        }
+
+        public get asSlider(): GSlider {
+            return <GSlider><any>this;
+        }
+
+        public get asComboBox(): GComboBox {
+            return <GComboBox><any>this;
+        }
+
+        public get asImage(): GImage {
+            return <GImage><any>this;
+        }
+
+        public get asMovieClip(): GMovieClip {
+            return <GMovieClip><any>this;
+        }
+
+        public static cast(obj: PIXI.DisplayObject): GObject {
+            return <GObject><any>obj["$owner"];
         }
 
         /** @virtual */
@@ -724,84 +903,101 @@ namespace fgui {
         public set icon(value: string) {
         }
 
+        public get isDisposed(): boolean {
+            return this._disposed;
+        }
+
+        public get treeNode(): GTreeNode {
+            return this._treeNode;
+        }
+
         public dispose(): void {
             this.removeFromParent();
-            this.$relations.dispose();
-            this.removeAllListeners();
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.$moving, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$end, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.$moving2, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$end2, this);
-            this.$displayObject.destroy();
+            this._relations.dispose();
+            //this.removeAllListeners();
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving2, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end2, this);
+            this._displayObject.destroy();
         }
 
-        public click(listener: Function, thisObj?: any): this {
-            return this.on(InteractiveEvents.Click, listener, thisObj);
-        }
+        // public onClick(listener: Function, thisObj?: any): this {
+        //     return this.on(InteractiveEvents.Click, listener, thisObj);
+        // }
 
-        public removeClick(listener: Function, thisObj?: any): this {
-            return this.off(InteractiveEvents.Click, listener, thisObj);
-        }
 
-        public hasClick(fn?:Function): boolean {
-            return this.hasListener(InteractiveEvents.Click, fn);
-        }
+        // public offClick(listener: Function, thisObj?: any): this {
+        //     return this.off(InteractiveEvents.Click, listener, thisObj);
+        // }
 
-        public on(type: string, listener: Function, thisObject?: any): this {
-            if (type == null) return this;
-            (this.$displayObject as PIXI.utils.EventEmitter).on(type, listener, thisObject);
-            return this;
-        }
 
-        public off(type: string, listener: Function, thisObject?: any): this {
-            if (type == null) return this;
-            //if (this.$displayObject.listeners(type, true))
-            if (this.$displayObject.listeners(type))
-                (this.$displayObject as PIXI.utils.EventEmitter).off(type, listener, thisObject);
-            return this;
-        }
+        // public hasClick(fn?:Function): boolean {
+        //     return this.hasListener(InteractiveEvents.Click, fn);
+        // }
 
-        public once(type: string, listener: Function, thisObject?: any): this {
-            if (type == null) return this;
-            (this.$displayObject as PIXI.utils.EventEmitter).once(type, listener, thisObject);
-            return this;
-        }
+        // public on(type: string, listener: Function, thisObject?: any): this {
+        //     if (type == null || !this._displayObject) {
+        //         return this;
+        //     } 
+        //     this._displayObject.on(type, listener, thisObject);
+        //     return this;
+        // }
 
-        public hasListener(event: string, handler?:Function): boolean {   //do we need to also check the context?
-            // if(!handler)
-            //     return this.$displayObject.listeners(event, true);
-            // else
-            //     return this.$displayObject.listeners(event).indexOf(handler) >= 0;
-            return this.$displayObject.listeners(event).indexOf(handler) >= 0;
-        }
+        // public off(type: string, listener: Function, thisObject?: any): this {
+        //     if (type == null || !this._displayObject) {
+        //         console.warn(`type of native object is null ${type}`);
+        //         return this;
+        //     } 
+        //     //if (this._displayObject.listeners(type, true))
+        //     if (this._displayObject.listeners(type)) {
+        //         this._displayObject.off(type, listener, thisObject);
+        //     }
+        //     return this;
+        // }
 
-        public emit(event: string, ...args: any[]): boolean {
-            if (!args || args.length <= 0) args = [event];
-            else args.unshift(event);
-            return this.$displayObject.emit.apply(this.$displayObject, args);
-        }
+        // public once(type: string, listener: Function, thisObject?: any): this {
+        //     if (type == null) return this;
+        //     (this._displayObject as PIXI.utils.EventEmitter).once(type, listener, thisObject);
+        //     return this;
+        // }
 
-        public removeAllListeners(type?:string):void {
-            (this.$displayObject as PIXI.utils.EventEmitter).removeAllListeners(type);
-        }
+        // public hasListener(event: string, handler?:Function): boolean {   //do we need to also check the context?
+        //     // if(!handler)
+        //     //     return this._displayObject.listeners(event, true);
+        //     // else
+        //     //     return this._displayObject.listeners(event).indexOf(handler) >= 0;
+        //     return this._displayObject.listeners(event).indexOf(handler) >= 0;
+        // }
+
+        // public emit(event: string, ...args: any[]): boolean {
+        //     if (!args || args.length <= 0) {
+        //         args = [event];
+        //     } else {
+        //         args.unshift(event);
+        //     }
+        //     return this._displayObject.emit.apply(this._displayObject, args);
+        // }
+
+      
 
         public get draggable(): boolean {
-            return this.$draggable;
+            return this._draggable;
         }
 
         public set draggable(value: boolean) {
-            if (this.$draggable != value) {
-                this.$draggable = value;
+            if (this._draggable != value) {
+                this._draggable = value;
                 this.initDrag();
             }
         }
 
         public get dragBounds(): PIXI.Rectangle {
-            return this.$dragBounds;
+            return this._dragBounds;
         }
 
         public set dragBounds(value: PIXI.Rectangle) {
-            this.$dragBounds = value;
+            this._dragBounds = value;
         }
 
         public startDrag(touchPointID: number = -1): void {
@@ -819,25 +1015,29 @@ namespace fgui {
         }
 
         public localToGlobal(ax: number = 0, ay: number = 0, resultPoint?: PIXI.Point): PIXI.Point {
-            if (this.$pivotAsAnchor) {
-                ax += this.$pivot.x * this.$width;
-                ay += this.$pivot.y * this.$height;
+            if (this._pivotAsAnchor) {
+                ax += this._pivot.x * this._width;
+                ay += this._pivot.y * this._height;
             }
-            if (!resultPoint) resultPoint = GObject.sHelperPoint;
+            if (!resultPoint){
+                resultPoint = GObject.sHelperPoint;
+            } 
             resultPoint.x = ax;
             resultPoint.y = ay;
-            //return this.$displayObject.toGlobal(resultPoint, resultPoint);
-            return this.$displayObject.toGlobal(resultPoint, resultPoint) as PIXI.Point;
+            //return this._displayObject.toGlobal(resultPoint, resultPoint);
+            return this._displayObject.toGlobal(resultPoint, resultPoint) as PIXI.Point;
         }
 
         public globalToLocal(ax: number = 0, ay: number = 0, resultPoint?: PIXI.Point): PIXI.Point {
-            if (!resultPoint) resultPoint = GObject.sHelperPoint;
+            if (!resultPoint) {
+                resultPoint = GObject.sHelperPoint;
+            }
             resultPoint.set(ax, ay);
-            // resultPoint = this.$displayObject.toLocal(resultPoint, GRoot.inst.nativeStage);
-            resultPoint = this.$displayObject.toLocal(resultPoint, GRoot.inst.nativeStage) as PIXI.Point;
-            if (this.$pivotAsAnchor) {
-                resultPoint.x -= this.$pivot.x * this.$width;
-                resultPoint.y -= this.$pivot.y * this.$height;
+            // resultPoint = this._displayObject.toLocal(resultPoint, GRoot.inst.nativeStage);
+            resultPoint = this._displayObject.toLocal(resultPoint, GRoot.inst.nativeStage) as PIXI.Point;
+            if (this._pivotAsAnchor) {
+                resultPoint.x -= this._pivot.x * this._width;
+                resultPoint.y -= this._pivot.y * this._height;
             }
             return resultPoint;
         }
@@ -875,54 +1075,58 @@ namespace fgui {
             return resultRect;
         }
 
-        public handleControllerChanged(c: controller.Controller): void {
-            this.$handlingController = true;
+        public handleControllerChanged(c: Controller): void {
+            this._handlingController = true;
             for (let i: number = 0; i < GearType.Count; i++) {
-                let gear: GearBase<GObject> = this.$gears[i];
+                let gear: GearBase<GObject> = this._gears[i];
                 if (gear != null && gear.controller == c)
                     gear.apply();
             }
-            this.$handlingController = false;
+            this._handlingController = false;
             this.checkGearVisible();
         }
 
         protected switchDisplayObject(newObj: PIXI.DisplayObject): void {
-            if (newObj == this.$displayObject)
+            if (newObj == this._displayObject){
                 return;
-
-            let old: PIXI.DisplayObject = this.$displayObject;
-            if (this.inContainer) {
-                let i: number = this.$displayObject.parent.getChildIndex(this.$displayObject);
-                this.$displayObject.parent.addChildAt(newObj, i);
-                this.$displayObject.parent.removeChild(this.$displayObject);
             }
-            this.$displayObject = newObj;
-            this.$displayObject.x = old.x;
-            this.$displayObject.y = old.y;
-            this.$displayObject.rotation = old.rotation;
-            this.$displayObject.alpha = old.alpha;
-            this.$displayObject.visible = old.visible;
-            this.$displayObject.scale.x = old.scale.x;
-            this.$displayObject.scale.y = old.scale.y;
-            this.$displayObject.interactive = old.interactive;
-            // this.$displayObject.interactiveChildren = old.interactiveChildren;
-            // @FIXME
-            // this.$displayObject.interactiveChildren = old.interactiveChildren;
+
+            let old: PIXI.DisplayObject = this._displayObject;
+            if (this.inContainer) {
+                let i: number = this._displayObject.parent.getChildIndex(this._displayObject);
+                this._displayObject.parent.addChildAt(newObj, i);
+                this._displayObject.parent.removeChild(this._displayObject);
+            }
+            this._displayObject = newObj;
+            this._displayObject.x = old.x;
+            this._displayObject.y = old.y;
+            this._displayObject.rotation = old.rotation;
+            this._displayObject.alpha = old.alpha;
+            this._displayObject.visible = old.visible;
+            this._displayObject.scale.x = old.scale.x;
+            this._displayObject.scale.y = old.scale.y;
+            
+            ToolSet.setColorFilter(this._displayObject, this._grayed);
+
+            this._displayObject.interactive = old.interactive;
+            if (this._displayObject instanceof PIXI.Container) {
+                this._displayObject.interactiveChildren = old.interactive;
+            }
         }
 
         protected handleXYChanged(): void {
-            if (this.$displayObject) {
-                let xv: number = this.$x;
-                let yv: number = this.$y;
-                if (this.$pivotAsAnchor) {
-                    xv -= this.$pivot.x * this.$width;
-                    yv -= this.$pivot.y * this.$height;
+            if (this._displayObject) {
+                let xv: number = this._x;
+                let yv: number = this._y;
+                if (this._pivotAsAnchor) {
+                    xv -= this._pivot.x * this._width;
+                    yv -= this._pivot.y * this._height;
                 }
-                if (this.$pixelSnapping) {
+                if (this._pixelSnapping) {
                     xv = Math.round(xv);
                     yv = Math.round(yv);
                 }
-                this.$displayObject.position.set(xv + this.$pivotOffset.x, yv + this.$pivotOffset.y);
+                this._displayObject.position.set(xv + this._pivotOffset.x, yv + this._pivotOffset.y);
             }
         }
 
@@ -930,20 +1134,21 @@ namespace fgui {
         }
 
         protected handleScaleChanged(): void {
-            if (this.$displayObject)
-                this.$displayObject.scale.set(this.$scaleX, this.$scaleY);
+            if (this._displayObject){
+                this._displayObject.scale.set(this._scaleX, this._scaleY);
+            }
         }
 
         protected get colorFilter(): PIXI.filters.ColorMatrixFilter {
-            if (this.$colorFilter)
-                return this.$colorFilter;
-            this.$colorFilter = new PIXI.filters.ColorMatrixFilter();
-            if (this.$displayObject) {
-                let a = this.$displayObject.filters || [];
-                a.push(this.$colorFilter);
-                this.$displayObject.filters = a;
+            if (this._colorFilter)
+                return this._colorFilter;
+            this._colorFilter = new PIXI.filters.ColorMatrixFilter();
+            if (this._displayObject) {
+                let a = this._displayObject.filters || [];
+                a.push(this._colorFilter);
+                this._displayObject.filters = a;
             }
-            return this.$colorFilter;
+            return this._colorFilter;
         }
 
         /**
@@ -954,131 +1159,223 @@ namespace fgui {
          * @param hue The hue property of the color in degress (-1 - 1, where 1 is 360deg)
          */
         public updateColorComponents(brightness: number, contrast: number, saturate: number, hue: number): void {
-            if (!GObject.$colorHelper) GObject.$colorHelper = new utils.ColorMatrix();
-            let helper = GObject.$colorHelper;
+            if (!GObject._colorHelper) GObject._colorHelper = new utils.ColorMatrix();
+            let helper = GObject._colorHelper;
             helper.setColor(brightness, contrast * 100, saturate * 100, hue * 180);
             let f = this.colorFilter;
             f.enabled = true;
             f.reset();
             f.matrix = helper.toArray();
-            if (!this.$lastColorComponents) this.$lastColorComponents = [];
-            this.$lastColorComponents.length = 0;
-            this.$lastColorComponents.push(helper.brightness, helper.contrast, helper.saturation, helper.hue);
+            if (!this._lastColorComponents) this._lastColorComponents = [];
+            this._lastColorComponents.length = 0;
+            this._lastColorComponents.push(helper.brightness, helper.contrast, helper.saturation, helper.hue);
         }
 
         protected handleGrayedChanged(): void {
-            if (this.$displayObject) {
+            if (this._displayObject) {
                 let c: PIXI.filters.ColorMatrixFilter = this.colorFilter;
                 c.enabled = true;
-                if (this.$grayed)
+                if (this._grayed)
                     c.blackAndWhite(true);
                 else {
-                    if (this.$lastColorComponents && this.$lastColorComponents.length >= 4)
-                        this.updateColorComponents(this.$lastColorComponents[0], this.$lastColorComponents[1], this.$lastColorComponents[2], this.$lastColorComponents[3]);
+                    if (this._lastColorComponents && this._lastColorComponents.length >= 4)
+                        this.updateColorComponents(this._lastColorComponents[0], this._lastColorComponents[1], this._lastColorComponents[2], this._lastColorComponents[3]);
                     else
                         c.enabled = false;
                 }
             }
         }
 
+        protected handleAlphaChanged(): void {
+            if (this._displayObject)
+                this._displayObject.alpha = this._alpha;
+        }
+
+        public handleVisibleChanged(): void {
+            if (this._displayObject)
+                this._displayObject.visible = this.internalVisible2;
+            if (this instanceof GGroup)
+                (<GGroup>this).handleVisibleChanged();
+        }
+
+        public getProp(index: number): any {
+            switch (index) {
+                case ObjectPropID.Text:
+                    return this.text;
+                case ObjectPropID.Icon:
+                    return this.icon;
+                case ObjectPropID.Color:
+                    return NaN;
+                case ObjectPropID.OutlineColor:
+                    return NaN;
+                case ObjectPropID.Playing:
+                    return false;
+                case ObjectPropID.Frame:
+                    return 0;
+                case ObjectPropID.DeltaTime:
+                    return 0;
+                case ObjectPropID.TimeScale:
+                    return 1;
+                case ObjectPropID.FontSize:
+                    return 0;
+                case ObjectPropID.Selected:
+                    return false;
+                default:
+                    return undefined;
+            }
+        }
+
+        public setProp(index: number, value: any): void {
+            switch (index) {
+                case ObjectPropID.Text:
+                    this.text = value;
+                    break;
+
+                case ObjectPropID.Icon:
+                    this.icon = value;
+                    break;
+            }
+        }
+
         /**@internal */
         constructFromResource(): void {
         }
+        
 
-        public setupBeforeAdd(xml: utils.XmlNode): void {
-            let str: string;
-            let arr: string[];
+        public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+            buffer.seek(beginPos, 0);
+            buffer.skip(5);
 
-            this.$id = xml.attributes.id;
-            this.$name = xml.attributes.name;
+            Debug.log("setup_beforeAdd", this.name);
+            var f1: number;
+            var f2: number;
 
-            str = xml.attributes.xy;
-            arr = str.split(",");
-            this.setXY(parseInt(arr[0]), parseInt(arr[1]));
+            this._id = buffer.readS();
+            this._name = buffer.readS();
+            f1 = buffer.readInt();
+            f2 = buffer.readInt();
+            this.setXY(f1, f2);
 
-            str = xml.attributes.size;
-            if (str) {
-                arr = str.split(",");
-                this.$initWidth = parseInt(arr[0]);
-                this.$initHeight = parseInt(arr[1]);
-                this.setSize(this.$initWidth, this.$initHeight, true);
+            if (buffer.readBool()) {
+                this.initWidth = buffer.readInt();
+                this.initHeight = buffer.readInt();
+                this.setSize(this.initWidth, this.initHeight, true);
+                Debug.log("","*init W H", this.initWidth, this.initHeight);
             }
 
-            str = xml.attributes.scale;
-            if (str) {
-                arr = str.split(",");
-                this.setScale(parseFloat(arr[0]), parseFloat(arr[1]));
+            if (buffer.readBool()) {
+                this.minWidth = buffer.readInt();
+                this.maxWidth = buffer.readInt();
+                this.minHeight = buffer.readInt();
+                this.maxHeight = buffer.readInt();
+                Debug.log("","*init Max W H Min W H", this.maxWidth, this.maxHeight, this.minWidth, this.minHeight);
             }
 
-            str = xml.attributes.rotation;
-            if (str)
-                this.rotation = parseInt(str);
-
-            str = xml.attributes.skew;
-            if (str) {
-                arr = str.split(",");
-                this.setSkew(parseFloat(arr[0]), parseFloat(arr[1]));
+            if (buffer.readBool()) {
+                f1 = buffer.readFloat();
+                f2 = buffer.readFloat();
+                this.setScale(f1, f2);
+                Debug.log("","*Scale X Y", f1, f2);
             }
 
-            str = xml.attributes.pivot;
-            if (str) {
-                arr = str.split(",");
-                let n1: number = parseFloat(arr[0]), n2: number = parseFloat(arr[1]);
-                str = xml.attributes.anchor;
-                this.setPivot(n1, n2, str == "true");
+            if (buffer.readBool()) {
+                f1 = buffer.readFloat();
+                f2 = buffer.readFloat();
+                this.setSkew(f1, f2);
+                Debug.log("","*Skew X Y", f1, f2);
             }
 
-            str = xml.attributes.alpha;
-            if (str)
-                this.alpha = parseFloat(str);
+            if (buffer.readBool()) {
+                f1 = buffer.readFloat();
+                f2 = buffer.readFloat();
+                this.setPivot(f1, f2, buffer.readBool());
+                Debug.log("","*Pivot X Y", f1, f2);
+            }
 
-            if (xml.attributes.touchable == "false")
-                this.touchable = false;
-            if (xml.attributes.visible == "false")
+            f1 = buffer.readFloat();
+            if (f1 != 1){
+                this.alpha = f1;
+                Debug.log("","*alpha ", f1);
+            }
+
+            f1 = buffer.readFloat();
+            if (f1 != 0){
+                this.rotation = f1;
+                Debug.log("","*rotation ", f1);
+            }
+
+            if (!buffer.readBool()){
                 this.visible = false;
-            if (xml.attributes.grayed == "true")
+                Debug.log("","*visible ", this.visible);
+            }
+            if (!buffer.readBool()){
+                this.touchable = false;
+                Debug.log("","*touchable ", this.touchable);
+            }
+            if (buffer.readBool()) {
                 this.grayed = true;
-            this.tooltips = xml.attributes.tooltips;
+                Debug.log("","*grayed ", this.grayed);
+            }
+            var bm: number = buffer.readByte();
+            this.blendMode = BlendModeMap[bm] || "Normal";
+            Debug.log("","*blendmode ", this.blendMode);
 
-            str = xml.attributes.blend;
-            if (str)
-                this.blendMode = str;
+            var filter: number = buffer.readByte();
+            if (filter == 1 && this._displayObject) {
+                let c1 = buffer.readFloat();
+                let c2 = buffer.readFloat();
+                let c3 = buffer.readFloat();
+                let c4 = buffer.readFloat();
+                ToolSet.setColorFilter(this._displayObject,[c1, c2, c3, c4]);
+            }
+            var str: string = buffer.readS();
+            if (str != null) {
+                this.data = str;
+            }
+            Debug.log("","*data ", this.data);
+        }
 
-            str = xml.attributes.filter;
-            if (str) {
-                switch (str) {
-                    case "color":
-                        str = xml.attributes.filterData;
-                        arr = str.split(",");
-                        this.updateColorComponents(
-                            parseFloat(arr[0]),
-                            parseFloat(arr[1]),
-                            parseFloat(arr[2]),
-                            parseFloat(arr[3])
-                        );
-                        break;
-                }
+
+        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+            buffer.seek(beginPos, 1);
+
+            Debug.log("setup_beforeAdd", this.name);
+
+            var str: string = buffer.readS();
+            if (str != null){
+                this.tooltips = str;
+                Debug.log("", `*tooltips${str}`);
+            }
+
+            var groupId: number = buffer.readShort();
+            if (groupId >= 0){
+                this.group = <GGroup>this.parent.getChildAt(groupId);
+                Debug.log("","*group");
+            }
+
+            buffer.seek(beginPos, 2);
+
+            var cnt: number = buffer.readShort();
+            Debug.log("","*Gear count ", cnt);
+            for (var i: number = 0; i < cnt; i++) {
+                var nextPos: number = buffer.readShort();
+                nextPos += buffer.position;
+    
+                var gear: GearBase<GObject> = this.getGear(buffer.readByte());
+                gear.setup(buffer);
+                Debug.log("", "", "*Gear ", gear);
+
+                buffer.position = nextPos;
             }
         }
 
-        public setupAfterAdd(xml: utils.XmlNode): void {
-            let str: string = xml.attributes.group;
-            if (str)
-                this.$group = this.$parent.getChildById(str) as GGroup;
 
-            let col: utils.XmlNode[] = xml.children;
-            col.forEach(cxml => {
-                let index: number = GearXMLNodeNameMap[cxml.nodeName];
-                if (index != void 0)
-                    this.getGear(index).setup(cxml);
-            }, this);
-        }
-
-        public static castFromNativeObject(disp: PIXI.DisplayObject): GObject {
-            if (fgui.isUIObject(disp))
-                return disp.UIOwner;
-            return null;
-        }
+        // public static castFromNativeObject(disp: PIXI.DisplayObject): GObject {
+        //     if (fgui.isUIObject(disp)){
+        //         return disp.UIOwner;
+        //     }
+        //     return null;
+        // }
 
         //dragging
         //-------------------------------------------------------------------
@@ -1087,17 +1384,16 @@ namespace fgui {
         protected static sHelperPoint: PIXI.Point = new PIXI.Point();
         protected static sDragHelperRect: PIXI.Rectangle = new PIXI.Rectangle();
         protected static sUpdatingWhileDragging: boolean;
-        private static $dragBeginCancelled: boolean;
+        private static _dragBeginCancelled: boolean;
 
-        protected $touchDownPoint: PIXI.Point;
+        protected _touchDownPoint: PIXI.Point;
 
-        public static draggingObject: GObject;
 
         private initDrag(): void {
-            if (this.$draggable)
-                this.on(InteractiveEvents.Down, this.$touchBegin, this);
+            if (this._draggable)
+                this.on(InteractiveEvents.Down, this._touchBegin, this);
             else
-                this.off(InteractiveEvents.Down, this.$touchBegin, this);
+                this.off(InteractiveEvents.Down, this._touchBegin, this);
         }
 
         private dragBegin(): void {
@@ -1110,62 +1406,62 @@ namespace fgui {
             this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
             GObject.draggingObject = this;
 
-            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this.$moving2, this);
-            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this.$end2, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this._moving2, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this._end2, this);
         }
 
         private dragEnd(): void {
             if (GObject.draggingObject == this) {
-                GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.$moving2, this);
-                GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$end2, this);
+                GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving2, this);
+                GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end2, this);
                 GObject.draggingObject = null;
             }
-            GObject.$dragBeginCancelled = true;
+            GObject._dragBeginCancelled = true;
         }
 
         private reset(): void {
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.$moving, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.$end, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end, this);
         }
 
-        private $touchBegin(evt: PIXI.interaction.InteractionEvent): void {
-            if (this.$touchDownPoint == null)
-                this.$touchDownPoint = new PIXI.Point();
-            this.$touchDownPoint.x = evt.data.global.x;
-            this.$touchDownPoint.y = evt.data.global.y;
-            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this.$moving, this);
-            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this.$end, this);
+        private _touchBegin(evt: PIXI.interaction.InteractionEvent): void {
+            if (this._touchDownPoint == null)
+                this._touchDownPoint = new PIXI.Point();
+            this._touchDownPoint.x = evt.data.global.x;
+            this._touchDownPoint.y = evt.data.global.y;
+            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this._moving, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this._end, this);
         }
 
-        private $end(evt: PIXI.interaction.InteractionEvent): void {
+        private _end(evt: PIXI.interaction.InteractionEvent): void {
             this.reset();
         }
 
-        private $moving(evt: PIXI.interaction.InteractionEvent): void {
+        private _moving(evt: PIXI.interaction.InteractionEvent): void {
             let sensitivity: number = UIConfig.touchDragSensitivity;
-            if (this.$touchDownPoint != null
-                && Math.abs(this.$touchDownPoint.x - evt.data.global.x) < sensitivity
-                && Math.abs(this.$touchDownPoint.y - evt.data.global.y) < sensitivity)
+            if (this._touchDownPoint != null
+                && Math.abs(this._touchDownPoint.x - evt.data.global.x) < sensitivity
+                && Math.abs(this._touchDownPoint.y - evt.data.global.y) < sensitivity)
                 return;
 
             this.reset();
 
-            GObject.$dragBeginCancelled = false;
+            GObject._dragBeginCancelled = false;
 
-            evt.currentTarget = this.$displayObject;
-            this.$displayObject.emit(DragEvent.START, evt, this);
+            evt.currentTarget = this._displayObject;
+            this._displayObject.emit(DragEvent.START, evt, this);
 
-            if (!GObject.$dragBeginCancelled)  //user may call obj.stopDrag in the DragStart event handler
+            if (!GObject._dragBeginCancelled)  //user may call obj.stopDrag in the DragStart event handler
                 this.dragBegin();
         }
 
-        private $moving2(evt: PIXI.interaction.InteractionEvent): void {
+        private _moving2(evt: PIXI.interaction.InteractionEvent): void {
             let xx: number = evt.data.global.x - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
             let yy: number = evt.data.global.y - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
 
-            if (this.$dragBounds != null) {
-                let rect: PIXI.Rectangle = GRoot.inst.localToGlobalRect(this.$dragBounds.x, this.$dragBounds.y,
-                    this.$dragBounds.width, this.$dragBounds.height, GObject.sDragHelperRect);
+            if (this._dragBounds != null) {
+                let rect: PIXI.Rectangle = GRoot.inst.localToGlobalRect(this._dragBounds.x, this._dragBounds.y,
+                    this._dragBounds.width, this._dragBounds.height, GObject.sDragHelperRect);
                 if (xx < rect.x)
                     xx = rect.x;
                 else if (xx + GObject.sGlobalRect.width > rect.right) {
@@ -1190,15 +1486,15 @@ namespace fgui {
             this.setXY(Math.round(pt.x), Math.round(pt.y));
             GObject.sUpdatingWhileDragging = false;
 
-            evt.currentTarget = this.$displayObject;
-            this.$displayObject.emit(DragEvent.MOVING, evt, this);
+            evt.currentTarget = this._displayObject;
+            this._displayObject.emit(DragEvent.MOVING, evt, this);
         }
 
-        private $end2(evt: PIXI.interaction.InteractionEvent): void {
+        private _end2(evt: PIXI.interaction.InteractionEvent): void {
             if (GObject.draggingObject == this) {
                 this.stopDrag();
-                evt.currentTarget = this.$displayObject;
-                this.$displayObject.emit(DragEvent.END, evt, this);
+                evt.currentTarget = this._displayObject;
+                this._displayObject.emit(DragEvent.END, evt, this);
             }
         }
     }

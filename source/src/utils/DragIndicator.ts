@@ -63,7 +63,7 @@ namespace fgui.utils {
 
             let obj: GObject = GRoot.inst.getObjectUnderPoint(evt.data.global.x, evt.data.global.y);
             while (obj != null) {
-                if (obj.hasListener(DragEvent.DROP)) {
+                if (obj.listenerCount(DragEvent.DROP)) {
                     obj.requestFocus();
                     evt.currentTarget = obj.displayObject;
                     obj.emit(DragEvent.DROP, evt, sourceData);

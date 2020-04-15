@@ -11,10 +11,30 @@ namespace fgui {
      */
     export type Decompressor = (rawData : ArrayBuffer) => Uint8Array;
 
+    export interface IDecompressObject {
+        decompress(rawData : ArrayBuffer) : Uint8Array;
+    }
+
+    export interface IDecompressHandler {
+        (rawData : ArrayBuffer) : Uint8Array;
+    }
+
+    export type DecompressAdapter = IDecompressObject | IDecompressHandler;
+
     /**
      * AssetLoader
      */
     export interface IAssetLoader {
 
     }
+
+    export interface IAssetManagerObject {
+        getAsset<T>(key : string) : T;
+    }
+
+    export interface IAssetManagerHandler {
+        <T>(key : string) : T;
+    }
+
+    export type AssetManagerAdapter =  IAssetManagerObject | IAssetManagerHandler;
 }

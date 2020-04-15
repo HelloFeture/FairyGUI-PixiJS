@@ -1,53 +1,53 @@
 namespace fgui {
     export class HTMLInput {
 
-        private $input:InputElement;
-        private $singleLine:HTMLInputElement;
-        private $multiLine:HTMLTextAreaElement;
-        private $curEle:HTMLInputElement | HTMLTextAreaElement;
+        private _input:InputElement;
+        private _singleLine:HTMLInputElement;
+        private _multiLine:HTMLTextAreaElement;
+        private _curEle:HTMLInputElement | HTMLTextAreaElement;
 
         /**@internal */
-        $wrapper:HTMLDivElement;
-        private $delegateDiv:HTMLDivElement;
-        private $canvas:HTMLCanvasElement;
+        _wrapper:HTMLDivElement;
+        private _delegateDiv:HTMLDivElement;
+        private _canvas:HTMLCanvasElement;
 
         /**@internal */
-        $requestToShow:boolean = false;
+        _requestToShow:boolean = false;
         /**@internal */
-        $scaleX:number = 1;
+        _scaleX:number = 1;
         /**@internal */
-        $scaleY:number = 1;
+        _scaleY:number = 1;
 
         public static isTyping:boolean = false;
         
         private constructor() {}
 
-        private static $instance:HTMLInput;
+        private static _instance:HTMLInput;
 
         public static get inst():HTMLInput {
-            if(!HTMLInput.$instance)
-                HTMLInput.$instance = new HTMLInput();
-            return HTMLInput.$instance;
+            if(!HTMLInput._instance)
+                HTMLInput._instance = new HTMLInput();
+            return HTMLInput._instance;
         }
 
         public initialize(container:HTMLElement, view:HTMLCanvasElement):void {
-            this.$canvas = view;
+            this._canvas = view;
             let div;
-            if (!this.$delegateDiv) {
+            if (!this._delegateDiv) {
                 div = document.createElement("div");
-                this.$delegateDiv = div;
+                this._delegateDiv = div;
                 div.id = "__delegateDiv";
                 container.appendChild(div);
                 this.initDomPos(div);
-                this.$wrapper = document.createElement("div");
-                this.initDomPos(this.$wrapper);
-                this.$wrapper.style.width = "0px";
-                this.$wrapper.style.height = "0px";
-                this.$wrapper.style.left = "0px";
-                this.$wrapper.style.top = "-100px";
+                this._wrapper = document.createElement("div");
+                this.initDomPos(this._wrapper);
+                this._wrapper.style.width = "0px";
+                this._wrapper.style.height = "0px";
+                this._wrapper.style.left = "0px";
+                this._wrapper.style.top = "-100px";
 
-                this.setTransform(this.$wrapper, "0% 0% 0px");
-                div.appendChild(this.$wrapper);
+                this.setTransform(this._wrapper, "0% 0% 0px");
+                div.appendChild(this._wrapper);
 
                 GRoot.inst.on(InteractiveEvents.Click, this.canvasClickHandler, this);
                 
@@ -57,30 +57,31 @@ namespace fgui {
         }
 
         public isInputOn():boolean {
-            return this.$input != null;
+            return this._input != null;
         }
 
         private canvasClickHandler(e:Event):void {
-            if (this.$requestToShow) {
-                this.$requestToShow = false;
-                this.$input.onClickHandler(e);
+           
+            if (this._requestToShow) {
+                this._requestToShow = false;
+                this._input.onClickHandler(e);
                 this.show();
             }
             else {
-                if (this.$curEle) {
+                if (this._curEle) {
                     this.clearInputElement();
-                    this.$curEle.blur();
-                    this.$curEle = null;
+                    this._curEle.blur();
+                    this._curEle = null;
                 }
             }
         }
 
         public isInputShown():boolean {
-            return this.$input != null;
+            return this._input != null;
         }
         
         public isCurrentInput(input:InputElement):boolean {
-            return this.$input == input;
+            return this._input == input;
         }
         
         private initDomPos(dom:HTMLElement):void {
@@ -100,17 +101,17 @@ namespace fgui {
         
         /**@internal */
         updateSize(sx:number, sy:number):void {
-            if(!this.$canvas)
+            if(!this._canvas)
                 return;
 
-            this.$scaleX = sx;
-            this.$scaleY = sy;
+            this._scaleX = sx;
+            this._scaleY = sy;
 
-            this.$delegateDiv.style.left = this.$canvas.style.left;
-            this.$delegateDiv.style.top = this.$canvas.style.top;
+            this._delegateDiv.style.left = this._canvas.style.left;
+            this._delegateDiv.style.top = this._canvas.style.top;
 
-            let cvsStyle:any = this.$canvas.style;
-            this.setTransform(this.$delegateDiv, "0% 0% 0px", cvsStyle.transform || cvsStyle.webkitTransform || cvsStyle.msTransform || cvsStyle.mozTransform || cvsStyle.oTransform);
+            let cvsStyle:any = this._canvas.style;
+            this.setTransform(this._delegateDiv, "0% 0% 0px", cvsStyle.transform || cvsStyle.webkitTransform || cvsStyle.msTransform || cvsStyle.mozTransform || cvsStyle.oTransform);
         }
         
         private initInputElement(multiline:boolean):void {
@@ -118,17 +119,17 @@ namespace fgui {
             if (multiline) {
                 inputElement = document.createElement("textarea");
                 inputElement.style.resize = "none";
-                this.$multiLine = inputElement;
+                this._multiLine = inputElement;
                 inputElement.id = "stageTextAreaEle";
             }
             else {
                 inputElement = document.createElement("input");
-                this.$singleLine = inputElement;
+                this._singleLine = inputElement;
                 inputElement.type = "text";
                 inputElement.id = "stageInputEle";
             }
             
-            this.$wrapper.appendChild(inputElement);
+            this._wrapper.appendChild(inputElement);
             inputElement.setAttribute("tabindex", "-1");
             inputElement.style.width = "1px";
             inputElement.style.height = "12px";
@@ -142,40 +143,43 @@ namespace fgui {
             style.opacity = 0;
 
             inputElement.oninput = (e) => {
-                if (this.$input)
-                    this.$input.onInputHandler();
+                Debug.log("input", inputElement.value);
+                if (this._input)
+                    this._input.onInputHandler();
             };
         }
 
         public show():void {
             GTimer.inst.callLater(() => {
-                this.$curEle.style.opacity = "1";
+                this._curEle.style.opacity = "1";
+                this._curEle.focus();
+                Debug.log("show....callLater");
             }, this);
         }
 
         public disconnect(ele:InputElement):void {
-            if (this.$input == null || this.$input == ele) {
+            if (this._input == null || this._input == ele) {
                 this.clearInputElement();
 
-                if (this.$curEle)
-                    this.$curEle.blur();
+                if (this._curEle)
+                    this._curEle.blur();
             }
         }
 
         public clearAttributes(obj:any):void {
-            if(this.$curEle) {
+            if(this._curEle) {
                 for(let key in obj) {
-                    this.$curEle.removeAttribute(key);
+                    this._curEle.removeAttribute(key);
                 }
             }
         }
         
         public clearInputElement():void {
-            if (this.$curEle) {
-                this.$curEle.value = "";
+            if (this._curEle) {
+                this._curEle.value = "";
 
-                this.$curEle.onblur = null;
-                let style = this.$curEle.style;
+                this._curEle.onblur = null;
+                let style = this._curEle.style;
                 style.width = "1px";
                 style.height = "12px";
                 style.left = "0px";
@@ -183,42 +187,42 @@ namespace fgui {
                 style.opacity = "0";
 
                 let el2;
-                if (this.$singleLine == this.$curEle)
-                    el2 = this.$multiLine;
+                if (this._singleLine == this._curEle)
+                    el2 = this._multiLine;
                 else
-                    el2 = this.$singleLine;
+                    el2 = this._singleLine;
                 el2.style.display = "block";
 
-                this.$wrapper.style.left = "0px";
-                this.$wrapper.style.top = "-100px";
-                this.$wrapper.style.height = "0px";
-                this.$wrapper.style.width = "0px";
+                this._wrapper.style.left = "0px";
+                this._wrapper.style.top = "-100px";
+                this._wrapper.style.height = "0px";
+                this._wrapper.style.width = "0px";
             }
 
-            if (this.$input) {
-                this.$input.onDisconnect();
-                this.$input = null;
+            if (this._input) {
+                this._input.onDisconnect();
+                this._input = null;
                 HTMLInput.isTyping = false;
             }
         }
 
         public requestInput(ele:InputElement):HTMLInputElement | HTMLTextAreaElement {
             this.clearInputElement();
-            this.$input = ele;
+            this._input = ele;
             HTMLInput.isTyping = true;
             
             let el2;
-            if(this.$input.textField.multipleLine) {
-                this.$curEle = this.$multiLine;
-                el2 = this.$singleLine;
+            if(this._input.textField.multipleLine) {
+                this._curEle = this._multiLine;
+                el2 = this._singleLine;
             }
             else {
-                this.$curEle = this.$singleLine;
-                el2 = this.$multiLine;
+                this._curEle = this._singleLine;
+                el2 = this._multiLine;
             }
             el2.style.display = "none";
 
-            return this.$curEle;
+            return this._curEle;
         }
     }
 }
