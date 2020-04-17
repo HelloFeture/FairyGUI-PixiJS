@@ -247,7 +247,8 @@ module fgui {
         }
 
         public addItemFromPool(url: string = null): GObject {
-            return this.addChild(this.getFromPool(url));
+            let obj = this.getFromPool(url);
+            return this.addChild(obj);
         }
 
         public removeChildAt(index: number, dispose: boolean = false): GObject {
@@ -722,14 +723,12 @@ module fgui {
                     this.viewHeight = lineCount * this._itemSize.y + Math.max(0, lineCount - 1) * this._lineGap;
                 else
                     this.viewWidth = lineCount * this._itemSize.x + Math.max(0, lineCount - 1) * this._columnGap;
-            }
-            else if (itemCount == 0) {
+            } else if (itemCount == 0) {
                 if (this._layout == ListLayoutType.SingleColumn || this._layout == ListLayoutType.FlowHorizontal)
                     this.viewHeight = minSize;
                 else
                     this.viewWidth = minSize;
-            }
-            else {
+            } else {
                 var i: number = itemCount - 1;
                 var obj: GObject = null;
                 while (i >= 0) {
@@ -1326,7 +1325,7 @@ module fgui {
                     enterCounter++;
                     forceUpdate = false;
                     if (enterCounter > 20) {
-                        console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
+                        console.warn("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
                         break;
                     }
                 }
@@ -1338,7 +1337,7 @@ module fgui {
                     enterCounter++;
                     forceUpdate = false;
                     if (enterCounter > 20) {
-                        console.log("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
+                        console.warn("FairyGUI: list will never be filled as the item renderer function always returns a different size.");
                         break;
                     }
                 }
@@ -2302,7 +2301,7 @@ module fgui {
 
         protected setupItem(buffer: ByteBuffer, obj: GObject): void {
             var str: string;
-
+            
             str = buffer.readS();
             if (str != null)
                 obj.text = str;

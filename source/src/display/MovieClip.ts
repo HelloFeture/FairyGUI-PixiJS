@@ -173,7 +173,7 @@ namespace fgui {
         }
 
         private update(): void {
-            if(this.UIOwner._inProgressBuilding) return;
+            //if(this.UIOwner._inProgressBuilding) return;
             if (this._playing && this._frameCount != 0 && this._status != MovieClipStatus.ENDED) {
                 this.data.update(this);
                 if (this._currentFrame != this.data.currentFrame) {
@@ -236,7 +236,6 @@ namespace fgui {
             this.texture = frame == null ? null : frame.texture;
             // @FIXME 
             //this_textureID = -1;
-            // Debug.log("MovieClip", frame.texture.width, frame.texture.height);
         }
 
         private added(disp: PIXI.DisplayObject): void {

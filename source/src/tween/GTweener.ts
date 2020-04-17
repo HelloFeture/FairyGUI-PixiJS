@@ -478,7 +478,7 @@ module fgui {
                     this._onStart.call(this._onStartCaller, this);
                 }
                 catch (err) {
-                    console.log("FairyGUI: error in start callback > " + err);
+                    console.warn("FairyGUI: error in start callback > " + err);
                 }
             }
         }
@@ -489,7 +489,7 @@ module fgui {
                     this._onUpdate.call(this._onUpdateCaller, this);
                 }
                 catch (err) {
-                    console.log("FairyGUI: error in update callback > " + err);
+                    console.warn("FairyGUI: error in update callback > " + err);
                 }
             }
         }
@@ -500,7 +500,7 @@ module fgui {
                     this._onComplete.call(this._onCompleteCaller, this);
                 }
                 catch (err) {
-                    console.log("FairyGUI: error in complete callback > " + err);
+                    console.warn("FairyGUI: error in complete callback > " + err);
                 }
             }
         }

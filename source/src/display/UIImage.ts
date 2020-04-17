@@ -30,13 +30,11 @@ namespace fgui {
             if (this._disp) {
                 return;
             } 
-            Debug.log("initDisp");
             if(item) {
                 item.load();
 
                 if (item.scaleByTile) {
                     this._disp = new PIXI.TilingSprite(item.texture);
-                    Debug.log("initDisp scaleByTile....",)
                 } else if (item.scale9Grid) {
                     this._disp = new pixi_extend.Sprite(item.id, item.texture);
                     // TODO
@@ -48,14 +46,11 @@ namespace fgui {
                     //     Math.max(0, item.texture.height - item.scale9Grid.height - item.scale9Grid.y)
                     // );
                     // this.tiledSlices = item.tiledSlices;
-                    // Debug.log("initDisp scale9Grid....",)
                 } else {
-                    Debug.log("initDisp normal....",)
                     this._disp = new pixi_extend.Sprite(item.id, item.texture);
                 }
             } else {
                 this._disp = new pixi_extend.Sprite();
-                Debug.log("initDisp", "item is null");
             }
             
             this.addChild(this._disp);
@@ -99,7 +94,6 @@ namespace fgui {
                 this._disp.leftWidth = this._disp.topHeight = this._disp.rightWidth = this._disp.bottomHeight = 0;
             */
             this._disp.texture = v;
-            Debug.log("uiimage texture", v.width, v.height);
         }
 
         /**

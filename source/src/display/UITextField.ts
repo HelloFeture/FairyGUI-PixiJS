@@ -73,15 +73,13 @@ namespace fgui {
             super(null);
             this.UIOwner = owner;
             this.interactive = this.interactiveChildren = false;
-            this.texture.noFrame = false;
-            this.width = this.texture.frame.width;
-            this.height = this.texture.frame.height;
+            //this.texture.noFrame = false;
             this._minHeight = -1;
         }
 
         public init() : void {
-            this.updateFrame();
-            this.texture.on("update", this.updateFrame, this);
+            //this.updateFrame();
+            //this.texture.on("update", this.updateFrame, this);
         }
 
         public get minHeight():number {
@@ -90,14 +88,13 @@ namespace fgui {
 
         /**@internal */
         updateMinHeight():void {
-            if(this.style.styleID != this._minHeightID || this._minHeight <= 0) {
-                this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
-                this._minHeightID = this.style.styleID;
-            }
+            // if(this.style.styleID != this._minHeightID || this._minHeight <= 0) {
+            //     this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
+            //     this._minHeightID = this.style.styleID;
+            // }
         }
         
         protected updateFrame():void {
-            Debug.log("GTextFiled updateFrame ",  this.x, this.y, this.texture.width, this.texture.height);
             
             GTimer.inst.callLater(this.internalUpdateFrame, this);
         }
@@ -125,39 +122,11 @@ namespace fgui {
                 this.texture.frame = frm;
             }
         }
+
         
-        //cancel scaling update
-        protected _onTextureUpdate():void {
-            // @FIXME
-            //this._textureID = -1;
-            //this._textureTrimmedID = -1;
-       
-            // this["_textureID"] = -1;
-            // this["_textureTrimmedID"] = -1;
-        
-        }
 
-  
-
-        // public set width(v:number) {
-        //     super["width"] = v;
-        //     this.updateFrame();
-        // }
-
-        // public get height():number {
-        //     return 100;
-        //     // return super["height"];
-        // }
-
-        // public set height(v:number) {
-        //     super["height"] = v;
-        //     this.updateFrame();
-        // }
 
         public get textHeight():number {
-            //this.updateText(true);
-            // @FIXME
-            
             this.calculateBounds();
             return this.texture.orig.height;
         }
@@ -166,8 +135,6 @@ namespace fgui {
         }
 
         public get textWidth():number {
-            //this.updateText(true);
-            // @FIXME
             this.calculateBounds();
             return this.texture.orig.width;
         }

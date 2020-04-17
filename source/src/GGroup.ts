@@ -528,7 +528,7 @@ namespace fgui {
         protected updateAlpha(): void {
             super.updateAlpha();
 
-            if (this._inProgressBuilding)
+            if (this._underConstruct)
                 return;
 
             let cnt: number = this._parent.numChildren;

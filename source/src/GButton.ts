@@ -15,7 +15,7 @@ namespace fgui {
         private _selectedIcon: string;
         private _sound: string;
         private _soundVolumeScale: number;
-        private _pageOption: PageOption;
+        //private _pageOption: PageOption;
         private _buttonController: Controller;
         private _changeStateOnClick: boolean;
         private _linkedPopup: GObject;
@@ -39,7 +39,9 @@ namespace fgui {
             this._mode = ButtonMode.Common;
             this._title = "";
             this._icon = "";
-            this._pageOption = new PageOption();
+            this._sound = UIConfig.buttonSound;
+            this._soundVolumeScale = UIConfig.buttonSoundVolumeScale;
+            //this._pageOption = new PageOption();
             this._changeStateOnClick = true;
             this._downEffect = 0;
             this._downEffectValue = 0.8;
@@ -187,12 +189,12 @@ namespace fgui {
                     && this._parent
                     && !this._parent._buildingDisplayList) {
                     if (this._selected) {
-                        this._relatedController.selectedPageId = this._pageOption.id;
+                        this._relatedController.selectedPageId = this._relatedPageId;
                         if (this._relatedController.autoRadioGroupDepth)
                             this._parent.adjustRadioGroupDepth(this, this._relatedController);
                     }
-                    else if (this._mode == ButtonMode.Check && this._relatedController.selectedPageId == this._pageOption.id)
-                        this._relatedController.oppositePageId = this._pageOption.id;
+                    else if (this._mode == ButtonMode.Check && this._relatedController.selectedPageId == this._relatedPageId)
+                        this._relatedController.oppositePageId = this._relatedPageId;
                 }
             }
         }
@@ -218,15 +220,15 @@ namespace fgui {
         }
 
         public set relatedController(val: Controller) {
-            if (val != this._relatedController) {
-                this._relatedController = val;
-                this._pageOption.controller = val;
-                this._pageOption.clear();
-            }
+            this._relatedController = val;
         }
 
-        public get pageOption(): PageOption {
-            return this._pageOption;
+        public get relatedPageId(): string {
+            return this._relatedPageId;
+        }
+
+        public set relatedPageId(val: string) {
+            this._relatedPageId = val;
         }
 
         public get changeStateOnClick(): boolean {
@@ -305,7 +307,7 @@ namespace fgui {
             super.handleControllerChanged(c);
 
             if (this._relatedController == c)
-                this.selected = this._pageOption.id == c.selectedPageId;
+                this.selected = this._relatedPageId == c.selectedPageId;
         }
 
         protected handleGrayedChanged(): void {
@@ -358,7 +360,6 @@ namespace fgui {
             this.on(InteractiveEvents.Out, this._rollout, this);
             this.on(InteractiveEvents.Down, this._mousedown, this);
             this.on(InteractiveEvents.Click, this._click, this);
-            Debug.log("button", this.title, this.width, this.height);
         }
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
@@ -468,15 +469,27 @@ namespace fgui {
             if (!this._changeStateOnClick)
                 return;
 
+            if (this._sound) {
+                var pi: PackageItem = UIPackage.getItemByURL(this._sound);
+                if (pi) {
+                    var sound  = pi.owner.getItemAsset(pi);
+                    if (sound){
+                        GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
+                    }
+                }
+            }
+
             if (this._mode == ButtonMode.Check) {
                 this.selected = !this._selected;
                 this.emit(StateChangeEvent.CHANGED, this, evt);
-            }
-            else if (this._mode == ButtonMode.Radio) {
+            } else if (this._mode == ButtonMode.Radio) {
                 if (!this._selected) {
                     this.selected = true;
                     this.emit(StateChangeEvent.CHANGED, this, evt);
                 }
+            } else {
+                if (this._relatedController)
+                    this._relatedController.selectedPageId = this._relatedPageId;
             }
         }
 

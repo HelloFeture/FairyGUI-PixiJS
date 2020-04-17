@@ -1,0 +1,15 @@
+{
+    "initial" : [
+        "js/pixi/pixi.js",
+        "js/fairygui/fairygui.js",
+        "js/babylon/babylon.max.js",
+        "js/babylon/babylonjs.loaders.js",
+        "js/babylon/babylonjs.materials.js",
+        "js/babylon//babylonjs.postProcess.js",
+        "js/babylon/babylonjs.serializers.js",
+        "js/main.js"
+    ],
+    "game" : [
+        
+    ]
+}

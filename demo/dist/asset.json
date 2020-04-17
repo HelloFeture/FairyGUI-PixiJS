@@ -1,0 +1,156 @@
+{
+  "default": [
+    {
+      "name": "Babylgon",
+      "path": "resource/assets/UI/Babylgon.fui"
+    },
+    {
+      "name": "Bag",
+      "path": "resource/assets/UI/Bag.fui"
+    },
+    {
+      "name": "Bag_atlas0",
+      "path": "resource/assets/UI/Bag_atlas0.png"
+    },
+    {
+      "name": "Basics",
+      "path": "resource/assets/UI/Basics.fui"
+    },
+    {
+      "name": "Basics_atlas0",
+      "path": "resource/assets/UI/Basics_atlas0.png"
+    },
+    {
+      "name": "Basics_gojg7u",
+      "path": "resource/assets/UI/Basics_gojg7u.wav"
+    },
+    {
+      "name": "Basics_o4lt7w",
+      "path": "resource/assets/UI/Basics_o4lt7w.wav"
+    },
+    {
+      "name": "Chat",
+      "path": "resource/assets/UI/Chat.fui"
+    },
+    {
+      "name": "Chat_atlas0",
+      "path": "resource/assets/UI/Chat_atlas0.png"
+    },
+    {
+      "name": "Cooldown",
+      "path": "resource/assets/UI/Cooldown.fui"
+    },
+    {
+      "name": "Cooldown_atlas0",
+      "path": "resource/assets/UI/Cooldown_atlas0.png"
+    },
+    {
+      "name": "Guide",
+      "path": "resource/assets/UI/Guide.fui"
+    },
+    {
+      "name": "Guide_atlas0",
+      "path": "resource/assets/UI/Guide_atlas0.png"
+    },
+    {
+      "name": "HitTest",
+      "path": "resource/assets/UI/HitTest.fui"
+    },
+    {
+      "name": "HitTest_atlas0",
+      "path": "resource/assets/UI/HitTest_atlas0.png"
+    },
+    {
+      "name": "Joystick",
+      "path": "resource/assets/UI/Joystick.fui"
+    },
+    {
+      "name": "Joystick_atlas0",
+      "path": "resource/assets/UI/Joystick_atlas0.png"
+    },
+    {
+      "name": "ListEffect",
+      "path": "resource/assets/UI/ListEffect.fui"
+    },
+    {
+      "name": "ListEffect_atlas0",
+      "path": "resource/assets/UI/ListEffect_atlas0.png"
+    },
+    {
+      "name": "LoopList",
+      "path": "resource/assets/UI/LoopList.fui"
+    },
+    {
+      "name": "LoopList_atlas0",
+      "path": "resource/assets/UI/LoopList_atlas0.png"
+    },
+    {
+      "name": "MainMenu",
+      "path": "resource/assets/UI/MainMenu.fui"
+    },
+    {
+      "name": "MainMenu_atlas0",
+      "path": "resource/assets/UI/MainMenu_atlas0.png"
+    },
+    {
+      "name": "ModalWaiting",
+      "path": "resource/assets/UI/ModalWaiting.fui"
+    },
+    {
+      "name": "ModalWaiting_atlas0",
+      "path": "resource/assets/UI/ModalWaiting_atlas0.png"
+    },
+    {
+      "name": "PullToRefresh",
+      "path": "resource/assets/UI/PullToRefresh.fui"
+    },
+    {
+      "name": "PullToRefresh_atlas0",
+      "path": "resource/assets/UI/PullToRefresh_atlas0.png"
+    },
+    {
+      "name": "ScrollPane",
+      "path": "resource/assets/UI/ScrollPane.fui"
+    },
+    {
+      "name": "ScrollPane_atlas0",
+      "path": "resource/assets/UI/ScrollPane_atlas0.png"
+    },
+    {
+      "name": "Test",
+      "path": "resource/assets/UI/Test.fui"
+    },
+    {
+      "name": "Test_atlas0",
+      "path": "resource/assets/UI/Test_atlas0.png"
+    },
+    {
+      "name": "Transition",
+      "path": "resource/assets/UI/Transition.fui"
+    },
+    {
+      "name": "Transition_atlas0",
+      "path": "resource/assets/UI/Transition_atlas0.png"
+    },
+    {
+      "name": "Transition_lvxrs",
+      "path": "resource/assets/UI/Transition_lvxrs.mp3"
+    },
+    {
+      "name": "TreeView",
+      "path": "resource/assets/UI/TreeView.fui"
+    },
+    {
+      "name": "TreeView_atlas0",
+      "path": "resource/assets/UI/TreeView_atlas0.png"
+    },
+    {
+      "name": "VirtualList",
+      "path": "resource/assets/UI/VirtualList.fui"
+    },
+    {
+      "name": "VirtualList_atlas0",
+      "path": "resource/assets/UI/VirtualList_atlas0.png"
+    }
+  ]
+}

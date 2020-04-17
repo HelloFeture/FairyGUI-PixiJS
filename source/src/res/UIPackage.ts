@@ -165,7 +165,6 @@ namespace fgui {
             }
 
             let pkg: UIPackage = new UIPackage();
-            Debug.log(`pakage length ${(buf.data as ArrayBuffer) .byteLength}`);
             pkg._resKey = resKey;
             pkg._assetGroupName = assetGroupName;
             pkg.loadPackage(new ByteBuffer(buf.data));
@@ -180,7 +179,6 @@ namespace fgui {
             // [0 ~ 3]  4字节 包版本/标识
             let pkgVersion : number = buffer.readUnsignedInt();
             if (pkgVersion != 0x46475549) {
-                Debug.log(`package version ${pkgVersion}, expect ${0x46475549}`);
                 throw "FairyGUI: old package format found in '" + this._resKey + "'";
             }
             // [4] 4字节 版本
@@ -192,10 +190,6 @@ namespace fgui {
             // [n] 包名称
             this._name = buffer.readUTF();
             buffer.skip(20);
-            Debug.log("version", buffer.version);
-            Debug.log("compressed", compressed);
-            Debug.log("id", this._id);
-            Debug.log("name", this._name);
             
             if (compressed) {
                 var buf: Uint8Array = new Uint8Array(buffer.buffer, buffer.position, buffer.length - buffer.position);
@@ -216,7 +210,6 @@ namespace fgui {
             buffer.seek(indexTablePos, 4);
             // 字符表 个数
             cnt = buffer.readInt();
-            Debug.log(`string table count ${cnt}`);
             var stringTable: Array<string> = new Array<string>(cnt);
             for (i = 0; i < cnt; i++) {
                 stringTable[i] = buffer.readUTF();
@@ -229,7 +222,6 @@ namespace fgui {
             for (i = 0; i < cnt; i++){
                 this._dependencies.push({ id: buffer.readS(), name: buffer.readS() });
             }
-            Debug.log(`dependencies count ${cnt}`);
             // ??
             if (ver2) {
                 cnt = buffer.readShort();
@@ -250,7 +242,6 @@ namespace fgui {
             var fileNamePrefix: string = this._resKey + "_";
 
             cnt = buffer.readShort();
-            Debug.log("PackageItem count ", cnt, buffer.position);
             for (let i = 0; i < cnt; i++) {
                 nextPos = buffer.readInt();
                 nextPos += buffer.position;
@@ -266,7 +257,6 @@ namespace fgui {
                 pi.width = buffer.readInt();
                 pi.height = buffer.readInt();
 
-                Debug.log("", `${pi.id} ${pi.name} ${pi.file} ${pi.width} ${pi.height} type ${pi.type}`);
 
                 switch (pi.type) {
                     case PackageItemType.Image:
@@ -359,7 +349,6 @@ namespace fgui {
             buffer.seek(indexTablePos, 2);
 
             cnt = buffer.readShort();   
-            Debug.log("sprite count ", cnt);
             for (let i = 0; i < cnt; i++) {
                 nextPos = buffer.readShort();
                 nextPos += buffer.position;
@@ -372,7 +361,6 @@ namespace fgui {
                 cfg.rotated = buffer.readBool();
                 cfg.rotate = cfg.rotated ? 6 : 0;
                 cfg.orig = cfg.rotate != 0 ? new PIXI.Rectangle(0, 0, cfg.frame.height, cfg.frame.width) : null;
-                Debug.log("", `${itemId} ${cfg.frame.x} ${cfg.frame.y} ${cfg.frame.width} ${cfg.frame.height}`);
 
                 if (ver2 && buffer.readBool()) {
                     // TODO
@@ -391,7 +379,6 @@ namespace fgui {
 
             if (buffer.seek(indexTablePos, 3)) {
                 cnt = buffer.readShort();
-                Debug.log("count3 ", cnt);
                 for (i = 0; i < cnt; i++) {
                     nextPos = buffer.readInt();
                     nextPos += buffer.position;
@@ -620,7 +607,6 @@ namespace fgui {
                     if (!item.decoded) {
                         item.decoded = true;
                         let fileName: string = (item.file != null && item.file.length > 0) ? item.file : (`${item.id}.png`);
-                        Debug.log("Atlas filename", fileName);
                         //let resName: string = `${this._resKey}_${utils.StringUtil.getFileName(fileName)}`;
                         let resName: string = fileName;
                         let assetDic = utils.AssetManager.inst.get(this._assetGroupName) || {};
@@ -670,7 +656,6 @@ namespace fgui {
         }
 
         private createSpriteTexture(cfgName:string, cfg: AtlasConfig): PIXI.Texture {
-            Debug.log("createSpriteTexture", `${this._resKey}_${cfg.atlasName}_${cfgName}`);
             let atlasItem: PackageItem = this._itemsById[cfg.atlasName];
             if (atlasItem != null) {
                 let atlasTexture: PIXI.Texture = this.getItemAsset(atlasItem) as PIXI.Texture;

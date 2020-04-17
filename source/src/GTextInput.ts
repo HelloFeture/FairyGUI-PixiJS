@@ -118,7 +118,8 @@ namespace fgui {
             if(value == null) value = "";
             if (this._text == value) return;
             this._util.text = value;
-            super.setText(value);
+            //super.setText(value);
+            this.text = value;
         }
 
         public setColor(value:number):void {
@@ -228,7 +229,6 @@ namespace fgui {
             if (buffer.readBool()) {
                 this.password = true;
             }
-            Debug.log(this.password, this.promptText);
             this.updateVertAlign();
         }
 

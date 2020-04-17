@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="1136,640">
+  <controller name="c1" pages="0,,1," selected="0"/>
+  <displayList>
+    <image id="n25_djr5" name="n25" src="r5yd6" fileName="b6_png.png" xy="155,526"/>
+    <component id="n28_djr5" name="n28" src="djr5a" fileName="Dropdown.xml" xy="286,203">
+      <ComboBox visibleItemCount="10">
+        <item title="TTTT1"/>
+        <item title="3333"/>
+      </ComboBox>
+    </component>
+  </displayList>
+  <transition name="t0" autoPlay="true" autoPlayRepeat="-1"/>
+</component>

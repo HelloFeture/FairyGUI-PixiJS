@@ -143,7 +143,6 @@ namespace fgui {
             style.opacity = 0;
 
             inputElement.oninput = (e) => {
-                Debug.log("input", inputElement.value);
                 if (this._input)
                     this._input.onInputHandler();
             };
@@ -153,7 +152,6 @@ namespace fgui {
             GTimer.inst.callLater(() => {
                 this._curEle.style.opacity = "1";
                 this._curEle.focus();
-                Debug.log("show....callLater");
             }, this);
         }
 

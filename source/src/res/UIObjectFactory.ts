@@ -33,7 +33,6 @@ namespace fgui {
 
         public static newObject(pi: PackageItem, userClass: { new(): GObject; } = null): GObject {
             var obj: GObject;
-            Debug.log("newObject", pi.file);
             if (pi.type == PackageItemType.Component) {
                 if (userClass){
                     obj = new userClass();
@@ -54,7 +53,6 @@ namespace fgui {
         }
 
         public static newObject2(type: ObjectType): GObject { 
-            Debug.log("newObject2", type);
             switch (type) {
                 case ObjectType.Image:
                     return new GImage();

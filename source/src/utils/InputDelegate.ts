@@ -60,7 +60,6 @@ namespace fgui.utils {
         }
 
         private updateText():void {
-            Debug.log("updateText");
             let textValue = this._input.text;
             let isChanged:boolean = false;
             if(this._restrictRegex != null) {
@@ -84,13 +83,11 @@ namespace fgui.utils {
             let target = GObject.cast(e.currentTarget);
             if(target != this._textField){
                 this._input._hide();
-                Debug.log("onStageDown -> hide");
             }
             this._input._show();
         }
 
         private focusHandler(type: string): void {
-            Debug.log("fouces change ", type);
             if (type == "focus") {
                 if (!this._focused) {
                     this._focused = true;
@@ -171,7 +168,6 @@ namespace fgui.utils {
         /**@internal */
         _onFocus():void {
             if (!this._textField.visible || this._focused){
-                Debug.log("_onFocus invisible or ");
                 return;
             }
             

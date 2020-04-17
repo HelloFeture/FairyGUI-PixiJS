@@ -86,7 +86,7 @@ module fgui {
             let dt = TweenManager._ticker.deltaTime / PIXI.settings.TARGET_FPMS;
             TweenManager._lastTime += dt;
 
-            //dt /= 1000;
+            dt /= 1000;
 
             var cnt: number = TweenManager._totalActiveTweens;
             var freePosStart: number = -1;

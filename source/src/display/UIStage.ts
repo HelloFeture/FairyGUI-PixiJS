@@ -2,22 +2,39 @@
 
 namespace fgui {
 
+    /**
+     * 舞台方向
+     */
     export const enum StageOrientation {
+        /** 自动 */
         AUTO = "auto",
+        /** 竖屏 */
         PORTRAIT = "portrait",
+        /** 横屏 */
         LANDSCAPE = "landscape"
     }
 
+    /** 舞台缩放模式 */
     export const enum StageScaleMode {
+        /** 无缩放 */
         NO_SCALE = "noScale",
+        /** 显示所有内容 */
         SHOW_ALL = "showAll",
+        /** 无边框 */
         NO_BORDER = "noBorder",
+        /** 强制缩放 */
         EXACT_FIT = "exactFit",
+        /** 固定宽度 */
         FIXED_WIDTH = "fixedWidth",
+        /** 固定高度 */
         FIXED_HEIGHT = "fixedHeight",
+        /** 自动 */
         FIXED_AUTO = "fixedAuto"
     }
 
+    /**
+     * 舞台对齐
+     */
     export const enum StageAlign {
         LEFT,
         CENTER,

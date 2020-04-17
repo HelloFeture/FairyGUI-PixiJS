@@ -35,7 +35,6 @@ namespace fgui {
         protected _relations: Relations;
         protected _group: GGroup;
         protected _gears: GearBase<GObject>[];
-        //protected _displayObject: PIXI.DisplayObject;
         protected _dragBounds: PIXI.Rectangle;
         private _colorFilter: PIXI.filters.ColorMatrixFilter;
 
@@ -72,7 +71,7 @@ namespace fgui {
 
 
         /**@internal */
-        _inProgressBuilding: boolean;   //parsing xml & building
+        //_inProgressBuilding: boolean;   //parsing xml & building
 
         
         public constructor() {
@@ -183,8 +182,9 @@ namespace fgui {
 
         public get width(): number {
             this.ensureSizeCorrect();
-            if (this._relations.sizeDirty)
+            if (this._relations.sizeDirty){
                 this._relations.ensureRelationsSizeCorrect();
+            }
             return this._width;
         }
 
@@ -194,8 +194,9 @@ namespace fgui {
 
         public get height(): number {
             this.ensureSizeCorrect();
-            if (this._relations.sizeDirty)
+            if (this._relations.sizeDirty){
                 this._relations.ensureRelationsSizeCorrect();
+            }
             return this._height;
         }
 
@@ -637,7 +638,7 @@ namespace fgui {
         public getGear(index: number | GearType): GearBase<GObject> {
             let gear: GearBase<GObject> = this._gears[index];
             if (gear == null) {
-                this._gears[index] = gear = GearBase.create(this, index);
+                gear = GearBase.create(this, index);
                 this._gears[index] = gear;
             }
             return gear;
@@ -914,72 +915,13 @@ namespace fgui {
         public dispose(): void {
             this.removeFromParent();
             this._relations.dispose();
-            //this.removeAllListeners();
+            this.removeAllListeners()
             GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving, this);
             GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end, this);
             GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving2, this);
             GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end2, this);
             this._displayObject.destroy();
         }
-
-        // public onClick(listener: Function, thisObj?: any): this {
-        //     return this.on(InteractiveEvents.Click, listener, thisObj);
-        // }
-
-
-        // public offClick(listener: Function, thisObj?: any): this {
-        //     return this.off(InteractiveEvents.Click, listener, thisObj);
-        // }
-
-
-        // public hasClick(fn?:Function): boolean {
-        //     return this.hasListener(InteractiveEvents.Click, fn);
-        // }
-
-        // public on(type: string, listener: Function, thisObject?: any): this {
-        //     if (type == null || !this._displayObject) {
-        //         return this;
-        //     } 
-        //     this._displayObject.on(type, listener, thisObject);
-        //     return this;
-        // }
-
-        // public off(type: string, listener: Function, thisObject?: any): this {
-        //     if (type == null || !this._displayObject) {
-        //         console.warn(`type of native object is null ${type}`);
-        //         return this;
-        //     } 
-        //     //if (this._displayObject.listeners(type, true))
-        //     if (this._displayObject.listeners(type)) {
-        //         this._displayObject.off(type, listener, thisObject);
-        //     }
-        //     return this;
-        // }
-
-        // public once(type: string, listener: Function, thisObject?: any): this {
-        //     if (type == null) return this;
-        //     (this._displayObject as PIXI.utils.EventEmitter).once(type, listener, thisObject);
-        //     return this;
-        // }
-
-        // public hasListener(event: string, handler?:Function): boolean {   //do we need to also check the context?
-        //     // if(!handler)
-        //     //     return this._displayObject.listeners(event, true);
-        //     // else
-        //     //     return this._displayObject.listeners(event).indexOf(handler) >= 0;
-        //     return this._displayObject.listeners(event).indexOf(handler) >= 0;
-        // }
-
-        // public emit(event: string, ...args: any[]): boolean {
-        //     if (!args || args.length <= 0) {
-        //         args = [event];
-        //     } else {
-        //         args.unshift(event);
-        //     }
-        //     return this._displayObject.emit.apply(this._displayObject, args);
-        // }
-
-      
 
         public get draggable(): boolean {
             return this._draggable;
@@ -1024,7 +966,6 @@ namespace fgui {
             } 
             resultPoint.x = ax;
             resultPoint.y = ay;
-            //return this._displayObject.toGlobal(resultPoint, resultPoint);
             return this._displayObject.toGlobal(resultPoint, resultPoint) as PIXI.Point;
         }
 
@@ -1033,7 +974,6 @@ namespace fgui {
                 resultPoint = GObject.sHelperPoint;
             }
             resultPoint.set(ax, ay);
-            // resultPoint = this._displayObject.toLocal(resultPoint, GRoot.inst.nativeStage);
             resultPoint = this._displayObject.toLocal(resultPoint, GRoot.inst.nativeStage) as PIXI.Point;
             if (this._pivotAsAnchor) {
                 resultPoint.x -= this._pivot.x * this._width;
@@ -1076,11 +1016,13 @@ namespace fgui {
         }
 
         public handleControllerChanged(c: Controller): void {
+            
             this._handlingController = true;
             for (let i: number = 0; i < GearType.Count; i++) {
                 let gear: GearBase<GObject> = this._gears[i];
-                if (gear != null && gear.controller == c)
+                if (gear && gear.controller == c) {
                     gear.apply();
+                }
             }
             this._handlingController = false;
             this.checkGearVisible();
@@ -1090,7 +1032,6 @@ namespace fgui {
             if (newObj == this._displayObject){
                 return;
             }
-
             let old: PIXI.DisplayObject = this._displayObject;
             if (this.inContainer) {
                 let i: number = this._displayObject.parent.getChildIndex(this._displayObject);
@@ -1246,7 +1187,6 @@ namespace fgui {
             buffer.seek(beginPos, 0);
             buffer.skip(5);
 
-            Debug.log("setup_beforeAdd", this.name);
             var f1: number;
             var f2: number;
 
@@ -1260,7 +1200,6 @@ namespace fgui {
                 this.initWidth = buffer.readInt();
                 this.initHeight = buffer.readInt();
                 this.setSize(this.initWidth, this.initHeight, true);
-                Debug.log("","*init W H", this.initWidth, this.initHeight);
             }
 
             if (buffer.readBool()) {
@@ -1268,57 +1207,47 @@ namespace fgui {
                 this.maxWidth = buffer.readInt();
                 this.minHeight = buffer.readInt();
                 this.maxHeight = buffer.readInt();
-                Debug.log("","*init Max W H Min W H", this.maxWidth, this.maxHeight, this.minWidth, this.minHeight);
             }
 
             if (buffer.readBool()) {
                 f1 = buffer.readFloat();
                 f2 = buffer.readFloat();
                 this.setScale(f1, f2);
-                Debug.log("","*Scale X Y", f1, f2);
             }
 
             if (buffer.readBool()) {
                 f1 = buffer.readFloat();
                 f2 = buffer.readFloat();
                 this.setSkew(f1, f2);
-                Debug.log("","*Skew X Y", f1, f2);
             }
 
             if (buffer.readBool()) {
                 f1 = buffer.readFloat();
                 f2 = buffer.readFloat();
                 this.setPivot(f1, f2, buffer.readBool());
-                Debug.log("","*Pivot X Y", f1, f2);
             }
 
             f1 = buffer.readFloat();
             if (f1 != 1){
                 this.alpha = f1;
-                Debug.log("","*alpha ", f1);
             }
 
             f1 = buffer.readFloat();
             if (f1 != 0){
                 this.rotation = f1;
-                Debug.log("","*rotation ", f1);
             }
 
             if (!buffer.readBool()){
                 this.visible = false;
-                Debug.log("","*visible ", this.visible);
             }
             if (!buffer.readBool()){
                 this.touchable = false;
-                Debug.log("","*touchable ", this.touchable);
             }
             if (buffer.readBool()) {
                 this.grayed = true;
-                Debug.log("","*grayed ", this.grayed);
             }
             var bm: number = buffer.readByte();
             this.blendMode = BlendModeMap[bm] || "Normal";
-            Debug.log("","*blendmode ", this.blendMode);
 
             var filter: number = buffer.readByte();
             if (filter == 1 && this._displayObject) {
@@ -1332,50 +1261,36 @@ namespace fgui {
             if (str != null) {
                 this.data = str;
             }
-            Debug.log("","*data ", this.data);
         }
 
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
             buffer.seek(beginPos, 1);
 
-            Debug.log("setup_beforeAdd", this.name);
 
             var str: string = buffer.readS();
             if (str != null){
                 this.tooltips = str;
-                Debug.log("", `*tooltips${str}`);
             }
 
             var groupId: number = buffer.readShort();
             if (groupId >= 0){
                 this.group = <GGroup>this.parent.getChildAt(groupId);
-                Debug.log("","*group");
             }
 
             buffer.seek(beginPos, 2);
 
             var cnt: number = buffer.readShort();
-            Debug.log("","*Gear count ", cnt);
             for (var i: number = 0; i < cnt; i++) {
                 var nextPos: number = buffer.readShort();
                 nextPos += buffer.position;
     
                 var gear: GearBase<GObject> = this.getGear(buffer.readByte());
                 gear.setup(buffer);
-                Debug.log("", "", "*Gear ", gear);
 
                 buffer.position = nextPos;
             }
         }
-
-
-        // public static castFromNativeObject(disp: PIXI.DisplayObject): GObject {
-        //     if (fgui.isUIObject(disp)){
-        //         return disp.UIOwner;
-        //     }
-        //     return null;
-        // }
 
         //dragging
         //-------------------------------------------------------------------

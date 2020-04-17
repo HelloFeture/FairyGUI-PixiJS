@@ -11,28 +11,28 @@ class Application {
      */
     public start() : void {
 
-        this._startBabylon();
+        // this._startBabylon();
         this._startPIXI();
         
     }
 
     private _startPIXI() {
-        
+        this.canvas = document.getElementById("babylonRenderCanvas") as HTMLCanvasElement;
         //let view = document.getElementById("pixiJsRenderCanvas") as HTMLCanvasElement;
         let view = this.canvas;
          this.app  = new PIXI.Application({
             view : view,
             antialias : true,
-            forceCanvas : false,
-            transparent : true,
-            clearBeforeRender : false,
-            autoStart : false,
+            // forceCanvas : false,
+            // transparent : true,
+            // clearBeforeRender : false,
+            // autoStart : false,
         });
     
         fgui.GRoot.inst.attachTo(this.app,{
             designHeight : 640,
             designWidth : 1136,
-            scaleMode: fgui.StageScaleMode.EXACT_FIT,
+            scaleMode: fgui.StageScaleMode.NO_SCALE,
             orientation: fgui.StageOrientation.LANDSCAPE,
             alignV: fgui.StageAlign.CENTER,
             alignH: fgui.StageAlign.CENTER

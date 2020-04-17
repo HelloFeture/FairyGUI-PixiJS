@@ -327,7 +327,7 @@ declare namespace fgui {
         off(type: string, listener: Function, thisArg: any): this;
         addListener(type: string, listener: Function, thisArg: any): this;
         removeListener(type: string, listener: Function, thisArg: any): this;
-        removeAllListeners(type: string): this;
+        removeAllListeners(type?: string): this;
     }
 }
 declare namespace fgui {
@@ -389,7 +389,6 @@ declare namespace fgui {
         private static _colorHelper;
         protected _lastColorComponents: number[];
         /**@internal */
-        _inProgressBuilding: boolean;
         constructor();
         get id(): string;
         get name(): string;
@@ -689,7 +688,6 @@ declare namespace fgui {
          * @param buffer
          */
         setup(buffer: ByteBuffer): void;
-        setupv1(xml: utils.XmlNode): void;
     }
 }
 declare namespace fgui {
@@ -806,7 +804,6 @@ declare namespace fgui {
         private _selectedIcon;
         private _sound;
         private _soundVolumeScale;
-        private _pageOption;
         private _buttonController;
         private _changeStateOnClick;
         private _linkedPopup;
@@ -848,7 +845,8 @@ declare namespace fgui {
         set mode(value: ButtonMode);
         get relatedController(): Controller;
         set relatedController(val: Controller);
-        get pageOption(): PageOption;
+        get relatedPageId(): string;
+        set relatedPageId(val: string);
         get changeStateOnClick(): boolean;
         set changeStateOnClick(value: boolean);
         get linkedPopup(): GObject;
@@ -927,6 +925,8 @@ declare namespace fgui {
         getProp(index: number): any;
         setProp(index: number, value: any): void;
         protected constructExtension(buffer: ByteBuffer): void;
+        handleControllerChanged(c: Controller): void;
+        private updateSelectionController;
         dispose(): void;
         setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
         protected showDropdown(): void;
@@ -1436,9 +1436,7 @@ declare namespace fgui {
         private switchBitmapMode;
         dispose(): void;
         set text(value: string);
-        protected setText(value: string): void;
         get text(): string;
-        protected getText(): string;
         get color(): number;
         getColor(): TextColor;
         setColor(value: TextColor): void;
@@ -1895,18 +1893,14 @@ declare module fgui {
         copyFrom(source: RelationDef): void;
     }
 }
-declare namespace fgui {
+declare module fgui {
     class Relations {
-        protected _owner: GObject;
-        protected _items: RelationItem[];
+        private _owner;
+        private _items;
         handling: GObject;
         sizeDirty: boolean;
-        /**@internal */
-        _dealing: GObject;
-        private static RELATION_NAMES;
         constructor(owner: GObject);
         add(target: GObject, relationType: number, usePercent?: boolean): void;
-        addItems(target: GObject, sidePairs: string): void;
         remove(target: GObject, relationType?: number): void;
         contains(target: GObject): boolean;
         clearFor(target: GObject): void;
@@ -2382,12 +2376,6 @@ declare namespace fgui {
          * @param buffer 参数流
          */
         setup(buffer: ByteBuffer): void;
-        /**
-         * @hide
-         * @override Action.setupv1
-         * @param xml 参数node
-         */
-        setupv1(xml: utils.XmlNode): void;
     }
 }
 declare namespace fgui {
@@ -2414,8 +2402,6 @@ declare namespace fgui {
         protected enter(controller: Controller): void;
         protected leave(controller: Controller): void;
         setup(buffer: ByteBuffer): void;
-        /**@internal */
-        setupv1(xml: utils.XmlNode): void;
     }
 }
 declare namespace fgui {
@@ -2763,20 +2749,37 @@ declare namespace fgui.utils {
     }
 }
 declare namespace fgui {
+    /**
+     * 舞台方向
+     */
     const enum StageOrientation {
+        /** 自动 */
         AUTO = "auto",
+        /** 竖屏 */
         PORTRAIT = "portrait",
+        /** 横屏 */
         LANDSCAPE = "landscape"
     }
+    /** 舞台缩放模式 */
     const enum StageScaleMode {
+        /** 无缩放 */
         NO_SCALE = "noScale",
+        /** 显示所有内容 */
         SHOW_ALL = "showAll",
+        /** 无边框 */
         NO_BORDER = "noBorder",
+        /** 强制缩放 */
         EXACT_FIT = "exactFit",
+        /** 固定宽度 */
         FIXED_WIDTH = "fixedWidth",
+        /** 固定高度 */
         FIXED_HEIGHT = "fixedHeight",
+        /** 自动 */
         FIXED_AUTO = "fixedAuto"
     }
+    /**
+     * 舞台对齐
+     */
     const enum StageAlign {
         LEFT = 0,
         CENTER = 1,
@@ -2858,7 +2861,6 @@ declare namespace fgui {
         updateMinHeight(): void;
         protected updateFrame(): void;
         private internalUpdateFrame;
-        protected _onTextureUpdate(): void;
         get textHeight(): number;
         set textHeight(v: number);
         get textWidth(): number;
@@ -2907,6 +2909,14 @@ declare namespace fgui {
         Change = "__textChange",
         FocusIn = "__textFocusIn",
         FocusOut = "__textFocusOut"
+    }
+}
+declare namespace fgui.provider {
+    interface IRawInflate {
+    }
+}
+declare namespace fgui.provider {
+    interface ISoundPlayer {
     }
 }
 declare namespace fgui {

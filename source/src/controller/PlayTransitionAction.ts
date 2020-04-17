@@ -35,23 +35,5 @@ namespace fgui {
 			this.delay = buffer.readFloat();
 			this.stopOnExit = buffer.readBool();
         }
-        /**@internal */
-        public setupv1(xml: utils.XmlNode): void {
-            super.setupv1(xml);
-
-            this.transitionName = xml.attributes.transition;
-
-            let str: string;
-
-            str = xml.attributes.repeat;
-            if (str)
-                this.playTimes = parseInt(str);
-
-            str = xml.attributes.delay;
-            if (str)
-                this.delay = parseFloat(str);
-
-            this.stopOnExit = xml.attributes.stopOnExit == "true";
-        }
     }
 }

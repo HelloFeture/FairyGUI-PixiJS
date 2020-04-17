@@ -58,18 +58,5 @@ namespace fgui {
             this.controllerName = buffer.readS();
             this.targetPage = buffer.readS();
         }
-
-        /**
-         * @hide
-         * @override Action.setupv1
-         * @param xml 参数node
-         */
-        public setupv1(xml: utils.XmlNode): void {
-			super.setupv1(xml);
-
-			this.objectId = xml.attributes.objectId;
-			this.controllerName = xml.attributes.controller;
-			this.targetPage = xml.attributes.targetPage;
-		}
 	}
 }

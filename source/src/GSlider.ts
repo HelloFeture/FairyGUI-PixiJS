@@ -101,7 +101,9 @@ namespace fgui {
                 this._barMaxWidth = this.width - this._barMaxWidthDelta;
             if (this._barObjectV)
                 this._barMaxHeight = this.height - this._barMaxHeightDelta;
-            if (!this._inProgressBuilding)
+            // if (!this._inProgressBuilding)
+            //     this.update();
+            if (!this._underConstruct)
                 this.update();
         }
 

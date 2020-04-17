@@ -154,6 +154,8 @@ namespace fgui {
                 if (this._icons != null)
                     this.icon = null;
             }
+
+            this.updateSelectionController();
         }
 
         public get value(): string {
@@ -280,7 +282,22 @@ namespace fgui {
             this.on(InteractiveEvents.Down, this.__mousedown, this);
         }
 
-        
+        public handleControllerChanged(c: Controller): void {
+            super.handleControllerChanged(c);
+
+            if (this._selectionController == c)
+                this.selectedIndex = c.selectedIndex;
+        }
+
+        private updateSelectionController(): void {
+            if (this._selectionController != null && !this._selectionController.changing
+                && this._selectedIndex < this._selectionController.pageCount) {
+                var c: Controller = this._selectionController;
+                this._selectionController = null;
+                c.selectedIndex = this._selectedIndex;
+                this._selectionController = c;
+            }
+        }
 
         public dispose(): void {
             GTimer.inst.remove(this.delayedClickItem, this);
@@ -295,7 +312,7 @@ namespace fgui {
             super.dispose();
         }
 
-        // FIXIME
+
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
             super.setup_afterAdd(buffer, beginPos);
 
@@ -366,13 +383,15 @@ namespace fgui {
                     item.icon = (this._icons != null && i < this._icons.length) ? this._icons[i] : null;
                 }, this);
                 this._list.resizeToFit(this._visibleItemCount);
-            }
+            } 
             this._list.selectedIndex = -1;
             this.dropdown.width = this.width;
 
             this.root.togglePopup(this.dropdown, this, this._popupDirection);
-            if (this.dropdown.parent)
+            if (this.dropdown.parent){
                 this.setState(GButton.DOWN);
+            }
+            
         }
 
         private __popupWinClosed(evt: PIXI.interaction.InteractionEvent): void {
@@ -396,6 +415,7 @@ namespace fgui {
                 this.text = this._items[this._selectedIndex];
             else
                 this.text = "";
+                
             this.emit(StateChangeEvent.CHANGED, this);
         }
 
@@ -408,6 +428,7 @@ namespace fgui {
                 this.text = this._items[this._selectedIndex];
             else
                 this.text = "";
+            
             this.emit(StateChangeEvent.CHANGED, this);
         }
 
@@ -429,7 +450,7 @@ namespace fgui {
 
         private __mousedown(evt: PIXI.interaction.InteractionEvent): void {
             evt.stopPropagation();
-
+            
             //if(evt.currentTarget instanceof PIXI.TextInput)   //TODO: TextInput
             //    return;
 

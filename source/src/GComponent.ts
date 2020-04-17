@@ -517,14 +517,15 @@ namespace fgui {
             return this._rootContainer.mask;
         }
 
-
+        // TODO
         public set mask(obj: PIXI.Container | PIXI.MaskData) {
             if(!obj) return;
      
             if (obj instanceof PIXI.Container) {
-                obj.interactive =  obj.interactiveChildren = false
+                obj.interactive =  obj.interactiveChildren = false;
+                obj.isMask = true;
             }
-            if (obj instanceof PIXI.Graphics)
+            if (obj instanceof PIXI.Graphics) 
                 obj.isMask = true;
             this._rootContainer.mask = obj;
         }
@@ -795,7 +796,6 @@ namespace fgui {
 
         public constructFromResource2(objectPool: Array<GObject>, poolIndex: number): void {
             var contentItem:PackageItem = this.packageItem.getBranch();
-            Debug.log("constructFromResource2");
             if (!contentItem.decoded) {
                 contentItem.decoded = true;
                 TranslationHelper.translateComponent(contentItem);
@@ -912,7 +912,6 @@ namespace fgui {
                 child.setup_beforeAdd(buffer, curPos);
                 child.parent = this;
                 this._children.push(child);
-
                 buffer.position = curPos + dataLen;
             }
 
@@ -942,7 +941,6 @@ namespace fgui {
                 child = this._children[i];
                 child.setup_afterAdd(buffer, buffer.position);
                 child._underConstruct = false;
-
                 buffer.position = nextPos;
             }
 
@@ -987,13 +985,10 @@ namespace fgui {
             }
 
             this.applyAllControllers();
-
             this._buildingDisplayList = false;
             this._underConstruct = false;
-
             this.buildNativeDisplayList();
             this.setBoundsChangedFlag();
-
             if (contentItem.objectType != ObjectType.Component){
                 this.constructExtension(buffer);
             }

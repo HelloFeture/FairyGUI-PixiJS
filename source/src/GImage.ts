@@ -37,18 +37,18 @@ namespace fgui {
             if (this._flip != value) {
                 this._flip = value;
 
-                let sx: boolean = false;
-                let  sy: boolean = false;
+            
+                var sx: number = 1, sy: number = 1;
                 if (this._flip == FlipType.Horizontal || this._flip == FlipType.Both) {
-                    sx = true;
+                    sx = -1;
                 }
                 if (this._flip == FlipType.Vertical || this._flip == FlipType.Both) {
-                    sy = true;
+                    sy = -1;
                 }
 
-                this._content.flipX = sx;
-                this._content.flipX = sy;
-                //this.handleXYChanged();
+                this._content.scale.x = sx;
+                this._content.scale.y = sy;
+                this.handleXYChanged();
             }
         }
 
@@ -59,8 +59,6 @@ namespace fgui {
         public set fillMethod(value: number) {
             this._content.fillMethod = value;
         }
-
-        
 
         public get fillAmount(): number {
             return this._content.fillAmount;
@@ -75,7 +73,6 @@ namespace fgui {
         }
 
         public set texture(value: PIXI.Texture) {
-            Debug.log("set gimage texture", value.width, value.height);
             if (value != null) {
                 this.sourceWidth = value.orig.width;
                 this.sourceHeight = value.orig.height;
@@ -110,19 +107,18 @@ namespace fgui {
             this._content.initDisp(contentItem);
             this.setSize(this.sourceWidth, this.sourceHeight);
 
-            // contentItem = contentItem.getHighResolution();
-            // contentItem.load();
+            contentItem = contentItem.getHighResolution();
+            contentItem.load();
 
-            // this._content.scale9Grid = contentItem.scale9Grid;
-            // this._content.smoothing = contentItem.smoothing;
-            // if (contentItem.scaleByTile) {
-            //     // FIXME
-            //     this._content.fillMethod = 0;
-            // }
+            this._content.scale9Grid = contentItem.scale9Grid;
+            this._content.smoothing = contentItem.smoothing;
+            if (contentItem.scaleByTile) {
+                // TODO
+                this._content.fillMethod = 0;
+            }
 
-            // this.setSize(this.sourceWidth, this.sourceHeight);
-            // this._content.texture = contentItem.texture;
-            Debug.log("constructFromResource GImage", this._flip);
+            this.setSize(this.sourceWidth, this.sourceHeight);
+            this._content.texture = contentItem.texture;
         }
 
         protected handleXYChanged(): void {
@@ -133,13 +129,11 @@ namespace fgui {
                 if (this._content.scale.y == -1)
                     this._content.y += this.height;
             }
-            //Debug.log("handleXYChanged GImage", this.x, this.y, this.width, this.height, this._flip);
         }
         
         protected handleSizeChanged(): void {
             this._content.width = this.width;
             this._content.height = this.height;
-            //Debug.log("handleSizeChanged GImage", this.x, this.y, this.width, this.height, this._flip);
         }
 
         public getProp(index: number): any {
@@ -171,7 +165,6 @@ namespace fgui {
                 this._content.fillClockwise = buffer.readBool();
                 this._content.fillAmount = buffer.readFloat();
             }
-            Debug.log("GImage", this._content.fillMethod, this._content.fillOrigin, this._content.fillClockwise, this._content.fillAmount);
         }
     }
 }

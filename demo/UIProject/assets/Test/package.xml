@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="4hvnatgy" jpegQuality="80" compressPNG="true">
+  <resources>
+    <component id="l8ea0" name="Main.xml" path="/" exported="true"/>
+    <image id="l8ea1" name="2.png" path="/"/>
+    <component id="l8ea2" name="Button.xml" path="/"/>
+    <component id="r5yd3" name="Button2.xml" path="/"/>
+    <image id="r5yd4" name="b7_png.png" path="/" scale="9grid" scale9grid="8,7,66,14"/>
+    <image id="r5yd5" name="b5_png.png" path="/" scale="9grid" scale9grid="12,7,61,14"/>
+    <image id="r5yd6" name="b6_png.png" path="/" scale="9grid" scale9grid="9,5,66,16"/>
+    <component id="djr57" name="Liste_Item.xml" path="/"/>
+    <component id="djr58" name="Combox_Frame.xml" path="/"/>
+    <component id="djr59" name="Combox.xml" path="/"/>
+    <component id="djr5a" name="Dropdown.xml" path="/"/>
+    <component id="djr5b" name="Button15.xml" path="/"/>
+    <image id="djr5c" name="k30.png" path="/" scale="9grid" scale9grid="33,10,57,20"/>
+    <image id="djr5d" name="k28.png" path="/" scale="9grid" scale9grid="33,10,55,20"/>
+    <image id="djr5e" name="k31.png" path="/" scale="9grid" scale9grid="33,10,55,20"/>
+    <image id="djr5f" name="k29.png" path="/" scale="9grid" scale9grid="33,10,53,20"/>
+    <component id="djr5g" name="Dropdown2.xml" path="/"/>
+    <image id="djr5h" name="k32.png" path="/" scale="9grid" scale9grid="26,11,52,22"/>
+    <component id="djr5i" name="Button14.xml" path="/"/>
+    <image id="djr5j" name="k23.png" path="/" scale="9grid" scale9grid="26,10,52,20"/>
+    <image id="djr5k" name="k21.png" path="/" scale="9grid" scale9grid="11,7,82,26"/>
+    <image id="djr5l" name="k24.png" path="/" scale="9grid" scale9grid="26,10,52,20"/>
+    <image id="djr5m" name="k22.png" path="/" scale="9grid" scale9grid="26,10,52,20"/>
+  </resources>
+  <publish name="Test"/>
+</packageDescription>

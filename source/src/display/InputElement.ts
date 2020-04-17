@@ -122,13 +122,7 @@ namespace fgui {
         public onInputHandler():void {
             window.setTimeout(() => {
                 this.textValue = this.inputElement.value;
-                Debug.log(this.textValue);
                 this.emit("updateText");
-                // if (this.inputElement && this.inputElement.selectionStart == this.inputElement.selectionEnd) {
-                //     this.textValue = this.inputElement.value;
-                //     Debug.log("onInputHandler", this.textValue, this.inputElement.value);
-                //     this.emit("updateText");
-                // }
             }, 0);
         }
 
@@ -175,7 +169,6 @@ namespace fgui {
         }
         
         public onClickHandler(e:Event):void {
-            Debug.log("onClickHandler", e);
             if (this._requestToShow) {
                 //e.stopImmediatePropagation();
                 this._requestToShow = false;

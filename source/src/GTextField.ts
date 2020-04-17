@@ -126,28 +126,22 @@ namespace fgui {
         }
 
         public set text(value:string) {
-            this.setText(value);
-
-        }
-        protected setText(value: string):void {
-            Debug.log("setText ..........");
             if(value == null) value = "";
             if (this._text == value) return;
             this._text = value;
             this.updateGear(GearType.Text);
-            if (this.parent && this.parent._inProgressBuilding)
+            if (this.parent && this.parent._underConstruct)
                 this.renderNow();
             else
                 this.render();
+
         }
 
         public get text(): string {
-            return this.getText();
-        }
-
-        protected getText():string {
             return this._text;
         }
+
+     
 
         public get color(): number {
             return this.getColor() as number;
@@ -237,7 +231,7 @@ namespace fgui {
         public set verticalAlign(value: VertAlignType) {
             if (this._verticalAlign != value) {
                 this._verticalAlign = value;
-                if(!this._inProgressBuilding)
+                if(!this._underConstruct)
                     this.layoutAlign();
             }
         }
@@ -376,9 +370,9 @@ namespace fgui {
         }
 
         public ensureSizeCorrect(): void {
-            if (!this._parent || this._parent._inProgressBuilding) {
-                return ;
-            }
+            // if (!this._parent || this._parent._underConstruct) {
+            //     return ;
+            // }
 
             if (this._sizeDirty && this._requireRender)
                 this.renderNow();
@@ -438,7 +432,7 @@ namespace fgui {
             this._textField.style.breakWords = wordWrap;
             this._textField.text = this._text;         //trigger t.dirty = true
             this._fontProperties = PIXI.TextMetrics.measureFont(this._style.toFontString());
-            
+           
             this._textWidth = Math.ceil(this._textField.textWidth);
             if (this._textWidth > 0)
                 this._textWidth += GTextField.GUTTER_X * 2;   //margin gap
@@ -447,11 +441,9 @@ namespace fgui {
                 this._textHeight += GTextField.GUTTER_Y * 2;  //margin gap
 
             let w = this.width, h = this.height;
-            // let w = this.initWidth, h = this.initHeight;
-            if(this.autoSize == AutoSizeType.Shrink)
+            if(this.autoSize == AutoSizeType.Shrink) {
                 this.shrinkTextField();
-            else
-            {
+            } else {
                 this._textField.scale.set(1, 1);
                 if (this._widthAutoSize) {
                     w = this._textWidth;
@@ -473,7 +465,6 @@ namespace fgui {
 
             if (updateBounds) {
                 this._updatingSize = true;
-                Debug.log("set size ", w, h, this.width, this.height);
                 this.setSize(w, h);
                 this._updatingSize = false;
             }
@@ -483,7 +474,6 @@ namespace fgui {
 
         private renderWithBitmapFont(updateBounds: boolean): void {
             this.switchBitmapMode(true);
-
             this._btContainer.children.forEach((c, i) => {
                 this._bitmapPool.push(this._btContainer.getChildAt(i) as PIXI.Sprite);
             }, this);
@@ -754,7 +744,7 @@ namespace fgui {
                     this.render();
             }
             else {
-                if (this._inProgressBuilding) {
+                if (this._underConstruct) {
                     this._textField.width = this.width;
                     this._textField.height = this.height;
                 }
@@ -833,7 +823,6 @@ namespace fgui {
             this._style.fontSize = buffer.readShort();
             this.color = buffer.readColor();
             this.align = AlignMap[buffer.readByte()];
-            console.log("text align", this.align);
             this.verticalAlign = buffer.readByte();
             this._style.leading = buffer.readShort();
             this._style.letterSpacing = buffer.readShort();
@@ -856,7 +845,6 @@ namespace fgui {
             if (buffer.readBool()){
                 this._templateVars = {};
             }
-            Debug.log("setup_beforeAdd", this.width, this.height);
         }
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
@@ -870,7 +858,6 @@ namespace fgui {
             }
             this._sizeDirty = false;
             this._textField.init();
-            console.log("setup_afterAdd", this.x, this.y, this.width, this.height);
         }
     }
 }
