@@ -73,13 +73,15 @@ namespace fgui {
             super(null);
             this.UIOwner = owner;
             this.interactive = this.interactiveChildren = false;
-            //this.texture.noFrame = false;
+            this.texture.noFrame = false;
+            this.width = this.texture.frame.width;
+            this.height = this.texture.frame.height;
             this._minHeight = -1;
         }
 
         public init() : void {
-            //this.updateFrame();
-            //this.texture.on("update", this.updateFrame, this);
+            this.updateFrame();
+            this.texture.on("update", this.updateFrame, this);
         }
 
         public get minHeight():number {
@@ -88,10 +90,10 @@ namespace fgui {
 
         /**@internal */
         updateMinHeight():void {
-            // if(this.style.styleID != this._minHeightID || this._minHeight <= 0) {
-            //     this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
-            //     this._minHeightID = this.style.styleID;
-            // }
+            if(this.style.styleID != this._minHeightID || this._minHeight <= 0) {
+                this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
+                this._minHeightID = this.style.styleID;
+            }
         }
         
         protected updateFrame():void {

@@ -81,10 +81,8 @@ namespace fgui.utils {
 
         private onStageDown(e:PIXI.interaction.InteractionEvent):void {
             let target = GObject.cast(e.currentTarget);
-            if(target != this._textField){
+            if(target != this._textField)
                 this._input._hide();
-            }
-            this._input._show();
         }
 
         private focusHandler(type: string): void {
@@ -92,7 +90,7 @@ namespace fgui.utils {
                 if (!this._focused) {
                     this._focused = true;
                     this._textField._isTyping = true;
-                    this._textField.alpha = 1;
+                    this._textField.alpha = 0;
                     this._textField.emit(FocusEvent.CHANGED, "focus", this._textField);
                     this._textField.emit(TextEvent.FocusIn, this._textField);
                 }
@@ -167,9 +165,8 @@ namespace fgui.utils {
 
         /**@internal */
         _onFocus():void {
-            if (!this._textField.visible || this._focused){
+            if (!this._textField.visible || this._focused)
                 return;
-            }
             
             GRoot.inst.off(InteractiveEvents.Down, this.onStageDown, this);
             GTimer.inst.callLater(() => {

@@ -158,7 +158,11 @@ namespace fgui {
         }
 
         public set password(v: boolean) {
-            this.type = InputType.PASSWORD;
+            if (v) {
+                this.type = InputType.PASSWORD;
+            } else {
+                this.type = InputType.TEXT;
+            }
         }
 
         public get type():InputType {
@@ -214,21 +218,22 @@ namespace fgui {
                 this.maxLength = iv;
             }
             iv = buffer.readInt();
+
             if (iv != 0) {
-                //keyboardType
-                // if(iv == 4)
-                //     this.type = InputType.NUMBER;
-                // else if(iv == 3)
-                //     this.type = InputType.URL;
-                // else if(iv == 5)
-                //     this.type = InputType.TEL;
-                // else if(iv == 6)
-                //     this.type = InputType.EMAIL;
+                // keyboardType
+                if(iv == 4)
+                    this.type = InputType.NUMBER;
+                else if(iv == 3)
+                    this.type = InputType.URL;
+                else if(iv == 5)
+                    this.type = InputType.TEL;
+                else if(iv == 6)
+                    this.type = InputType.EMAIL;
        
             }
-            if (buffer.readBool()) {
-                this.password = true;
-            }
+
+            let ispassword : boolean = buffer.readBool();
+            this.password = ispassword;
             this.updateVertAlign();
         }
 
@@ -236,6 +241,7 @@ namespace fgui {
             // @FIXME
             // switch (this._verticalAlign) {
             //     case VertAlignType.Top:
+              
             //         this._textField.verticalAlign = egret.VerticalAlign.TOP;
             //         break;
             //     case VertAlignType.Middle:
@@ -248,14 +254,13 @@ namespace fgui {
             // }
         }
 
-        public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
-            super.setup_afterAdd(buffer, beginPos);
-            this._textField.text = "dddddddddddddddddd";
-            if ((!this._text || this._text.length <= 0)&& this.promptText) {
-                this._textField.text = this.promptText;
-                this.password = false;
-                //this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._promptText)));
-            } 
-        }       
+        // public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+        //     super.setup_afterAdd(buffer, beginPos);
+        //     if ((!this._text || this._text.length <= 0)&& this.promptText) {
+        //         this._textField.text = this.promptText;
+        //         this.password = false;
+        //         //this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._promptText)));
+        //     } 
+        // }       
     }
 }

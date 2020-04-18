@@ -121,8 +121,10 @@ namespace fgui {
 
         public onInputHandler():void {
             window.setTimeout(() => {
-                this.textValue = this.inputElement.value;
-                this.emit("updateText");
+                if (this.inputElement && this.inputElement.selectionStart == this.inputElement.selectionEnd) {
+                    this.textValue = this.inputElement.value;
+                    this.emit("updateText");
+                }
             }, 0);
         }
 

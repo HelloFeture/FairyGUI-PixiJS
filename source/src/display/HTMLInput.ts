@@ -61,7 +61,6 @@ namespace fgui {
         }
 
         private canvasClickHandler(e:Event):void {
-           
             if (this._requestToShow) {
                 this._requestToShow = false;
                 this._input.onClickHandler(e);
@@ -151,7 +150,6 @@ namespace fgui {
         public show():void {
             GTimer.inst.callLater(() => {
                 this._curEle.style.opacity = "1";
-                this._curEle.focus();
             }, this);
         }
 
@@ -209,7 +207,7 @@ namespace fgui {
             this._input = ele;
             HTMLInput.isTyping = true;
             
-            let el2;
+            let el2 : HTMLInputElement | HTMLTextAreaElement;
             if(this._input.textField.multipleLine) {
                 this._curEle = this._multiLine;
                 el2 = this._singleLine;
