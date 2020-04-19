@@ -135,8 +135,9 @@ namespace fgui {
                     this._sortingChildCount--;
 
                 this._children.splice(index, 1);
-                if (child.inContainer)
+                if (child.inContainer){
                     this._container.removeChild(child.displayObject);
+                }
 
                 if (dispose === true)
                     child.dispose();

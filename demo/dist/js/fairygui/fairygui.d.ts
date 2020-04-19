@@ -116,6 +116,21 @@ declare namespace fgui {
     }
     type AssetManagerAdapter = IAssetManagerObject | IAssetManagerHandler;
 }
+declare module fgui {
+    class DragDropManager {
+        private _agent;
+        private _sourceData;
+        private _source;
+        private static _inst;
+        static get inst(): DragDropManager;
+        constructor();
+        get dragAgent(): GObject;
+        get dragging(): boolean;
+        startDrag(source: GObject, icon: string, sourceData: any, touchPointID?: number): void;
+        cancel(): void;
+        private __dragEnd;
+    }
+}
 import fairygui = fgui;
 declare module fgui {
     enum ButtonMode {
@@ -314,6 +329,8 @@ declare namespace fgui {
 declare namespace fgui {
     interface IGObjectInteractionEvent extends PIXI.interaction.InteractionEvent {
         gObject: GObject;
+        source?: GObject;
+        sourceData?: any;
     }
     /**
      * UI 事件代理
@@ -579,10 +596,10 @@ declare namespace fgui {
         private dragEnd;
         private reset;
         private _touchBegin;
-        private _end;
-        private _moving;
-        private _moving2;
-        private _end2;
+        private __end;
+        private __moving;
+        private __moving2;
+        private __end2;
     }
 }
 declare namespace fgui {
@@ -1516,11 +1533,6 @@ declare namespace fgui {
     }
 }
 declare namespace fgui {
-    class GRootMouseStatus {
-        touchDown: boolean;
-        mouseX: number;
-        mouseY: number;
-    }
     class GRoot extends GComponent {
         static contentScaleLevel: number;
         private static uniqueID;
@@ -1543,7 +1555,6 @@ declare namespace fgui {
         static shiftKeyDown: boolean;
         static mouseX: number;
         static mouseY: number;
-        private static _gmStatus;
         /**
          * the singleton instance of the GRoot object
          */
@@ -1551,7 +1562,6 @@ declare namespace fgui {
         /**
          * the current mouse/pointer data
          */
-        static get globalMouseStatus(): GRootMouseStatus;
         /**
          * the main entry to lauch the UI root, e.g.: GRoot.inst.attachTo(app, options)
          * @param app your PIXI.Application instance to be used in this GRoot instance
@@ -1598,11 +1608,11 @@ declare namespace fgui {
         set focus(value: GObject);
         private setFocus;
         private adjustModalLayer;
-        private _stageDown;
+        private __stageDown;
         checkPopups(target: PIXI.DisplayObject): void;
-        private _stageMove;
-        private _stageUp;
-        private _winResize;
+        private __stageMove;
+        private __stageUp;
+        private __winResize;
     }
 }
 declare namespace fgui {

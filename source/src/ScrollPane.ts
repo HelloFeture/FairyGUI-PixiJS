@@ -1082,10 +1082,12 @@ namespace fgui {
             else
                 this._isDragging = false;
 
+            // const globalMouse: PIXI.Point = PIXI.utils.isMobile.any ? 
+            //     this._owner.globalToLocal(e.data.global.x, e.data.global.y)
+            //     : this._owner.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
             const globalMouse: PIXI.Point = PIXI.utils.isMobile.any ? 
                 this._owner.globalToLocal(e.data.global.x, e.data.global.y)
-                : this._owner.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
-
+                : this._owner.globalToLocal(GRoot.mouseX, GRoot.mouseY, ScrollPane.sHelperPoint);
             this._containerPos.set(this._container.x, this._container.y);
             this._beginTouchPos.copyFrom(globalMouse);
             this._lastTouchPos.copyFrom(globalMouse);
@@ -1109,7 +1111,8 @@ namespace fgui {
 
             let sensitivity: number = UIConfig.touchScrollSensitivity;
 
-            const globalMouse: PIXI.Point = this._owner.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
+            // const globalMouse: PIXI.Point = this._owner.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
+            const globalMouse: PIXI.Point = this._owner.globalToLocal(GRoot.mouseX, GRoot.mouseY, ScrollPane.sHelperPoint);
 
             let diff: number, diff2: number;
             let sv: boolean, sh: boolean;

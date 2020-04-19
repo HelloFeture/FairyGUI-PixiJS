@@ -213,17 +213,16 @@ class BasicDemo {
         btnD.dragBounds = rect;
     }
 
-    private __onDragStart(evt: fgui.DragEvent): void {
+    private __onDragStart(evt: fgui.IGObjectInteractionEvent): void {
         //取消对原目标的拖动，换成一个替代品
-        // evt.preventDefault();
-
-        //var btn: fgui.GButton = <fgui.GButton><any>evt.currentTarget;
-        //fgui.DragDropManager.inst.startDrag(btn, btn.icon, btn.icon);
+        evt.stopPropagation();
+        var btn: fgui.GButton = <fgui.GButton><any>evt.gObject;
+        fgui.DragDropManager.inst.startDrag(btn, btn.icon, btn.icon);
     }
 
-    private __onDrop(evt: PIXI.interaction.InteractionEvent): void {
-        var btn: fgui.GButton = <fgui.GButton><any>evt.currentTarget;
-        // btn.icon = evt.source;
+    private __onDrop(evt: fgui.IGObjectInteractionEvent): void {
+        var btn: fgui.GButton = <fgui.GButton><any>evt.gObject;
+        btn.icon = evt.source.asButton.icon;
     }
 
     //------------------------------

@@ -1,10 +1,10 @@
 namespace fgui {
 
-    export class GRootMouseStatus {
-        public touchDown: boolean = false;
-        public mouseX: number = 0;
-        public mouseY: number = 0;
-    }
+    // export class GRootMouseStatus {
+    //     public touchDown: boolean = false;
+    //     public mouseX: number = 0;
+    //     public mouseY: number = 0;
+    // }
 
     export class GRoot extends GComponent {
         public static contentScaleLevel: number = 0;
@@ -34,7 +34,7 @@ namespace fgui {
         public static mouseX: number;
         public static mouseY: number;
 
-        private static _gmStatus = new GRootMouseStatus();
+        //private static _gmStatus = new GRootMouseStatus();
 
         /**
          * the singleton instance of the GRoot object
@@ -48,9 +48,9 @@ namespace fgui {
         /**
          * the current mouse/pointer data
          */
-        public static get globalMouseStatus(): GRootMouseStatus {
-            return GRoot._gmStatus;
-        }
+        // public static get globalMouseStatus(): GRootMouseStatus {
+        //     return GRoot._gmStatus;
+        // }
         
         /**
          * the main entry to lauch the UI root, e.g.: GRoot.inst.attachTo(app, options)
@@ -63,22 +63,22 @@ namespace fgui {
             TweenManager._ticker = app.ticker;
             
             if (this._uiStage) {
-                this._uiStage.off(DisplayObjectEvent.SIZE_CHANGED, this._winResize, this);
-                this._uiStage.nativeStage.off(InteractiveEvents.Down, this._stageDown, this);
-                this._uiStage.nativeStage.off(InteractiveEvents.Up, this._stageUp, this);
-                this._uiStage.nativeStage.off(InteractiveEvents.Move, this._stageMove, this);
+                this._uiStage.off(DisplayObjectEvent.SIZE_CHANGED, this.__winResize, this);
+                this._uiStage.nativeStage.off(InteractiveEvents.Down, this.__stageDown, this);
+                this._uiStage.nativeStage.off(InteractiveEvents.Up, this.__stageUp, this);
+                this._uiStage.nativeStage.off(InteractiveEvents.Move, this.__stageMove, this);
                 this._uiStage.nativeStage.removeChild(this._displayObject);
                 this._uiStage.dispose();
             }
 
             this._uiStage = new UIStage(app, stageOptions);
-            this._uiStage.on(DisplayObjectEvent.SIZE_CHANGED, this._winResize, this);
-            this._uiStage.nativeStage.on(InteractiveEvents.Down, this._stageDown, this);
-            this._uiStage.nativeStage.on(InteractiveEvents.Up, this._stageUp, this);
-            this._uiStage.nativeStage.on(InteractiveEvents.Move, this._stageMove, this);
+            this._uiStage.on(DisplayObjectEvent.SIZE_CHANGED, this.__winResize, this);
+            this._uiStage.nativeStage.on(InteractiveEvents.Down, this.__stageDown, this);
+            this._uiStage.nativeStage.on(InteractiveEvents.Up, this.__stageUp, this);
+            this._uiStage.nativeStage.on(InteractiveEvents.Move, this.__stageMove, this);
             this._uiStage.nativeStage.addChild(this._displayObject);
 
-            this._winResize(this._uiStage);
+            this.__winResize(this._uiStage);
 
             if (!this._modalLayer) {
                 this._modalLayer = new GGraph();
@@ -135,7 +135,15 @@ namespace fgui {
         }
 
         protected dispatchMouseWheel(evt:any):void {
-            let childUnderMouse = this.getObjectUnderPoint(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY);
+            // let childUnderMouse = this.getObjectUnderPoint(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY);
+            // if(childUnderMouse != null) { //bubble
+            //     while(childUnderMouse.parent && childUnderMouse.parent != this) {
+            //         childUnderMouse.emit(DisplayObjectEvent.MOUSE_WHEEL, evt);
+            //         childUnderMouse = childUnderMouse.parent;
+            //     }
+            // }
+
+            let childUnderMouse = this.getObjectUnderPoint(GRoot.mouseX, GRoot.mouseY);
             if(childUnderMouse != null) { //bubble
                 while(childUnderMouse.parent && childUnderMouse.parent != this) {
                     childUnderMouse.emit(DisplayObjectEvent.MOUSE_WHEEL, evt);
@@ -274,9 +282,10 @@ namespace fgui {
                 pos = target.localToRoot();
                 sizeW = target.width;
                 sizeH = target.height;
+            } else{
+                pos = this.globalToLocal(GRoot.mouseX, GRoot.mouseY);
+                //pos = this.globalToLocal(GRoot._gmStatus.mouseX, GRoot._gmStatus.mouseY);
             }
-            else
-                pos = this.globalToLocal(GRoot._gmStatus.mouseX, GRoot._gmStatus.mouseY);
 
             let xx: number, yy: number;
             xx = pos.x;
@@ -359,8 +368,10 @@ namespace fgui {
             let xx: number = 0;
             let yy: number = 0;
             if (position == null) {
-                xx = GRoot._gmStatus.mouseX + 10;
-                yy = GRoot._gmStatus.mouseY + 20;
+                // xx = GRoot._gmStatus.mouseX + 10;
+                // yy = GRoot._gmStatus.mouseY + 20;
+                xx = GRoot.mouseX + 10;
+                yy = GRoot.mouseY + 20;
             }
             else {
                 xx = position.x;
@@ -438,10 +449,13 @@ namespace fgui {
                 this.removeChild(this._modalLayer);
         }
 
-        private _stageDown(evt: PIXI.interaction.InteractionEvent): void {
-            GRoot._gmStatus.mouseX = evt.data.global.x;
-            GRoot._gmStatus.mouseY = evt.data.global.y;
-            GRoot._gmStatus.touchDown = true;
+        private __stageDown(evt: PIXI.interaction.InteractionEvent): void {
+            // GRoot._gmStatus.mouseX = evt.data.global.x;
+            // GRoot._gmStatus.mouseY = evt.data.global.y;
+            // GRoot._gmStatus.touchDown = true;
+            GRoot.mouseX = evt.data.global.x;
+            GRoot.mouseY = evt.data.global.y;
+            GRoot.touchDown = true;
 
             //check focus
             let mc: PIXI.DisplayObject = evt.target;
@@ -498,17 +512,20 @@ namespace fgui {
             }
         }
 
-        private _stageMove(evt: PIXI.interaction.InteractionEvent): void {
-            GRoot._gmStatus.mouseX = evt.data.global.x;
-            GRoot._gmStatus.mouseY = evt.data.global.y;
+        private __stageMove(evt: PIXI.interaction.InteractionEvent): void {
+            // GRoot._gmStatus.mouseX = evt.data.global.x;
+            // GRoot._gmStatus.mouseY = evt.data.global.y;
+            GRoot.mouseX = evt.data.global.x;
+            GRoot.mouseY = evt.data.global.y;
         }
 
-        private _stageUp(evt: PIXI.interaction.InteractionEvent): void {
-            GRoot._gmStatus.touchDown = false;
+        private __stageUp(evt: PIXI.interaction.InteractionEvent): void {
+            // GRoot._gmStatus.touchDown = false;
+            GRoot.touchDown = false;
             this._checkingPopups = false;
         }
 
-        private _winResize(stage: UIStage): void {
+        private __winResize(stage: UIStage): void {
             this.setSize(stage.stageWidth, stage.stageHeight);
         }
     }

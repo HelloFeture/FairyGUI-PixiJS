@@ -917,10 +917,10 @@ namespace fgui {
             this.removeFromParent();
             this._relations.dispose();
             this.removeAllListeners()
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving2, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end2, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.__moving, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.__end, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.__moving2, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.__end2, this);
             this._displayObject.destroy();
         }
 
@@ -1323,28 +1323,28 @@ namespace fgui {
             if (GObject.draggingObject != null)
                 GObject.draggingObject.stopDrag();
 
-            GObject.sGlobalDragStart.x = GRoot.globalMouseStatus.mouseX;
-            GObject.sGlobalDragStart.y = GRoot.globalMouseStatus.mouseY;
+        
+            GObject.sGlobalDragStart.x = GRoot.mouseX;
+            GObject.sGlobalDragStart.y = GRoot.mouseY;
 
             this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
             GObject.draggingObject = this;
-
-            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this._moving2, this);
-            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this._end2, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this.__moving2, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this.__end2, this);
         }
 
         private dragEnd(): void {
             if (GObject.draggingObject == this) {
-                GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving2, this);
-                GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end2, this);
+                GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.__moving2, this);
+                GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.__end2, this);
                 GObject.draggingObject = null;
             }
             GObject._dragBeginCancelled = true;
         }
 
         private reset(): void {
-            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this._moving, this);
-            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this._end, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Move, this.__moving, this);
+            GRoot.inst.nativeStage.off(InteractiveEvents.Up, this.__end, this);
         }
 
         private _touchBegin(evt: PIXI.interaction.InteractionEvent): void {
@@ -1352,15 +1352,15 @@ namespace fgui {
                 this._touchDownPoint = new PIXI.Point();
             this._touchDownPoint.x = evt.data.global.x;
             this._touchDownPoint.y = evt.data.global.y;
-            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this._moving, this);
-            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this._end, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Move, this.__moving, this);
+            GRoot.inst.nativeStage.on(InteractiveEvents.Up, this.__end, this);
         }
 
-        private _end(evt: PIXI.interaction.InteractionEvent): void {
+        private __end(evt: PIXI.interaction.InteractionEvent): void {
             this.reset();
         }
 
-        private _moving(evt: PIXI.interaction.InteractionEvent): void {
+        private __moving(evt: PIXI.interaction.InteractionEvent): void {
             let sensitivity: number = UIConfig.touchDragSensitivity;
             if (this._touchDownPoint != null
                 && Math.abs(this._touchDownPoint.x - evt.data.global.x) < sensitivity
@@ -1373,15 +1373,15 @@ namespace fgui {
 
             evt.currentTarget = this._displayObject;
             this._displayObject.emit(DragEvent.START, evt, this);
-
+                
             if (!GObject._dragBeginCancelled)  //user may call obj.stopDrag in the DragStart event handler
                 this.dragBegin();
         }
 
-        private _moving2(evt: PIXI.interaction.InteractionEvent): void {
+        private __moving2(evt: PIXI.interaction.InteractionEvent): void {
             let xx: number = evt.data.global.x - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
             let yy: number = evt.data.global.y - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
-
+       
             if (this._dragBounds != null) {
                 let rect: PIXI.Rectangle = GRoot.inst.localToGlobalRect(this._dragBounds.x, this._dragBounds.y,
                     this._dragBounds.width, this._dragBounds.height, GObject.sDragHelperRect);
@@ -1413,7 +1413,8 @@ namespace fgui {
             this._displayObject.emit(DragEvent.MOVING, evt, this);
         }
 
-        private _end2(evt: PIXI.interaction.InteractionEvent): void {
+        private __end2(evt: PIXI.interaction.InteractionEvent): void {
+          
             if (GObject.draggingObject == this) {
                 this.stopDrag();
                 evt.currentTarget = this._displayObject;

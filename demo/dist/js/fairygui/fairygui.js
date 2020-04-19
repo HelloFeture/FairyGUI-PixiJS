@@ -103,6 +103,87 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     ;
     ;
 })(fgui || (fgui = {}));
+
+(function (fgui) {
+    var DragDropManager = /** @class */ (function () {
+        function DragDropManager() {
+            this._agent = new fgui.GLoader();
+            this._agent.draggable = true;
+            this._agent.touchable = false; //important
+            this._agent.setSize(100, 100);
+            this._agent.setPivot(0.5, 0.5, true);
+            this._agent.align = fgui.AlignType.Center;
+            this._agent.verticalAlign = fgui.VertAlignType.Middle;
+            this._agent.sortingOrder = 1000000;
+            this._agent.on("__dragEnd" /* END */, this.__dragEnd, this);
+            this._agent.displayObject.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+        }
+        Object.defineProperty(DragDropManager, "inst", {
+            get: function () {
+                if (DragDropManager._inst == null)
+                    DragDropManager._inst = new DragDropManager();
+                return DragDropManager._inst;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DragDropManager.prototype, "dragAgent", {
+            get: function () {
+                return this._agent;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DragDropManager.prototype, "dragging", {
+            get: function () {
+                return this._agent.parent != null;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DragDropManager.prototype.startDrag = function (source, icon, sourceData, touchPointID) {
+            if (touchPointID === void 0) { touchPointID = -1; }
+            if (this._agent.parent != null)
+                return;
+            this._sourceData = sourceData;
+            this._source = source;
+            this._agent.url = icon;
+            fgui.GRoot.inst.addChild(this._agent);
+            var pt = fgui.GRoot.inst.globalToLocal(fgui.GRoot.mouseX, fgui.GRoot.mouseY);
+            source.stopDrag();
+            this._agent.setXY(pt.x, pt.y);
+            this._agent.startDrag(touchPointID);
+        };
+        DragDropManager.prototype.cancel = function () {
+            if (this._agent.parent != null) {
+                this._agent.stopDrag();
+                fgui.GRoot.inst.removeChild(this._agent);
+                this._sourceData = null;
+            }
+        };
+        DragDropManager.prototype.__dragEnd = function (evt) {
+            if (this._agent.parent == null) //cancelled
+                return;
+            fgui.GRoot.inst.removeChild(this._agent);
+            var sourceData = this._sourceData;
+            this._sourceData = null;
+            var obj = fgui.GRoot.inst.getObjectUnderPoint(evt.data.global.x, evt.data.global.y);
+            while (obj != null) {
+                if (obj.listeners("__dragDrop" /* DROP */).length > 0) {
+                    obj.requestFocus();
+                    evt.source = this._source;
+                    evt.sourceData = this._sourceData;
+                    evt.gObject = obj;
+                    obj.emit("__dragDrop" /* DROP */, evt);
+                    return;
+                }
+                obj = obj.parent;
+            }
+        };
+        return DragDropManager;
+    }());
+    fgui.DragDropManager = DragDropManager;
+})(fgui || (fgui = {}));
 var fairygui = fgui;
 
 (function (fgui) {
@@ -1400,10 +1481,10 @@ var fairygui = fgui;
             this.removeFromParent();
             this._relations.dispose();
             this.removeAllListeners();
-            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this._moving, this);
-            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this._end, this);
-            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this._moving2, this);
-            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this._end2, this);
+            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this.__moving, this);
+            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this.__end, this);
+            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this.__moving2, this);
+            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this.__end2, this);
             this._displayObject.destroy();
         };
         Object.defineProperty(GObject.prototype, "draggable", {
@@ -1773,37 +1854,37 @@ var fairygui = fgui;
         GObject.prototype.dragBegin = function () {
             if (GObject.draggingObject != null)
                 GObject.draggingObject.stopDrag();
-            GObject.sGlobalDragStart.x = fgui.GRoot.globalMouseStatus.mouseX;
-            GObject.sGlobalDragStart.y = fgui.GRoot.globalMouseStatus.mouseY;
+            GObject.sGlobalDragStart.x = fgui.GRoot.mouseX;
+            GObject.sGlobalDragStart.y = fgui.GRoot.mouseY;
             this.localToGlobalRect(0, 0, this.width, this.height, GObject.sGlobalRect);
             GObject.draggingObject = this;
-            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Move, this._moving2, this);
-            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Up, this._end2, this);
+            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Move, this.__moving2, this);
+            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Up, this.__end2, this);
         };
         GObject.prototype.dragEnd = function () {
             if (GObject.draggingObject == this) {
-                fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this._moving2, this);
-                fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this._end2, this);
+                fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this.__moving2, this);
+                fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this.__end2, this);
                 GObject.draggingObject = null;
             }
             GObject._dragBeginCancelled = true;
         };
         GObject.prototype.reset = function () {
-            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this._moving, this);
-            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this._end, this);
+            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Move, this.__moving, this);
+            fgui.GRoot.inst.nativeStage.off(fgui.InteractiveEvents.Up, this.__end, this);
         };
         GObject.prototype._touchBegin = function (evt) {
             if (this._touchDownPoint == null)
                 this._touchDownPoint = new PIXI.Point();
             this._touchDownPoint.x = evt.data.global.x;
             this._touchDownPoint.y = evt.data.global.y;
-            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Move, this._moving, this);
-            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Up, this._end, this);
+            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Move, this.__moving, this);
+            fgui.GRoot.inst.nativeStage.on(fgui.InteractiveEvents.Up, this.__end, this);
         };
-        GObject.prototype._end = function (evt) {
+        GObject.prototype.__end = function (evt) {
             this.reset();
         };
-        GObject.prototype._moving = function (evt) {
+        GObject.prototype.__moving = function (evt) {
             var sensitivity = fgui.UIConfig.touchDragSensitivity;
             if (this._touchDownPoint != null
                 && Math.abs(this._touchDownPoint.x - evt.data.global.x) < sensitivity
@@ -1816,7 +1897,7 @@ var fairygui = fgui;
             if (!GObject._dragBeginCancelled) //user may call obj.stopDrag in the DragStart event handler
                 this.dragBegin();
         };
-        GObject.prototype._moving2 = function (evt) {
+        GObject.prototype.__moving2 = function (evt) {
             var xx = evt.data.global.x - GObject.sGlobalDragStart.x + GObject.sGlobalRect.x;
             var yy = evt.data.global.y - GObject.sGlobalDragStart.y + GObject.sGlobalRect.y;
             if (this._dragBounds != null) {
@@ -1845,7 +1926,7 @@ var fairygui = fgui;
             evt.currentTarget = this._displayObject;
             this._displayObject.emit("__dragMoving" /* MOVING */, evt, this);
         };
-        GObject.prototype._end2 = function (evt) {
+        GObject.prototype.__end2 = function (evt) {
             if (GObject.draggingObject == this) {
                 this.stopDrag();
                 evt.currentTarget = this._displayObject;
@@ -2302,8 +2383,9 @@ var fairygui = fgui;
                 if (child.sortingOrder != 0)
                     this._sortingChildCount--;
                 this._children.splice(index, 1);
-                if (child.inContainer)
+                if (child.inContainer) {
                     this._container.removeChild(child.displayObject);
+                }
                 if (dispose === true)
                     child.dispose();
                 this.setBoundsChangedFlag();
@@ -9083,15 +9165,11 @@ var fairygui = fgui;
 })(fgui || (fgui = {}));
 
 (function (fgui) {
-    var GRootMouseStatus = /** @class */ (function () {
-        function GRootMouseStatus() {
-            this.touchDown = false;
-            this.mouseX = 0;
-            this.mouseY = 0;
-        }
-        return GRootMouseStatus;
-    }());
-    fgui.GRootMouseStatus = GRootMouseStatus;
+    // export class GRootMouseStatus {
+    //     public touchDown: boolean = false;
+    //     public mouseX: number = 0;
+    //     public mouseY: number = 0;
+    // }
     var GRoot = /** @class */ (function (_super) {
         __extends(GRoot, _super);
         function GRoot() {
@@ -9106,6 +9184,7 @@ var fairygui = fgui;
             return _this;
         }
         Object.defineProperty(GRoot, "inst", {
+            //private static _gmStatus = new GRootMouseStatus();
             /**
              * the singleton instance of the GRoot object
              */
@@ -9117,16 +9196,12 @@ var fairygui = fgui;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(GRoot, "globalMouseStatus", {
-            /**
-             * the current mouse/pointer data
-             */
-            get: function () {
-                return GRoot._gmStatus;
-            },
-            enumerable: true,
-            configurable: true
-        });
+        /**
+         * the current mouse/pointer data
+         */
+        // public static get globalMouseStatus(): GRootMouseStatus {
+        //     return GRoot._gmStatus;
+        // }
         /**
          * the main entry to lauch the UI root, e.g.: GRoot.inst.attachTo(app, options)
          * @param app your PIXI.Application instance to be used in this GRoot instance
@@ -9136,20 +9211,20 @@ var fairygui = fgui;
             fgui.GTimer.inst.setTicker(app.ticker);
             fgui.TweenManager._ticker = app.ticker;
             if (this._uiStage) {
-                this._uiStage.off("__sizeChanged" /* SIZE_CHANGED */, this._winResize, this);
-                this._uiStage.nativeStage.off(fgui.InteractiveEvents.Down, this._stageDown, this);
-                this._uiStage.nativeStage.off(fgui.InteractiveEvents.Up, this._stageUp, this);
-                this._uiStage.nativeStage.off(fgui.InteractiveEvents.Move, this._stageMove, this);
+                this._uiStage.off("__sizeChanged" /* SIZE_CHANGED */, this.__winResize, this);
+                this._uiStage.nativeStage.off(fgui.InteractiveEvents.Down, this.__stageDown, this);
+                this._uiStage.nativeStage.off(fgui.InteractiveEvents.Up, this.__stageUp, this);
+                this._uiStage.nativeStage.off(fgui.InteractiveEvents.Move, this.__stageMove, this);
                 this._uiStage.nativeStage.removeChild(this._displayObject);
                 this._uiStage.dispose();
             }
             this._uiStage = new fgui.UIStage(app, stageOptions);
-            this._uiStage.on("__sizeChanged" /* SIZE_CHANGED */, this._winResize, this);
-            this._uiStage.nativeStage.on(fgui.InteractiveEvents.Down, this._stageDown, this);
-            this._uiStage.nativeStage.on(fgui.InteractiveEvents.Up, this._stageUp, this);
-            this._uiStage.nativeStage.on(fgui.InteractiveEvents.Move, this._stageMove, this);
+            this._uiStage.on("__sizeChanged" /* SIZE_CHANGED */, this.__winResize, this);
+            this._uiStage.nativeStage.on(fgui.InteractiveEvents.Down, this.__stageDown, this);
+            this._uiStage.nativeStage.on(fgui.InteractiveEvents.Up, this.__stageUp, this);
+            this._uiStage.nativeStage.on(fgui.InteractiveEvents.Move, this.__stageMove, this);
             this._uiStage.nativeStage.addChild(this._displayObject);
-            this._winResize(this._uiStage);
+            this.__winResize(this._uiStage);
             if (!this._modalLayer) {
                 this._modalLayer = new fgui.GGraph();
                 this._modalLayer.setSize(this.width, this.height);
@@ -9214,7 +9289,14 @@ var fairygui = fgui;
             configurable: true
         });
         GRoot.prototype.dispatchMouseWheel = function (evt) {
-            var childUnderMouse = this.getObjectUnderPoint(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY);
+            // let childUnderMouse = this.getObjectUnderPoint(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY);
+            // if(childUnderMouse != null) { //bubble
+            //     while(childUnderMouse.parent && childUnderMouse.parent != this) {
+            //         childUnderMouse.emit(DisplayObjectEvent.MOUSE_WHEEL, evt);
+            //         childUnderMouse = childUnderMouse.parent;
+            //     }
+            // }
+            var childUnderMouse = this.getObjectUnderPoint(GRoot.mouseX, GRoot.mouseY);
             if (childUnderMouse != null) { //bubble
                 while (childUnderMouse.parent && childUnderMouse.parent != this) {
                     childUnderMouse.emit("__mouseWheel" /* MOUSE_WHEEL */, evt);
@@ -9343,8 +9425,10 @@ var fairygui = fgui;
                 sizeW = target.width;
                 sizeH = target.height;
             }
-            else
-                pos = this.globalToLocal(GRoot._gmStatus.mouseX, GRoot._gmStatus.mouseY);
+            else {
+                pos = this.globalToLocal(GRoot.mouseX, GRoot.mouseY);
+                //pos = this.globalToLocal(GRoot._gmStatus.mouseX, GRoot._gmStatus.mouseY);
+            }
             var xx, yy;
             xx = pos.x;
             if (xx + popup.width > this.width)
@@ -9422,8 +9506,10 @@ var fairygui = fgui;
             var xx = 0;
             var yy = 0;
             if (position == null) {
-                xx = GRoot._gmStatus.mouseX + 10;
-                yy = GRoot._gmStatus.mouseY + 20;
+                // xx = GRoot._gmStatus.mouseX + 10;
+                // yy = GRoot._gmStatus.mouseY + 20;
+                xx = GRoot.mouseX + 10;
+                yy = GRoot.mouseY + 20;
             }
             else {
                 xx = position.x;
@@ -9492,10 +9578,13 @@ var fairygui = fgui;
             if (this._modalLayer.parent != null)
                 this.removeChild(this._modalLayer);
         };
-        GRoot.prototype._stageDown = function (evt) {
-            GRoot._gmStatus.mouseX = evt.data.global.x;
-            GRoot._gmStatus.mouseY = evt.data.global.y;
-            GRoot._gmStatus.touchDown = true;
+        GRoot.prototype.__stageDown = function (evt) {
+            // GRoot._gmStatus.mouseX = evt.data.global.x;
+            // GRoot._gmStatus.mouseY = evt.data.global.y;
+            // GRoot._gmStatus.touchDown = true;
+            GRoot.mouseX = evt.data.global.x;
+            GRoot.mouseY = evt.data.global.y;
+            GRoot.touchDown = true;
             //check focus
             var mc = evt.target;
             while (mc && mc != this.nativeStage) {
@@ -9544,21 +9633,23 @@ var fairygui = fgui;
                 this._popupStack.length = 0;
             }
         };
-        GRoot.prototype._stageMove = function (evt) {
-            GRoot._gmStatus.mouseX = evt.data.global.x;
-            GRoot._gmStatus.mouseY = evt.data.global.y;
+        GRoot.prototype.__stageMove = function (evt) {
+            // GRoot._gmStatus.mouseX = evt.data.global.x;
+            // GRoot._gmStatus.mouseY = evt.data.global.y;
+            GRoot.mouseX = evt.data.global.x;
+            GRoot.mouseY = evt.data.global.y;
         };
-        GRoot.prototype._stageUp = function (evt) {
-            GRoot._gmStatus.touchDown = false;
+        GRoot.prototype.__stageUp = function (evt) {
+            // GRoot._gmStatus.touchDown = false;
+            GRoot.touchDown = false;
             this._checkingPopups = false;
         };
-        GRoot.prototype._winResize = function (stage) {
+        GRoot.prototype.__winResize = function (stage) {
             this.setSize(stage.stageWidth, stage.stageHeight);
         };
         GRoot.contentScaleLevel = 0;
         GRoot.uniqueID = 0;
         GRoot.contentScaleFactor = 1;
-        GRoot._gmStatus = new GRootMouseStatus();
         return GRoot;
     }(fgui.GComponent));
     fgui.GRoot = GRoot;
@@ -12711,9 +12802,12 @@ var fairygui = fgui;
             }
             else
                 this._isDragging = false;
+            // const globalMouse: PIXI.Point = PIXI.utils.isMobile.any ? 
+            //     this._owner.globalToLocal(e.data.global.x, e.data.global.y)
+            //     : this._owner.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
             var globalMouse = PIXI.utils.isMobile.any ?
                 this._owner.globalToLocal(e.data.global.x, e.data.global.y)
-                : this._owner.globalToLocal(fgui.GRoot.globalMouseStatus.mouseX, fgui.GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
+                : this._owner.globalToLocal(fgui.GRoot.mouseX, fgui.GRoot.mouseY, ScrollPane.sHelperPoint);
             this._containerPos.set(this._container.x, this._container.y);
             this._beginTouchPos.copyFrom(globalMouse);
             this._lastTouchPos.copyFrom(globalMouse);
@@ -12732,7 +12826,8 @@ var fairygui = fgui;
             if (ScrollPane.draggingPane != null && ScrollPane.draggingPane != this || fgui.GObject.draggingObject != null)
                 return;
             var sensitivity = fgui.UIConfig.touchScrollSensitivity;
-            var globalMouse = this._owner.globalToLocal(fgui.GRoot.globalMouseStatus.mouseX, fgui.GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
+            // const globalMouse: PIXI.Point = this._owner.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY, ScrollPane.sHelperPoint);
+            var globalMouse = this._owner.globalToLocal(fgui.GRoot.mouseX, fgui.GRoot.mouseY, ScrollPane.sHelperPoint);
             var diff, diff2;
             var sv, sh;
             if (this._scrollType == fgui.ScrollType.Vertical) {
@@ -19136,12 +19231,10 @@ var fairygui = fgui;
                     bg.channel = 2;
                 else
                     bg.channel = 1;
-                fgui.Debug.log("is ttf", img, font.ttf, bg.x, bg.y, bg.width, bg.height);
                 if (font.ttf) {
                     if (mainTexture) {
                         var cfg = this._atlasConfigs[item.id];
                         var frame = new PIXI.Rectangle(bx + cfg.frame.x, by + cfg.frame.y, bg.width, bg.height);
-                        fgui.Debug.log(cfg.rotate, cfg.rotated, cfg.atlasName, cfg.frame.x, cfg.frame.y, cfg.frame.width, cfg.frame.height, mainTexture.width, mainTexture.height);
                         bg.texture = new PIXI.Texture(mainTexture.baseTexture, frame);
                     }
                     bg.lineHeight = lineHeight;
@@ -21874,7 +21967,8 @@ var fairygui = fgui;
                 this.$sourceData = sourceData;
                 this.$agent.url = icon;
                 fgui.GRoot.inst.addChild(this.$agent);
-                var pt = fgui.GRoot.inst.globalToLocal(fgui.GRoot.globalMouseStatus.mouseX, fgui.GRoot.globalMouseStatus.mouseY);
+                // const pt: PIXI.Point = GRoot.inst.globalToLocal(GRoot.globalMouseStatus.mouseX, GRoot.globalMouseStatus.mouseY);
+                var pt = fgui.GRoot.inst.globalToLocal(fgui.GRoot.mouseX, fgui.GRoot.mouseY);
                 this.$agent.setXY(pt.x, pt.y);
                 this.$agent.startDrag(touchPointID);
             };

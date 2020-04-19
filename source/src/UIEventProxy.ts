@@ -18,6 +18,8 @@ namespace fgui {
 
     export  interface IGObjectInteractionEvent extends  PIXI.interaction.InteractionEvent {
         gObject : GObject;
+        source ?: GObject;
+        sourceData ?: any;
     }
 
     /**

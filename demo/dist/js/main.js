@@ -475,13 +475,13 @@ var BasicDemo = /** @class */ (function () {
     };
     BasicDemo.prototype.__onDragStart = function (evt) {
         //取消对原目标的拖动，换成一个替代品
-        // evt.preventDefault();
-        //var btn: fgui.GButton = <fgui.GButton><any>evt.currentTarget;
-        //fgui.DragDropManager.inst.startDrag(btn, btn.icon, btn.icon);
+        evt.stopPropagation();
+        var btn = evt.gObject;
+        fgui.DragDropManager.inst.startDrag(btn, btn.icon, btn.icon);
     };
     BasicDemo.prototype.__onDrop = function (evt) {
-        var btn = evt.currentTarget;
-        // btn.icon = evt.source;
+        var btn = evt.gObject;
+        btn.icon = evt.source.asButton.icon;
     };
     //------------------------------
     BasicDemo.prototype.playDepth = function () {
