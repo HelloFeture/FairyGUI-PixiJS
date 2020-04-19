@@ -108,20 +108,13 @@ var MainMenu = /** @class */ (function () {
         });
     };
     MainMenu.prototype.__start = function () {
-        fgui.UIPackage.addPackage("Test");
-        this._view = fgui.UIPackage.createObject("Test", "Main").asCom;
-        this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-        fgui.GRoot.inst.addChild(this._view);
-        // let a = new MT();
-        // console.log(a);
-        // a.text = "dddddddddddddd";
-        // let st = a.style as PIXI.TextStyle;
-        // st.fill = 0xFFFFFF;
-        // st.fontSize = 20; 
-        // a.x = 200;
-        // (fgui.GRoot.inst.displayObject as PIXI.Container).addChild(a);
-        // let rs = a.scale.set(2, 2);
-        // console.log("a++ ", rs, a.scale);
+        // fgui.UIPackage.addPackage("Bag");
+        // this._view = fgui.UIPackage.createObject("Bag", "Main").asCom;
+        // this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+        // fgui.GRoot.inst.addChild(this._view);
+        // if (this._view) {
+        //     return ;
+        // }
         fgui.UIPackage.addPackage("Basics");
         this._view = fgui.UIPackage.createObject("Basics", "Main").asCom;
         this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
@@ -305,9 +298,12 @@ var BagWindow = /** @class */ (function (_super) {
         obj.icon = "resource/assets/Icons/i" + Math.floor(Math.random() * 10) + ".png";
         obj.text = "" + Math.floor(Math.random() * 100);
     };
-    BagWindow.prototype.onClickItem = function (evt) {
-        this.contentPane.getChild("n11").asLoader.url = evt.itemObject.icon;
-        this.contentPane.getChild("n13").text = evt.itemObject.icon;
+    BagWindow.prototype.onClickItem = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        console.log.apply(console, args);
     };
     return BagWindow;
 }(fgui.Window));

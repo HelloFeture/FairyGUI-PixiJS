@@ -992,16 +992,14 @@ namespace fgui {
             if (contentItem.objectType != ObjectType.Component){
                 this.constructExtension(buffer);
             }
-
-            this.onConstruct();
         }
 
         protected constructExtension(buffer: ByteBuffer): void {
         }
 
-        protected onConstruct(): void {
-            this.constructFromXML(null);
-        }
+        // protected onConstruct(): void {
+        //     this.constructFromXML(null);
+        // }
 
         private buildNativeDisplayList(): void {
             var cnt: number = this._children.length;
@@ -1056,8 +1054,8 @@ namespace fgui {
             }, this);
         }
 
-        protected constructFromXML(xml: utils.XmlNode): void {
-        }
+        // protected constructFromXML(xml: utils.XmlNode): void {
+        // }
 
         private ___added(d: PIXI.DisplayObject): void {
             var cnt: number = this._transitions.length;

@@ -64,21 +64,13 @@ class MainMenu {
 
     private __start() : void {
 
-        fgui.UIPackage.addPackage("Test");
-        this._view = fgui.UIPackage.createObject("Test", "Main").asCom;
-        this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
-        fgui.GRoot.inst.addChild(this._view);
-        // let a = new MT();
-        // console.log(a);
-        // a.text = "dddddddddddddd";
-        // let st = a.style as PIXI.TextStyle;
-        // st.fill = 0xFFFFFF;
-        // st.fontSize = 20; 
-        // a.x = 200;
-        // (fgui.GRoot.inst.displayObject as PIXI.Container).addChild(a);
-        // let rs = a.scale.set(2, 2);
-        // console.log("a++ ", rs, a.scale);
-
+        // fgui.UIPackage.addPackage("Bag");
+        // this._view = fgui.UIPackage.createObject("Bag", "Main").asCom;
+        // this._view.setSize(fgui.GRoot.inst.width, fgui.GRoot.inst.height);
+        // fgui.GRoot.inst.addChild(this._view);
+        // if (this._view) {
+        //     return ;
+        // }
 
         fgui.UIPackage.addPackage("Basics");
         this._view = fgui.UIPackage.createObject("Basics", "Main").asCom;

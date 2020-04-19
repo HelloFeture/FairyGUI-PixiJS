@@ -271,7 +271,7 @@ namespace fgui {
         /**overwrite this method if you need to load resources by your own way*/
         protected loadExternal(): void {
             
-            let texture = PIXI.Texture.from(this._url, true);
+            let texture = PIXI.Texture.from(this._url);
             this._loadingTexture = texture;
             //TODO: Texture does not have error event... monitor error event on baseTexture will casue cross-error-event problem.
             texture.once("update", () => {

@@ -782,10 +782,8 @@ declare namespace fgui {
         constructFromResource(): void;
         constructFromResource2(objectPool: Array<GObject>, poolIndex: number): void;
         protected constructExtension(buffer: ByteBuffer): void;
-        protected onConstruct(): void;
         private buildNativeDisplayList;
         protected appendChildrenList(): void;
-        protected constructFromXML(xml: utils.XmlNode): void;
         private ___added;
         private ___removed;
     }
@@ -1436,7 +1434,9 @@ declare namespace fgui {
         private switchBitmapMode;
         dispose(): void;
         set text(value: string);
+        protected setText(value: string): void;
         get text(): string;
+        protected getText(): string;
         get color(): number;
         getColor(): TextColor;
         setColor(value: TextColor): void;
@@ -1717,7 +1717,6 @@ declare namespace fgui {
         private decorateInputbox;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
         private updateVertAlign;
-        setup_afterAdd(buffer: ByteBuffer, beginPos: number): void;
     }
 }
 declare namespace fgui {

@@ -103,10 +103,13 @@ namespace fgui {
 
         protected createDisplayObject(): void {
             this._textField = new UITextField(this);
+
             this.setDisplayObject(this._textField);
         }
 
         private switchBitmapMode(val: boolean): void {
+            this._textField.scale.set(this._scaleX, this._scaleY);
+  
             if (val && this.displayObject == this._textField) {
                 if (this._btContainer == null)
                     this._btContainer = new UIContainer(this);
@@ -126,6 +129,10 @@ namespace fgui {
         }
 
         public set text(value:string) {
+            this.setText(value);
+
+        }
+        protected setText(value: string):void {
             if(value == null) value = "";
             if (this._text == value) return;
             this._text = value;
@@ -134,14 +141,15 @@ namespace fgui {
                 this.renderNow();
             else
                 this.render();
-
         }
 
         public get text(): string {
-            return this._text;
+            return this.getText();
         }
 
-     
+        protected getText():string {
+            return this._text;
+        }
 
         public get color(): number {
             return this.getColor() as number;
@@ -199,6 +207,8 @@ namespace fgui {
                 this.render();
             }
         }
+
+     
 
         public get fontSize(): number {
             return +this._style.fontSize;
@@ -701,6 +711,7 @@ namespace fgui {
                             bm = new PIXI.Sprite();
                         bm.x = charX + lineIndent + Math.ceil(glyph.offsetX * fontScale);
                         bm.y = line.y + charIndent + Math.ceil(glyph.offsetY * fontScale);
+                   
                         bm.texture = glyph.texture;
                         bm.scale.set(fontScale, fontScale);
                         bm.tint =  0xFFFFFF;
@@ -709,7 +720,6 @@ namespace fgui {
                         }
                         
                         this._btContainer.addChild(bm);
-
                         charX += letterSpacing + Math.ceil(glyph.advance * fontScale);
                     }
                     else if (ch == " ") {
@@ -736,34 +746,34 @@ namespace fgui {
         }
 
         protected handleSizeChanged(): void {
-            if (this._updatingSize)
+          
+            if (this._updatingSize || this._underConstruct) 
                 return;
 
             if (this._bitmapFont != null) {
                 if (!this._widthAutoSize)
                     this.render();
-            }
-            else {
+            } else {
                 if (this._underConstruct) {
                     this._textField.width = this.width;
                     this._textField.height = this.height;
-                }
-                else {
-                    if(this._autoSize == AutoSizeType.Shrink)
+                } else {
+                    if(this._autoSize == AutoSizeType.Shrink){
                         this.shrinkTextField();
-                    else {
-                        if (!this._widthAutoSize) {
-                            if (!this._heightAutoSize) {
-                                this._textField.width = this.width;
-                                this._textField.height = this.height;
-                            }
-                            else
-                                this._textField.width = this.width;
-                        }
+                    } else {
+                        // @NOTE 设置宽度和高度将会改变 scale
+                        // if (!this._widthAutoSize) {
+                        //     if (!this._heightAutoSize) {
+                        //         this._textField.width = this.width;
+                        //         this._textField.height = this.height;
+                        //     } else {
+                        //         this._textField.width = this.width;
+                        //     }
+                        // }
                     }
                 }
             }
-
+            
             this.layoutAlign();
         }
 
@@ -815,8 +825,8 @@ namespace fgui {
         }
 
         public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
+   
             super.setup_beforeAdd(buffer, beginPos);
-
             buffer.seek(beginPos, 5);
 
             this._font = buffer.readS();
@@ -845,19 +855,32 @@ namespace fgui {
             if (buffer.readBool()){
                 this._templateVars = {};
             }
+
         }
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
+           
             super.setup_afterAdd(buffer, beginPos);
-
             buffer.seek(beginPos, 6);
 
+            this._bitmapFont = null;
+            if (ToolSet.startsWith(this._font, "ui://")) {
+                var pi: PackageItem = UIPackage.getItemByURL(this._font);
+                if (pi) {
+                    this._bitmapFont = <BitmapFont>pi.owner.getItemAsset(pi);
+                }
+            }
+            //@ TODO
+            this._textField.scale.set(this._scaleX, this._scaleY);
+           
             var str: string = buffer.readS();
             if (str != null){
                 this.text = str;
             }
+
             this._sizeDirty = false;
             this._textField.init();
+            
         }
     }
 }

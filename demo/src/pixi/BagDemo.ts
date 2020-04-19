@@ -44,9 +44,13 @@ class BagWindow extends fgui.Window {
         obj.icon = "resource/assets/Icons/i" + Math.floor(Math.random() * 10) +".png";
         obj.text = "" + Math.floor(Math.random() * 100);
     }
-
-    private onClickItem(evt: any): void {
-        this.contentPane.getChild("n11").asLoader.url = evt.itemObject.icon;
-        this.contentPane.getChild("n13").text = evt.itemObject.icon;
+    private onClickItem(...args : any[]): void {
+        console.log(...args);
+    
     }
+    // private onClickItem(evt: fgui.InteractiveEvents, obj : fgui.GObject): void {
+    //     console.log(evt, obj);
+    //     this.contentPane.getChild("n11").asLoader.url = obj.icon;
+    //     this.contentPane.getChild("n13").text = obj.icon;
+    // }
 }

@@ -1685,7 +1685,10 @@ var fairygui = fgui;
             if (buffer.readBool()) {
                 this.initWidth = buffer.readInt();
                 this.initHeight = buffer.readInt();
-                this.setSize(this.initWidth, this.initHeight, true);
+                // @TODO ??
+                //this.setSize(this.initWidth, this.initHeight, true);
+                this._width = this.initWidth;
+                this._height = this.initHeight;
             }
             if (buffer.readBool()) {
                 this.minWidth = buffer.readInt();
@@ -1759,6 +1762,7 @@ var fairygui = fgui;
                 gear.setup(buffer);
                 buffer.position = nextPos;
             }
+            this.setSize(this.initWidth, this.initHeight, true);
         };
         GObject.prototype.initDrag = function () {
             if (this._draggable)
@@ -3077,13 +3081,12 @@ var fairygui = fgui;
             if (contentItem.objectType != fgui.ObjectType.Component) {
                 this.constructExtension(buffer);
             }
-            this.onConstruct();
         };
         GComponent.prototype.constructExtension = function (buffer) {
         };
-        GComponent.prototype.onConstruct = function () {
-            this.constructFromXML(null);
-        };
+        // protected onConstruct(): void {
+        //     this.constructFromXML(null);
+        // }
         GComponent.prototype.buildNativeDisplayList = function () {
             var cnt = this._children.length;
             if (cnt == 0)
@@ -3133,8 +3136,8 @@ var fairygui = fgui;
                     _this._container.addChild(child.displayObject);
             }, this);
         };
-        GComponent.prototype.constructFromXML = function (xml) {
-        };
+        // protected constructFromXML(xml: utils.XmlNode): void {
+        // }
         GComponent.prototype.___added = function (d) {
             var cnt = this._transitions.length;
             for (var i = 0; i < cnt; ++i) {
@@ -7651,7 +7654,7 @@ var fairygui = fgui;
         /**overwrite this method if you need to load resources by your own way*/
         GLoader.prototype.loadExternal = function () {
             var _this = this;
-            var texture = PIXI.Texture.from(this._url, true);
+            var texture = PIXI.Texture.from(this._url);
             this._loadingTexture = texture;
             //TODO: Texture does not have error event... monitor error event on baseTexture will casue cross-error-event problem.
             texture.once("update", function () {
@@ -8226,6 +8229,7 @@ var fairygui = fgui;
             this.setDisplayObject(this._textField);
         };
         GTextField.prototype.switchBitmapMode = function (val) {
+            this._textField.scale.set(this._scaleX, this._scaleY);
             if (val && this.displayObject == this._textField) {
                 if (this._btContainer == null)
                     this._btContainer = new fgui.UIContainer(this);
@@ -8244,23 +8248,29 @@ var fairygui = fgui;
         };
         Object.defineProperty(GTextField.prototype, "text", {
             get: function () {
-                return this._text;
+                return this.getText();
             },
             set: function (value) {
-                if (value == null)
-                    value = "";
-                if (this._text == value)
-                    return;
-                this._text = value;
-                this.updateGear(6 /* Text */);
-                if (this.parent && this.parent._underConstruct)
-                    this.renderNow();
-                else
-                    this.render();
+                this.setText(value);
             },
             enumerable: true,
             configurable: true
         });
+        GTextField.prototype.setText = function (value) {
+            if (value == null)
+                value = "";
+            if (this._text == value)
+                return;
+            this._text = value;
+            this.updateGear(6 /* Text */);
+            if (this.parent && this.parent._underConstruct)
+                this.renderNow();
+            else
+                this.render();
+        };
+        GTextField.prototype.getText = function () {
+            return this._text;
+        };
         Object.defineProperty(GTextField.prototype, "color", {
             get: function () {
                 return this.getColor();
@@ -8854,7 +8864,7 @@ var fairygui = fgui;
             return r;
         };
         GTextField.prototype.handleSizeChanged = function () {
-            if (this._updatingSize)
+            if (this._updatingSize || this._underConstruct)
                 return;
             if (this._bitmapFont != null) {
                 if (!this._widthAutoSize)
@@ -8866,17 +8876,19 @@ var fairygui = fgui;
                     this._textField.height = this.height;
                 }
                 else {
-                    if (this._autoSize == fgui.AutoSizeType.Shrink)
+                    if (this._autoSize == fgui.AutoSizeType.Shrink) {
                         this.shrinkTextField();
+                    }
                     else {
-                        if (!this._widthAutoSize) {
-                            if (!this._heightAutoSize) {
-                                this._textField.width = this.width;
-                                this._textField.height = this.height;
-                            }
-                            else
-                                this._textField.width = this.width;
-                        }
+                        // @NOTE 设置宽度和高度将会改变 scale
+                        // if (!this._widthAutoSize) {
+                        //     if (!this._heightAutoSize) {
+                        //         this._textField.width = this.width;
+                        //         this._textField.height = this.height;
+                        //     } else {
+                        //         this._textField.width = this.width;
+                        //     }
+                        // }
                     }
                 }
             }
@@ -8952,6 +8964,15 @@ var fairygui = fgui;
         GTextField.prototype.setup_afterAdd = function (buffer, beginPos) {
             _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
             buffer.seek(beginPos, 6);
+            this._bitmapFont = null;
+            if (fgui.ToolSet.startsWith(this._font, "ui://")) {
+                var pi = fgui.UIPackage.getItemByURL(this._font);
+                if (pi) {
+                    this._bitmapFont = pi.owner.getItemAsset(pi);
+                }
+            }
+            //@ TODO
+            this._textField.scale.set(this._scaleX, this._scaleY);
             var str = buffer.readS();
             if (str != null) {
                 this.text = str;
@@ -9925,8 +9946,7 @@ var fairygui = fgui;
             if (this._text == value)
                 return;
             this._util.text = value;
-            //super.setText(value);
-            this.text = value;
+            _super.prototype.setText.call(this, value);
         };
         GTextInput.prototype.setColor = function (value) {
             _super.prototype.setColor.call(this, value);
@@ -9969,7 +9989,12 @@ var fairygui = fgui;
                 return this.type == "password" /* PASSWORD */;
             },
             set: function (v) {
-                this.type = "password" /* PASSWORD */;
+                if (v) {
+                    this.type = "password" /* PASSWORD */;
+                }
+                else {
+                    this.type = "text" /* TEXT */;
+                }
             },
             enumerable: true,
             configurable: true
@@ -10024,19 +10049,18 @@ var fairygui = fgui;
             }
             iv = buffer.readInt();
             if (iv != 0) {
-                //keyboardType
-                // if(iv == 4)
-                //     this.type = InputType.NUMBER;
-                // else if(iv == 3)
-                //     this.type = InputType.URL;
-                // else if(iv == 5)
-                //     this.type = InputType.TEL;
-                // else if(iv == 6)
-                //     this.type = InputType.EMAIL;
+                // keyboardType
+                if (iv == 4)
+                    this.type = "number" /* NUMBER */;
+                else if (iv == 3)
+                    this.type = "url" /* URL */;
+                else if (iv == 5)
+                    this.type = "tel" /* TEL */;
+                else if (iv == 6)
+                    this.type = "email" /* EMAIL */;
             }
-            if (buffer.readBool()) {
-                this.password = true;
-            }
+            var ispassword = buffer.readBool();
+            this.password = ispassword;
             this.updateVertAlign();
         };
         GTextInput.prototype.updateVertAlign = function () {
@@ -10052,15 +10076,6 @@ var fairygui = fgui;
             //         this._textField.verticalAlign = egret.VerticalAlign.BOTTOM;
             //         break;
             // }
-        };
-        GTextInput.prototype.setup_afterAdd = function (buffer, beginPos) {
-            _super.prototype.setup_afterAdd.call(this, buffer, beginPos);
-            this._textField.text = "dddddddddddddddddd";
-            if ((!this._text || this._text.length <= 0) && this.promptText) {
-                this._textField.text = this.promptText;
-                this.password = false;
-                //this._textField.textFlow = (new egret.HtmlTextParser).parser(ToolSet.parseUBB(ToolSet.encodeHTML(this._promptText)));
-            }
         };
         return GTextInput;
     }(fgui.GTextField));
@@ -15828,7 +15843,6 @@ var fairygui = fgui;
             var _this = this;
             fgui.GTimer.inst.callLater(function () {
                 _this._curEle.style.opacity = "1";
-                _this._curEle.focus();
             }, this);
         };
         HTMLInput.prototype.disconnect = function (ele) {
@@ -16007,8 +16021,10 @@ var fairygui = fgui;
         InputElement.prototype.onInputHandler = function () {
             var _this = this;
             window.setTimeout(function () {
-                _this.textValue = _this.inputElement.value;
-                _this.emit("updateText");
+                if (_this.inputElement && _this.inputElement.selectionStart == _this.inputElement.selectionEnd) {
+                    _this.textValue = _this.inputElement.value;
+                    _this.emit("updateText");
+                }
             }, 0);
         };
         InputElement.prototype.setAreaHeight = function () {
@@ -17274,13 +17290,15 @@ var fairygui = fgui;
             _this._minHeightID = -1;
             _this.UIOwner = owner;
             _this.interactive = _this.interactiveChildren = false;
-            //this.texture.noFrame = false;
+            _this.texture.noFrame = false;
+            _this.width = _this.texture.frame.width;
+            _this.height = _this.texture.frame.height;
             _this._minHeight = -1;
             return _this;
         }
         UITextField.prototype.init = function () {
-            //this.updateFrame();
-            //this.texture.on("update", this.updateFrame, this);
+            this.updateFrame();
+            this.texture.on("update", this.updateFrame, this);
         };
         Object.defineProperty(UITextField.prototype, "minHeight", {
             get: function () {
@@ -17291,10 +17309,10 @@ var fairygui = fgui;
         });
         /**@internal */
         UITextField.prototype.updateMinHeight = function () {
-            // if(this.style.styleID != this._minHeightID || this._minHeight <= 0) {
-            //     this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight;  //no way to get the cached auto-lineheight (when style.lineHeight=0);
-            //     this._minHeightID = this.style.styleID;
-            // }
+            if (this.style.styleID != this._minHeightID || this._minHeight <= 0) {
+                this._minHeight = PIXI.TextMetrics.measureText("", this.style, false).lineHeight; //no way to get the cached auto-lineheight (when style.lineHeight=0);
+                this._minHeightID = this.style.styleID;
+            }
         };
         UITextField.prototype.updateFrame = function () {
             fgui.GTimer.inst.callLater(this.internalUpdateFrame, this);
@@ -18632,7 +18650,7 @@ var fairygui = fgui;
                 cfg.frame = new PIXI.Rectangle(buffer.readInt(), buffer.readInt(), buffer.readInt(), buffer.readInt());
                 cfg.rotated = buffer.readBool();
                 cfg.rotate = cfg.rotated ? 6 : 0;
-                cfg.orig = cfg.rotate != 0 ? new PIXI.Rectangle(0, 0, cfg.frame.height, cfg.frame.width) : null;
+                cfg.orig = cfg.rotate != 0 ? new PIXI.Rectangle(0, 0, cfg.frame.width, cfg.frame.height) : null;
                 if (ver2 && buffer.readBool()) {
                     // TODO
                     buffer.readInt();
@@ -19060,7 +19078,9 @@ var fairygui = fgui;
                 height = buffer.readInt(); //height
                 frame.addDelay = buffer.readInt();
                 spriteId = buffer.readS();
-                var trimRect = new PIXI.Rectangle(fx, fy, width, height);
+                // TODO fx ? fy ?
+                //let trimRect: PIXI.Rectangle = new PIXI.Rectangle(fx, fy, width, height);
+                var trimRect = new PIXI.Rectangle(0, 0, width, height);
                 if (spriteId != null && (sprite = this._atlasConfigs[spriteId]) != null) {
                     sprite.trim = trimRect;
                     frame.texture = this.createSpriteTexture(spriteId, sprite);
@@ -19074,6 +19094,7 @@ var fairygui = fgui;
             font.id = "ui://" + this.id + item.id;
             item.bitmapFont = font;
             var buffer = item.rawData;
+            fgui.Debug.log("loadFont", item.file, item.bitmapFont);
             buffer.seek(0, 0);
             font.ttf = buffer.readBool();
             font.tint = buffer.readBool();
@@ -19101,21 +19122,28 @@ var fairygui = fgui;
                 var by = buffer.readInt();
                 bg.x = buffer.readInt();
                 bg.y = buffer.readInt();
+                bg.offsetX = bx || 0;
+                bg.offsetY = by || 0;
                 bg.width = buffer.readInt();
                 bg.height = buffer.readInt();
                 bg.advance = buffer.readInt();
                 bg.channel = buffer.readByte();
-                if (bg.channel == 1)
+                if (bg.channel == 15)
+                    bg.channel = 4;
+                else if (bg.channel == 1)
                     bg.channel = 3;
                 else if (bg.channel == 2)
                     bg.channel = 2;
-                else if (bg.channel == 3)
+                else
                     bg.channel = 1;
+                fgui.Debug.log("is ttf", img, font.ttf, bg.x, bg.y, bg.width, bg.height);
                 if (font.ttf) {
-                    var cfg = this._atlasConfigs[item.id];
-                    var atlasOffsetX = cfg.frame.x;
-                    var atlasOffsetY = cfg.frame.y;
-                    bg.texture = new PIXI.Texture(mainTexture.baseTexture, new PIXI.Rectangle(bg.x + atlasOffsetX, bg.y + atlasOffsetY, bg.width, bg.height));
+                    if (mainTexture) {
+                        var cfg = this._atlasConfigs[item.id];
+                        var frame = new PIXI.Rectangle(bx + cfg.frame.x, by + cfg.frame.y, bg.width, bg.height);
+                        fgui.Debug.log(cfg.rotate, cfg.rotated, cfg.atlasName, cfg.frame.x, cfg.frame.y, cfg.frame.width, cfg.frame.height, mainTexture.width, mainTexture.height);
+                        bg.texture = new PIXI.Texture(mainTexture.baseTexture, frame);
+                    }
                     bg.lineHeight = lineHeight;
                 }
                 else {
@@ -19133,8 +19161,9 @@ var fairygui = fgui;
                             bg.advance = xadvance;
                     }
                     bg.lineHeight = bg.y < 0 ? bg.height : (bg.y + bg.height);
-                    if (bg.lineHeight < font.size)
+                    if (bg.lineHeight < font.size) {
                         bg.lineHeight = font.size;
+                    }
                 }
                 buffer.position = nextPos;
             }
@@ -21944,17 +21973,15 @@ var fairygui = fgui;
             };
             InputDelegate.prototype.onStageDown = function (e) {
                 var target = fgui.GObject.cast(e.currentTarget);
-                if (target != this._textField) {
+                if (target != this._textField)
                     this._input._hide();
-                }
-                this._input._show();
             };
             InputDelegate.prototype.focusHandler = function (type) {
                 if (type == "focus") {
                     if (!this._focused) {
                         this._focused = true;
                         this._textField._isTyping = true;
-                        this._textField.alpha = 1;
+                        this._textField.alpha = 0;
                         this._textField.emit("__focusChanged" /* CHANGED */, "focus", this._textField);
                         this._textField.emit("__textFocusIn" /* FocusIn */, this._textField);
                     }
@@ -22031,9 +22058,8 @@ var fairygui = fgui;
             /**@internal */
             InputDelegate.prototype._onFocus = function () {
                 var _this = this;
-                if (!this._textField.visible || this._focused) {
+                if (!this._textField.visible || this._focused)
                     return;
-                }
                 fgui.GRoot.inst.off(fgui.InteractiveEvents.Down, this.onStageDown, this);
                 fgui.GTimer.inst.callLater(function () {
                     fgui.GRoot.inst.on(fgui.InteractiveEvents.Down, _this.onStageDown, _this);

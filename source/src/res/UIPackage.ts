@@ -275,7 +275,7 @@ namespace fgui {
                             else if (scaleOption == 2){
                                 pi.scaleByTile = true;
                             }
-
+                            
                             pi.smoothing = buffer.readBool();
                             break;
                         }
@@ -360,8 +360,8 @@ namespace fgui {
                 cfg.frame = new PIXI.Rectangle(buffer.readInt(), buffer.readInt(), buffer.readInt(), buffer.readInt())
                 cfg.rotated = buffer.readBool();
                 cfg.rotate = cfg.rotated ? 6 : 0;
-                cfg.orig = cfg.rotate != 0 ? new PIXI.Rectangle(0, 0, cfg.frame.height, cfg.frame.width) : null;
-
+                cfg.orig = cfg.rotate != 0 ? new PIXI.Rectangle(0, 0, cfg.frame.width, cfg.frame.height) : null;
+                
                 if (ver2 && buffer.readBool()) {
                     // TODO
                     buffer.readInt();
@@ -848,7 +848,9 @@ namespace fgui {
                 height = buffer.readInt();//height
                 frame.addDelay = buffer.readInt();
                 spriteId = buffer.readS();
-                let trimRect: PIXI.Rectangle = new PIXI.Rectangle(fx, fy, width, height);
+                // TODO fx ? fy ?
+                //let trimRect: PIXI.Rectangle = new PIXI.Rectangle(fx, fy, width, height);
+                let trimRect: PIXI.Rectangle = new PIXI.Rectangle(0, 0, width, height);
                 
                 if (spriteId != null && (sprite = this._atlasConfigs[spriteId]) != null) {
                     sprite.trim = trimRect;
@@ -867,7 +869,7 @@ namespace fgui {
             font.id = `ui://${this.id}${item.id}`;
             item.bitmapFont = font;
             var buffer: ByteBuffer = item.rawData;
-
+            Debug.log("loadFont", item.file, item.bitmapFont);
             buffer.seek(0, 0);
 
             font.ttf = buffer.readBool();
@@ -891,7 +893,6 @@ namespace fgui {
             for (var i: number = 0; i < cnt; i++) {
                 var nextPos: number = buffer.readShort();
                 nextPos += buffer.position;
-
                 bg = new BMGlyph();
                 var ch: string = buffer.readChar();
                 font.glyphs[ch] = bg;
@@ -901,24 +902,31 @@ namespace fgui {
                 var by: number = buffer.readInt();
                 bg.x = buffer.readInt();
                 bg.y = buffer.readInt();
+                bg.offsetX = bx || 0;
+                bg.offsetY = by || 0;
                 bg.width = buffer.readInt();
                 bg.height = buffer.readInt();
                 bg.advance = buffer.readInt();
                 bg.channel = buffer.readByte();
-                if (bg.channel == 1)
+                if (bg.channel == 15)
+                    bg.channel = 4;
+                else if (bg.channel == 1)
                     bg.channel = 3;
                 else if (bg.channel == 2)
                     bg.channel = 2;
-                else if (bg.channel == 3)
+                else
                     bg.channel = 1;
 
+           
                 if (font.ttf) {
-                    let cfg: AtlasConfig = this._atlasConfigs[item.id];
-                    let atlasOffsetX = cfg.frame.x;
-                    let atlasOffsetY = cfg.frame.y;
-                    bg.texture = new PIXI.Texture(mainTexture.baseTexture, new PIXI.Rectangle(bg.x + atlasOffsetX, bg.y + atlasOffsetY, bg.width, bg.height));
+                    if (mainTexture) {
+                        let cfg: AtlasConfig = this._atlasConfigs[item.id];
+                        let frame = new PIXI.Rectangle(bx + cfg.frame.x, by + cfg.frame.y, bg.width, bg.height);
+                        bg.texture = new PIXI.Texture(mainTexture.baseTexture, frame);
+                    }
                     bg.lineHeight = lineHeight;
                 } else {
+                    
                     var charImg: PackageItem = this._itemsById[img];
                     if (charImg) {
                         this.getItemAsset(charImg);
@@ -931,13 +939,13 @@ namespace fgui {
                         if (xadvance == 0)
                             bg.advance = bg.x + bg.width;
                         else
-                        
                             bg.advance = xadvance;
                     }
 
                     bg.lineHeight = bg.y < 0 ? bg.height : (bg.y + bg.height);
-                    if (bg.lineHeight < font.size)
+                    if (bg.lineHeight < font.size){
                         bg.lineHeight = font.size;
+                    }
                 }
                 buffer.position = nextPos;
             }

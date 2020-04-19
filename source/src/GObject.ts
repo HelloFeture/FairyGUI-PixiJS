@@ -214,8 +214,9 @@ namespace fgui {
                 let diffh: number = hv - this.mapPivotHeight(1);
                 this._width = wv;
                 this._height = hv;
-
+               
                 this.handleSizeChanged();
+                
                 if (this._pivot.x != 0 || this._pivot.y != 0) {
                     if (!this._pivotAsAnchor) {
                         if (!ignorePivot){
@@ -226,9 +227,9 @@ namespace fgui {
                         this.applyPivot();
                     }
                 }
-
+               
                 this.updateGear(GearType.Size);
-
+                
                 if (this._parent) {
                     this._relations.onOwnerSizeChanged(diffw, diffh, this._pivotAsAnchor || !ignorePivot);
                     this._parent.setBoundsChangedFlag();
@@ -1038,6 +1039,7 @@ namespace fgui {
                 this._displayObject.parent.addChildAt(newObj, i);
                 this._displayObject.parent.removeChild(this._displayObject);
             }
+      
             this._displayObject = newObj;
             this._displayObject.x = old.x;
             this._displayObject.y = old.y;
@@ -1075,6 +1077,7 @@ namespace fgui {
         }
 
         protected handleScaleChanged(): void {
+        
             if (this._displayObject){
                 this._displayObject.scale.set(this._scaleX, this._scaleY);
             }
@@ -1195,48 +1198,51 @@ namespace fgui {
             f1 = buffer.readInt();
             f2 = buffer.readInt();
             this.setXY(f1, f2);
-
+            
             if (buffer.readBool()) {
                 this.initWidth = buffer.readInt();
                 this.initHeight = buffer.readInt();
-                this.setSize(this.initWidth, this.initHeight, true);
+                // @TODO ??
+                //this.setSize(this.initWidth, this.initHeight, true);
+                this._width = this.initWidth;
+                this._height = this.initHeight;
             }
-
+            
             if (buffer.readBool()) {
                 this.minWidth = buffer.readInt();
                 this.maxWidth = buffer.readInt();
                 this.minHeight = buffer.readInt();
                 this.maxHeight = buffer.readInt();
             }
-
+            
             if (buffer.readBool()) {
                 f1 = buffer.readFloat();
                 f2 = buffer.readFloat();
                 this.setScale(f1, f2);
             }
-
+            
             if (buffer.readBool()) {
                 f1 = buffer.readFloat();
                 f2 = buffer.readFloat();
                 this.setSkew(f1, f2);
             }
-
+            
             if (buffer.readBool()) {
                 f1 = buffer.readFloat();
                 f2 = buffer.readFloat();
                 this.setPivot(f1, f2, buffer.readBool());
             }
-
+            
             f1 = buffer.readFloat();
             if (f1 != 1){
                 this.alpha = f1;
             }
-
+            
             f1 = buffer.readFloat();
             if (f1 != 0){
                 this.rotation = f1;
             }
-
+            
             if (!buffer.readBool()){
                 this.visible = false;
             }
@@ -1248,7 +1254,7 @@ namespace fgui {
             }
             var bm: number = buffer.readByte();
             this.blendMode = BlendModeMap[bm] || "Normal";
-
+            
             var filter: number = buffer.readByte();
             if (filter == 1 && this._displayObject) {
                 let c1 = buffer.readFloat();
@@ -1261,13 +1267,13 @@ namespace fgui {
             if (str != null) {
                 this.data = str;
             }
+            
         }
 
 
         public setup_afterAdd(buffer: ByteBuffer, beginPos: number): void {
             buffer.seek(beginPos, 1);
-
-
+            
             var str: string = buffer.readS();
             if (str != null){
                 this.tooltips = str;
@@ -1290,6 +1296,8 @@ namespace fgui {
 
                 buffer.position = nextPos;
             }
+            
+            this.setSize(this.initWidth, this.initHeight, true);
         }
 
         //dragging

@@ -118,8 +118,7 @@ namespace fgui {
             if(value == null) value = "";
             if (this._text == value) return;
             this._util.text = value;
-            //super.setText(value);
-            this.text = value;
+            super.setText(value);
         }
 
         public setColor(value:number):void {
