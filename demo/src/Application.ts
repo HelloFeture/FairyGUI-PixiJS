@@ -6,24 +6,33 @@ class Application {
     canvas : HTMLCanvasElement;
     sphere : BABYLON.Mesh;
     camera : BABYLON.FreeCamera;
+    scene : BABYLON.Scene;
     /**
      * start run application 
      */
     public start() : void {
-
-        // this._startBabylon();
+        // BABYLON(3D) 和 PIXI(UI) 一起使用
+        this._startBabylon();
         this._startPIXI();
         
     }
 
     private _startPIXI() {
-        this.canvas = document.getElementById("babylonRenderCanvas") as HTMLCanvasElement;
+        // 处理按键
+        this.scene.onPreKeyboardObservable.add((info) => {
+            info.skipOnPointerObservable = true;
+        });
+        this.scene.onPrePointerObservable.add((info) => {
+            info.skipOnPointerObservable = true;
+        });
+        
+        // this.canvas = document.getElementById("babylonRenderCanvas") as HTMLCanvasElement;
         //let view = document.getElementById("pixiJsRenderCanvas") as HTMLCanvasElement;
         let view = this.canvas;
          this.app  = new PIXI.Application({
             view : view,
             antialias : true,
-            // forceCanvas : false,
+            forceCanvas : false,
             // transparent : true,
             // clearBeforeRender : false,
             // autoStart : false,
@@ -90,5 +99,6 @@ class Application {
                 this.app.render();
             }
         });
+        this.scene = scene;
     }
 }

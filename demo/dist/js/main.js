@@ -189,16 +189,25 @@ var Application = /** @class */ (function () {
      * start run application
      */
     Application.prototype.start = function () {
-        // this._startBabylon();
+        // BABYLON(3D) 和 PIXI(UI) 一起使用
+        this._startBabylon();
         this._startPIXI();
     };
     Application.prototype._startPIXI = function () {
-        this.canvas = document.getElementById("babylonRenderCanvas");
+        // 处理按键
+        this.scene.onPreKeyboardObservable.add(function (info) {
+            info.skipOnPointerObservable = true;
+        });
+        this.scene.onPrePointerObservable.add(function (info) {
+            info.skipOnPointerObservable = true;
+        });
+        // this.canvas = document.getElementById("babylonRenderCanvas") as HTMLCanvasElement;
         //let view = document.getElementById("pixiJsRenderCanvas") as HTMLCanvasElement;
         var view = this.canvas;
         this.app = new PIXI.Application({
             view: view,
             antialias: true,
+            forceCanvas: false,
         });
         fgui.GRoot.inst.attachTo(this.app, {
             designHeight: 640,
@@ -249,6 +258,7 @@ var Application = /** @class */ (function () {
                 _this.app.render();
             }
         });
+        this.scene = scene;
     };
     return Application;
 }());
